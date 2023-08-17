@@ -1,0 +1,12 @@
+@import './base.scss';
+
+html, body, #app {
+  overflow: hidden;
+  height: 100%;
+}
+
+#app {
+  max-height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
