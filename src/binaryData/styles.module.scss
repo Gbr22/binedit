@@ -1,13 +1,15 @@
 .container {
     outline: 1px solid red;
-    background-color: gray;
-    overflow: auto;
+    background-color: #111111;
+    overflow-x: hidden;
+    overflow-y: auto;
     display: grid;
     position: relative;
     --row-height: 16px;
     font-family: monospace;
     max-height: 100%;
     height: 100%;
+    font-size: 14px;
 }
 .data-view {
     position: sticky;
@@ -31,16 +33,59 @@
     top: calc(var(--row-height) * var(--index));
     left: 0;
     overflow: hidden;
-    font-size: 14px;
+
+    button {
+        outline: none;
+        border: none;
+        background-color: transparent;
+        font-family: inherit;
+        font-size: inherit;
+    }
 
     .count {
-        background-color: green;
+        background-color: #1a1a1a;
         width: 80px;
         text-align: center;
+        color: #c8c8c8;
     }
     .list {
+        --item-size: 24px;
         display: flex;
-        gap: 10px;
-        padding: 0 10px;
+        box-sizing: content-box;
+        padding: 0 5px;
+        width: calc(var(--item-size) * 16);
+        
+        & > * {
+            height: 100%;
+            width: var(--item-size);
+
+            color: #a3a3a3;
+        }
+        & > *:nth-child(2n) {
+            color: #c8c8c8;
+        }
+    }
+    .text {
+        --item-size: 11px;
+        display: flex;
+        flex-direction: row;
+        width: calc(var(--item-size) * 16);
+        overflow: hidden;
+
+        & > * {
+            width: var(--item-size);
+            overflow: hidden;
+            height: 100%;
+
+            color: #565656;
+
+            &[data-type="ascii"] {
+                color: #0074D9
+            }
+            &[data-type="control"] {
+                color: #3D9970;
+                font-size: 17px;
+            }
+        }
     }
 }
