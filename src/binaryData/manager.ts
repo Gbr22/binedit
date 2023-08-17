@@ -1,6 +1,7 @@
 import { computed, ref, watch } from "vue";
 import styles from "./styles.module.scss";
 import { state } from "@/state";
+import { preferences } from "@/preferences";
 
 export const container = document.createElement("div");
 container.classList.add(styles.container);
@@ -89,6 +90,43 @@ function getBytes(startByte: number): Uint8Array {
     return bytes;
 }
 
+interface Printable {
+    text: string
+    type: "ascii" | "control" | "other"
+}
+
+function toHex(n: number){
+    if (preferences.case == 'upper') {
+        return n.toString(16).toUpperCase();
+    }
+    return n.toString(16).toLowerCase();
+}
+
+function byteToPrintable(byte: number): Printable {
+    const isNormalAscii = (byte >= 33 && byte <= 126);
+    const isExtenedAscii = (byte >= 128 && byte <= 254);
+    const isControlCharacter = (byte >= 0 && byte <= 32);
+
+    if (isNormalAscii){
+        return {
+            text: String.fromCharCode(byte),
+            type: "ascii"
+        };
+    }
+    if (isControlCharacter){
+        return {
+            text: String.fromCodePoint(byte + 0x2400),
+            type: "control"
+        };
+    }
+    else {
+        return {
+            text: '.',
+            type: "other"
+        };
+    }
+}
+
 function createRow(props:
     { renderIndex: number, startByte: number }
 ){
@@ -103,19 +141,32 @@ function createRow(props:
 
     const byteCounter = document.createElement("div");
     byteCounter.classList.add(styles.count);
-    const count = startByte.toString(16).padStart(8,'0');
+    const count = toHex(startByte).padStart(8,'0');
     byteCounter.innerText = count;
     row.appendChild(byteCounter);
 
+    const bytes = [...getBytes(startByte)];
+
     const list = document.createElement("div");
     list.classList.add(styles.list);
-    [...getBytes(startByte)].forEach(byte=>{
-        const text = byte.toString(16).padStart(2,'0');
-        const element = document.createElement("span");
+    bytes.forEach(byte=>{
+        const text = toHex(byte).padStart(2,'0');
+        const element = document.createElement("button");
         element.innerText = text;
         list.appendChild(element);
     })
     row.appendChild(list);
+
+    const text = document.createElement("div");
+    text.classList.add(styles.text);
+    const printables = bytes.map(byteToPrintable);
+    printables.forEach(printable=>{
+        const element = document.createElement("button");
+        element.innerText = printable.text;
+        element.dataset["type"] = printable.type;
+        text.appendChild(element);
+    })
+    row.appendChild(text);
 
     return row;
 }

@@ -10,3 +10,9 @@ html, body, #app {
   display: grid;
   grid-template-rows: auto 1fr;
 }
+
+body {
+  color-scheme: dark;
+  background-color: #1f1f1f;
+  color: #f7f7f7;
+}
