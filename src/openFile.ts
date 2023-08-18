@@ -1,4 +1,4 @@
-import { type File, state } from './state';
+import { EditorFile, state } from './state';
 
 const input = document.createElement("input");
 input.type = "file";
@@ -12,11 +12,8 @@ input.addEventListener("change", async ()=>{
     if (!domFile){
         return;
     }
-    const name = domFile.name;
-    const file: File = {
-        name,
-        blob: domFile
-    }
+    const file = new EditorFile(domFile);
+    console.log("open file",file);
     state.files.push(file);
     state.currentFile = file;
 })
