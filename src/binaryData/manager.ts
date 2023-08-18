@@ -73,7 +73,8 @@ window.addEventListener("mousemove",(e)=>{
         if (topRow.value != newValue){
             topRow.value = newValue;
         }
-    },3);
+        console.log("scroll");
+    },10);
     scrollBar.style.setProperty("--scroll-percent",scrollPercent.toString());
 })
 window.addEventListener("mouseup",()=>{
@@ -168,24 +169,25 @@ function collectGarbage(){
 function updateDom(){
     container.dataset["scrollType"] = `${scrollBarType.value}`;
     scrollView.style.setProperty('--row-count',scrollRowCount.value.toString());
-    const top = (topRow.value % 1000);
+    const top = (topRow.value % 1024);
     const shift = topRow.value - top;
     dataView.style.setProperty('--top',top.toString());
-    for(let renderIndex = -overScollTop; renderIndex < viewportRowCount.value + overScollBottom; renderIndex++){
+    for(let renderIndex = 0; renderIndex < viewportRowCount.value; renderIndex++){
         const index = topRow.value + renderIndex;
         const startByte = index * bytesPerRow;
         const row: Row = rowMap.get(startByte) ?? recycleOrCreateRow({
             renderIndex,
             startByte
         });
-        row.container.style.setProperty('--index',(index - shift).toString());
+        const shiftedIndex = index - shift;
+        row.container.style.setProperty('--index',shiftedIndex.toString());
     }
     collectGarbage();
 }
 
 async function getBytes(startByte: number): Promise<Uint8Array> {
-    const buffer = await state.currentFile?.blob.slice(startByte, startByte+bytesPerRow).arrayBuffer();
-    const bytes = buffer ? new Uint8Array(buffer) : new Uint8Array(16);
+    const buffer = await state.currentFile?.slice(startByte, startByte+bytesPerRow);
+    const bytes = buffer ? new Uint8Array(buffer) : new Uint8Array(0);
     return bytes;
 }
 
@@ -273,7 +275,10 @@ function updateRowDom(row: Row, props:
     const { container } = row;
 
     const index = getRowIndex(startByte);
-    container.style.setProperty("--index",index.toString());
+    const top = (topRow.value % 1024);
+    const shift = topRow.value - top;
+    const shiftedIndex = index - shift;
+    container.style.setProperty("--index",shiftedIndex.toString());
 
     const count = toHex(startByte).padStart(8,'0');
     row.startByte.innerText = count;
