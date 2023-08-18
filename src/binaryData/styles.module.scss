@@ -30,7 +30,8 @@
     display: flex;
     flex-direction: row;
     height: var(--row-height);
-    top: calc(var(--row-height) * var(--index));
+    top: 0;
+    transform: translateY(calc(var(--row-height) * var(--index)));
     left: 0;
     overflow: hidden;
 
