@@ -34,6 +34,7 @@ watch(topRow,()=>{
 
 watch(state, ()=>{
     updateDom();
+    redrawAll();
 })
 
 container.addEventListener("scroll",()=>{
@@ -41,47 +42,63 @@ container.addEventListener("scroll",()=>{
     topRow.value = Math.ceil(fileRowCount.value * scrollPercent);
 })
 
-function updateDom(){
-    
-    scrollView.style.setProperty('--row-count',fileRowCount.value.toString());
-    const used: Element[] = [];
+interface Row {
+    container: HTMLElement
+    bytes: HTMLElement[]
+    printables: HTMLElement[]
+    startByte: HTMLElement
+}
+
+const rowMap = new Map<number, Row>();
+
+function redrawAll(){
     for(let renderIndex = 0; renderIndex < viewportRowCount.value; renderIndex++){
         const index = topRow.value + renderIndex;
         const startByte = index * bytesPerRow;
-        let row: HTMLDivElement | null = container.querySelector(`[data-start-byte='${startByte}']`);
-        const bytes = getBytesString(startByte);
-        if (row && bytes != row.dataset["bytes"]){
-            dataView.removeChild(row);
-            row = null;
-        }
-
+        const row = rowMap.get(startByte);
         if (!row){
-            row = createRow({
-                renderIndex,
-                startByte
-            });
-            dataView.appendChild(row);
+            continue;
         }
-
-        if (row){
-            row.style.setProperty('--index',renderIndex.toString());
-        }
-
-        used.push(row);
-    }
-    const remove: Element[] = [];
-    for (let child of dataView.children){
-        if (!used.includes(child)){
-            remove.push(child);
-        }
-    }
-    for (let r of remove){
-        dataView.removeChild(r);
+        updateRowDom(row,{
+            startByte,
+            renderIndex
+        });
     }
 }
 
-function getBytesString(startByte: number){
-    return [...getBytes(startByte)].join(",");
+function collectGarbage(){
+    for (let startByte of rowMap.keys()){
+        const rowIndex = Math.floor(startByte / bytesPerRow);
+        const start = topRow.value;
+        const end = topRow.value + viewportRowCount.value;
+        const isVisible = rowIndex >= start && rowIndex < end;
+        if (!isVisible){
+            rowMap.get(startByte)?.container.remove();
+            rowMap.delete(startByte);
+        }
+    }
+}
+
+function updateDom(){
+    
+    scrollView.style.setProperty('--row-count',fileRowCount.value.toString());
+    for(let renderIndex = 0; renderIndex < viewportRowCount.value; renderIndex++){
+        const index = topRow.value + renderIndex;
+        const startByte = index * bytesPerRow;
+        let row: Row | undefined = rowMap.get(startByte);
+
+        if (!row){
+            row = recycleOrCreateRow({
+                renderIndex,
+                startByte
+            });
+        }
+
+        if (row){
+            row.container.style.setProperty('--index',renderIndex.toString());
+        }
+    }
+    collectGarbage();
 }
 
 function getBytes(startByte: number): Uint8Array {
@@ -127,46 +144,132 @@ function byteToPrintable(byte: number): Printable {
     }
 }
 
-function createRow(props:
+function takeGarbageRow(){
+    for (let startByte of rowMap.keys()){
+        const rowIndex = Math.floor(startByte / bytesPerRow);
+        const start = topRow.value;
+        const end = topRow.value + viewportRowCount.value;
+        const isVisible = rowIndex >= start && rowIndex < end;
+        if (isVisible){
+            continue;
+        }
+        const row = rowMap.get(startByte);
+        if (row?.bytes.length != bytesPerRow){
+            continue;
+        }
+        rowMap.delete(startByte);
+        return row;
+    }
+}
+
+function recycleOrCreateRow(props:
+    { renderIndex: number, startByte: number }
+){
+    const recycled = recycleRow(props);
+    if (!recycled){
+        return createNewRow(props);
+    }
+    return recycled;
+}
+
+function recycleRow(props:
     { renderIndex: number, startByte: number }
 ){
     const { renderIndex, startByte } = props;
+    const row = takeGarbageRow();
 
-    const row = document.createElement("div");
-    row.classList.add(styles.row);
-    row.dataset["index"] = renderIndex.toString();
-    row.dataset["bytes"] = getBytesString(startByte);
-    row.dataset["startByte"] = startByte.toString();
-    row.style.setProperty("--index",renderIndex.toString());
+    if (!row){
+        return;
+    }
 
-    const byteCounter = document.createElement("div");
-    byteCounter.classList.add(styles.count);
+    updateRowDom(row,props);
+
+    return row;
+}
+
+function updateRowDom(row: Row, props:
+    { renderIndex: number, startByte: number }
+) {
+    const { renderIndex, startByte } = props;
+
+    const { container } = row;
+
+    container.dataset["index"] = renderIndex.toString();
+    container.style.setProperty("--index",renderIndex.toString());
+
     const count = toHex(startByte).padStart(8,'0');
-    byteCounter.innerText = count;
-    row.appendChild(byteCounter);
+    row.startByte.innerText = count;
 
     const bytes = [...getBytes(startByte)];
+    for (let i = 0; i < row.bytes.length; i++){
+        const byte: number | undefined = bytes[i];
+        if (byte == undefined){
+            row.bytes[i].innerText = '';
+            continue;
+        }
+        row.bytes[i].innerText = toHex(byte).padStart(2,'0');
+    }
+    const printables = bytes.map(byteToPrintable);
+    for (let i = 0; i < row.printables.length; i++){
+        const printable: Printable | undefined = printables[i];
+        if (!printable){
+            row.printables[i].innerText = '';
+            row.printables[i].dataset["type"] = "undefined";
+            continue;
+        }
+        row.printables[i].innerText = printable.text;
+        row.printables[i].dataset["type"] = printable.type;
+    }
+    rowMap.set(startByte,row);
+}
+
+function createRowDom() {
+    console.log("create row dom");
+
+    const container = document.createElement("div");
+    container.classList.add(styles.row);
+
+    const startByte = document.createElement("div");
+    startByte.classList.add(styles.count);
+    container.appendChild(startByte);
 
     const list = document.createElement("div");
     list.classList.add(styles.list);
-    bytes.forEach(byte=>{
-        const text = toHex(byte).padStart(2,'0');
+    container.appendChild(list);
+
+    const bytes: HTMLElement[] = [];
+    for (let i=0; i < bytesPerRow; i++){
         const element = document.createElement("button");
-        element.innerText = text;
         list.appendChild(element);
-    })
-    row.appendChild(list);
+        bytes.push(element);
+    }
 
     const text = document.createElement("div");
     text.classList.add(styles.text);
-    const printables = bytes.map(byteToPrintable);
-    printables.forEach(printable=>{
+    container.appendChild(text);
+    const printables: HTMLElement[] = [];
+    for (let i=0; i < bytesPerRow; i++){
         const element = document.createElement("button");
-        element.innerText = printable.text;
-        element.dataset["type"] = printable.type;
         text.appendChild(element);
-    })
-    row.appendChild(text);
+        printables.push(element);
+    }
+
+    dataView.appendChild(container);
+
+    return {
+        container,
+        bytes,
+        printables,
+        startByte
+    } satisfies Row;
+}
+
+function createNewRow(props:
+    { renderIndex: number, startByte: number }
+){
+    const { renderIndex, startByte } = props;
+    const row = createRowDom();
+    updateRowDom(row, props);
 
     return row;
 }
