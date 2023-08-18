@@ -15,8 +15,8 @@
 import { state } from '@/state';
 
 function formatNumber(n: number){
-    const float = n - (n|0);
-    const digits = (n|0).toString().split('').reverse();
+    const float = n - Math.floor(n);
+    const digits = Math.floor(n).toString().split('').reverse();
     let str = "";
     while (digits.length > 3){
         let [a, b, c, ...rest] = digits;
@@ -29,12 +29,13 @@ function formatNumber(n: number){
 
 function formatUnit(byteCount: number){
     let power = 0;
+    const p = 1024;
     
-    while(Math.floor(byteCount / 1024) > 0){
-        byteCount /= 1024;
+    while(Math.floor(byteCount / p) > 0){
+        byteCount /= p;
         power++;
     }
-    const n = byteCount|0;
+    const n = byteCount;
     const map = new Map([
         [0, "B"],
         [1, "KiB"],
@@ -47,7 +48,7 @@ function formatUnit(byteCount: number){
         [8, "YiB"],
     ]);
     const unit = map.get(power);
-    return `${n} ${unit}`;
+    return `${n.toFixed(1)} ${unit}`;
 }
 </script>
 
