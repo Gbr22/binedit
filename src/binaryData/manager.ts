@@ -71,6 +71,21 @@ function drawQueue(key: string, f: (...a: any)=>any){
     })
 }
 
+let lastUpdateRequest = Date.now();
+let lastUpdate = lastUpdateRequest;
+function drawLoop(){
+    if (lastUpdate < lastUpdateRequest){
+        updateDom();
+        lastUpdate = Date.now();
+    }
+    requestAnimationFrame(drawLoop);
+}
+drawLoop();
+
+function requestDomUpdate(){
+    lastUpdateRequest = Date.now();
+}
+
 window.addEventListener("mousemove",(e)=>{
     if (!scrollStart){
         return;
@@ -114,11 +129,11 @@ const viewportRowCount = ref(0);
 const topRow = ref(0);
 
 watch(viewportRowCount,()=>{
-    updateDom();
+    requestDomUpdate();
 })
 
 watch(topRow,()=>{
-    updateDom();
+    requestDomUpdate();
 })
 
 watch(state, ()=>{
