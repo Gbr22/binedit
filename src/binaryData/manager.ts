@@ -14,12 +14,89 @@ const scrollView = document.createElement("div");
 scrollView.classList.add(styles["scroll-view"]);
 container.appendChild(scrollView);
 
+const scrollBar = document.createElement("div");
+scrollBar.classList.add(styles["scroll-bar"]);
+container.appendChild(scrollBar);
+
+const upArrow = document.createElement("button");
+upArrow.classList.add(styles["up-arrow"]);
+
+const downArrow = document.createElement("button");
+downArrow.classList.add(styles["down-arrow"]);
+
+const scrollBarTrack = document.createElement("div");
+scrollBarTrack.classList.add(styles["scroll-bar-track"]);
+
+scrollBar.appendChild(upArrow);
+scrollBar.appendChild(scrollBarTrack);
+scrollBar.appendChild(downArrow);
+
+const scrollBarHandle = document.createElement("button");
+scrollBarHandle.classList.add(styles["scroll-bar-handle"]);
+scrollBarTrack.appendChild(scrollBarHandle);
+
+interface ScrollStart {
+    y: number
+    scrollPercent: number
+}
+
+let scrollStart: ScrollStart | null = null;
+let scrollPercent = 0;
+scrollBarHandle.addEventListener("mousedown",(e)=>{
+    scrollStart = {
+        y: e.clientY,
+        scrollPercent
+    };
+})
+
+
+const queueMap = new Map();
+function queue(key: string, f: (...a: any)=>any, ms: number){
+    if (queueMap.has(key)){
+        clearTimeout(queueMap.get(key));
+        queueMap.delete(key);
+    }
+    const timeout = setTimeout(f,ms);
+    queueMap.set(key,timeout);
+}
+
+window.addEventListener("mousemove",(e)=>{
+    if (!scrollStart){
+        return;
+    }
+    const diff = e.clientY - scrollStart.y;
+    const height = scrollBarTrack.clientHeight;
+    const percent = diff/height + scrollStart.scrollPercent;
+    scrollPercent = Math.max(0,Math.min(percent,1));
+    queue("scroll",()=>{
+        let newValue = Math.ceil(fileRowCount.value * scrollPercent);
+        if (topRow.value != newValue){
+            topRow.value = newValue;
+        }
+    },3);
+    scrollBar.style.setProperty("--scroll-percent",scrollPercent.toString());
+})
+window.addEventListener("mouseup",()=>{
+    scrollStart = null;
+})
+
 const bytesPerRow = 16;
 const rowHeight = 16;
 
 const fileRowCount = computed(()=>{
-    return Math.ceil( (state.currentFile?.buffer?.byteLength ?? 0) / bytesPerRow);
+    return Math.ceil( (state.currentFile?.blob.size ?? 0) / bytesPerRow);
 });
+
+const scrollRowCount = computed(()=>{
+    return Math.min(10000, fileRowCount.value);
+})
+
+const scrollBarType = computed(()=>{
+    if (fileRowCount.value > 10000){
+        return "virtual";
+    }
+    return "native";
+})
 
 const viewportRowCount = ref(0);
 const topRow = ref(0);
@@ -38,7 +115,7 @@ watch(state, ()=>{
 })
 
 container.addEventListener("scroll",()=>{
-    const scrollPercent = container.scrollTop / container.scrollHeight;
+    const scrollPercent = container.scrollTop / ( container.scrollHeight - (container.clientHeight / 2) );
     topRow.value = Math.ceil(fileRowCount.value * scrollPercent);
 })
 
@@ -66,43 +143,48 @@ function redrawAll(){
     }
 }
 
+function getRowIndex(startByte: number){
+    return Math.floor(startByte / bytesPerRow);
+}
+
+const overScollTop = 0;
+const overScollBottom = 0;
+function shouldRemove(startByte: number){
+    const rowIndex = getRowIndex(startByte);
+    const start = topRow.value - overScollTop;
+    const end = topRow.value + viewportRowCount.value + overScollBottom;
+    const isVisible = rowIndex >= start && rowIndex < end;
+    return !isVisible;
+}
+
 function collectGarbage(){
     for (let startByte of rowMap.keys()){
-        const rowIndex = Math.floor(startByte / bytesPerRow);
-        const start = topRow.value;
-        const end = topRow.value + viewportRowCount.value;
-        const isVisible = rowIndex >= start && rowIndex < end;
-        if (!isVisible){
+        if (shouldRemove(startByte)){
             rowMap.get(startByte)?.container.remove();
             rowMap.delete(startByte);
         }
     }
 }
-
 function updateDom(){
-    
-    scrollView.style.setProperty('--row-count',fileRowCount.value.toString());
-    for(let renderIndex = 0; renderIndex < viewportRowCount.value; renderIndex++){
+    container.dataset["scrollType"] = `${scrollBarType.value}`;
+    scrollView.style.setProperty('--row-count',scrollRowCount.value.toString());
+    const top = (topRow.value % 1000);
+    const shift = topRow.value - top;
+    dataView.style.setProperty('--top',top.toString());
+    for(let renderIndex = -overScollTop; renderIndex < viewportRowCount.value + overScollBottom; renderIndex++){
         const index = topRow.value + renderIndex;
         const startByte = index * bytesPerRow;
-        let row: Row | undefined = rowMap.get(startByte);
-
-        if (!row){
-            row = recycleOrCreateRow({
-                renderIndex,
-                startByte
-            });
-        }
-
-        if (row){
-            row.container.style.setProperty('--index',renderIndex.toString());
-        }
+        const row: Row = rowMap.get(startByte) ?? recycleOrCreateRow({
+            renderIndex,
+            startByte
+        });
+        row.container.style.setProperty('--index',(index - shift).toString());
     }
     collectGarbage();
 }
 
-function getBytes(startByte: number): Uint8Array {
-    const buffer = state.currentFile?.buffer.slice(startByte, startByte+bytesPerRow);
+async function getBytes(startByte: number): Promise<Uint8Array> {
+    const buffer = await state.currentFile?.blob.slice(startByte, startByte+bytesPerRow).arrayBuffer();
     const bytes = buffer ? new Uint8Array(buffer) : new Uint8Array(16);
     return bytes;
 }
@@ -146,11 +228,7 @@ function byteToPrintable(byte: number): Printable {
 
 function takeGarbageRow(){
     for (let startByte of rowMap.keys()){
-        const rowIndex = Math.floor(startByte / bytesPerRow);
-        const start = topRow.value;
-        const end = topRow.value + viewportRowCount.value;
-        const isVisible = rowIndex >= start && rowIndex < end;
-        if (isVisible){
+        if (!shouldRemove(startByte)){
             continue;
         }
         const row = rowMap.get(startByte);
@@ -194,42 +272,45 @@ function updateRowDom(row: Row, props:
 
     const { container } = row;
 
-    container.dataset["index"] = renderIndex.toString();
-    container.style.setProperty("--index",renderIndex.toString());
+    const index = getRowIndex(startByte);
+    container.style.setProperty("--index",index.toString());
 
     const count = toHex(startByte).padStart(8,'0');
     row.startByte.innerText = count;
 
-    const bytes = [...getBytes(startByte)];
-    for (let i = 0; i < row.bytes.length; i++){
-        const byte: number | undefined = bytes[i];
-        if (byte == undefined){
-            row.bytes[i].innerText = '';
-            continue;
+    getBytes(startByte).then((elements)=>{
+        const bytes = [...elements];
+        for (let i = 0; i < row.bytes.length; i++){
+            const byte: number | undefined = bytes[i];
+            if (byte == undefined){
+                row.bytes[i].innerText = '';
+                continue;
+            }
+            row.bytes[i].innerText = toHex(byte).padStart(2,'0');
         }
-        row.bytes[i].innerText = toHex(byte).padStart(2,'0');
-    }
-    const printables = bytes.map(byteToPrintable);
-    for (let i = 0; i < row.printables.length; i++){
-        const printable: Printable | undefined = printables[i];
-        if (!printable){
-            row.printables[i].innerText = '';
-            row.printables[i].dataset["type"] = "undefined";
-            continue;
+        const printables = bytes.map(byteToPrintable);
+        for (let i = 0; i < row.printables.length; i++){
+            const printable: Printable | undefined = printables[i];
+            if (!printable){
+                row.printables[i].innerText = '';
+                row.printables[i].dataset["type"] = "undefined";
+                continue;
+            }
+            row.printables[i].innerText = printable.text;
+            row.printables[i].dataset["type"] = printable.type;
         }
-        row.printables[i].innerText = printable.text;
-        row.printables[i].dataset["type"] = printable.type;
-    }
+    })
+    
     rowMap.set(startByte,row);
 }
 
 function createRowDom() {
-    console.log("create row dom");
+    console.log("create row");
 
     const container = document.createElement("div");
     container.classList.add(styles.row);
 
-    const startByte = document.createElement("div");
+    const startByte = document.createElement("button");
     startByte.classList.add(styles.count);
     container.appendChild(startByte);
 

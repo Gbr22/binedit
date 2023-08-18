@@ -13,10 +13,9 @@ input.addEventListener("change", async ()=>{
         return;
     }
     const name = domFile.name;
-    const buffer = await domFile.arrayBuffer();
     const file: File = {
         name,
-        buffer
+        blob: domFile
     }
     state.files.push(file);
     state.currentFile = file;
