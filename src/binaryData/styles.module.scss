@@ -85,6 +85,9 @@
     * {
         white-space: pre;
         overflow: hidden;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
     }
 
     button {
