@@ -60,6 +60,17 @@ function queue(key: string, f: (...a: any)=>any, ms: number){
     queueMap.set(key,timeout);
 }
 
+const drawQueueMap = new Map();
+function drawQueue(key: string, f: (...a: any)=>any){
+    const id = Math.random();
+    drawQueueMap.set(key,id);
+    requestAnimationFrame(()=>{
+        if (drawQueueMap.get(key) == id){
+            f();
+        }
+    })
+}
+
 window.addEventListener("mousemove",(e)=>{
     if (!scrollStart){
         return;
@@ -69,12 +80,16 @@ window.addEventListener("mousemove",(e)=>{
     const percent = diff/height + scrollStart.scrollPercent;
     scrollPercent = Math.max(0,Math.min(percent,1));
     queue("scroll",()=>{
-        let newValue = Math.ceil(fileRowCount.value * scrollPercent);
-        if (topRow.value != newValue){
-            topRow.value = newValue;
-        }
-        console.log("scroll");
-    },10);
+        drawQueue("scroll",()=>{
+            queue("scroll-inner",()=>{
+                let newValue = Math.ceil(fileRowCount.value * scrollPercent);
+                if (topRow.value != newValue){
+                    topRow.value = newValue;
+                }
+                console.log("scroll")
+            },2);
+        });
+    },2);
     scrollBar.style.setProperty("--scroll-percent",scrollPercent.toString());
 })
 window.addEventListener("mouseup",()=>{

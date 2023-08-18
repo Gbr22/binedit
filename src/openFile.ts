@@ -1,4 +1,5 @@
-import { EditorFile, state } from './state';
+import { EditorFile } from './EditorFile';
+import { state } from './state';
 
 const input = document.createElement("input");
 input.type = "file";
