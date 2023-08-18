@@ -2,7 +2,7 @@ import { reactive } from "vue";
 
 export type File = {
     name: string
-    buffer: ArrayBuffer
+    blob: Blob
 }
 
 export const state = reactive({
