@@ -80,6 +80,12 @@
     transform: translateY(calc(var(--row-height) * var(--index)));
     left: 0;
     overflow: hidden;
+    white-space: nowrap;
+
+    * {
+        white-space: pre;
+        overflow: hidden;
+    }
 
     button {
         outline: none;

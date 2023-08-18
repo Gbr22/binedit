@@ -80,15 +80,11 @@ window.addEventListener("mousemove",(e)=>{
     const percent = diff/height + scrollStart.scrollPercent;
     scrollPercent = Math.max(0,Math.min(percent,1));
     queue("scroll",()=>{
-        drawQueue("scroll",()=>{
-            queue("scroll-inner",()=>{
-                let newValue = Math.ceil(fileRowCount.value * scrollPercent);
-                if (topRow.value != newValue){
-                    topRow.value = newValue;
-                }
-                console.log("scroll")
-            },2);
-        });
+        let newValue = Math.ceil(fileRowCount.value * scrollPercent);
+        if (topRow.value != newValue){
+            topRow.value = newValue;
+        }
+        console.log("scroll")
     },2);
     scrollBar.style.setProperty("--scroll-percent",scrollPercent.toString());
 })
@@ -286,6 +282,7 @@ function updateRowDom(row: Row, props:
     { renderIndex: number, startByte: number }
 ) {
     const { renderIndex, startByte } = props;
+    rowMap.set(startByte,row);
 
     const { container } = row;
 
@@ -298,8 +295,7 @@ function updateRowDom(row: Row, props:
     const count = toHex(startByte).padStart(8,'0');
     row.startByte.innerText = count;
 
-    getBytes(startByte).then((elements)=>{
-        const bytes = [...elements];
+    getBytes(startByte).then((bytes)=>{
         for (let i = 0; i < row.bytes.length; i++){
             const byte: number | undefined = bytes[i];
             if (byte == undefined){
@@ -308,9 +304,9 @@ function updateRowDom(row: Row, props:
             }
             row.bytes[i].innerText = toHex(byte).padStart(2,'0');
         }
-        const printables = bytes.map(byteToPrintable);
         for (let i = 0; i < row.printables.length; i++){
-            const printable: Printable | undefined = printables[i];
+            const byte: number | undefined = bytes[i];
+            const printable: Printable | undefined = byte != undefined ? byteToPrintable(byte) : undefined;
             if (!printable){
                 row.printables[i].innerText = '';
                 row.printables[i].dataset["type"] = "undefined";
@@ -320,8 +316,6 @@ function updateRowDom(row: Row, props:
             row.printables[i].dataset["type"] = printable.type;
         }
     })
-    
-    rowMap.set(startByte,row);
 }
 
 function createRowDom() {
