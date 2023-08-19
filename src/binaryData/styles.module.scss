@@ -73,6 +73,7 @@
     align-items: center;
     transform: translateY(calc(100% * var(--scroll-percent)));
 }
+.scroll-bar-track-padding {}
 .scroll-bar-handle {
     background-color: #484848;
     width: 12px;

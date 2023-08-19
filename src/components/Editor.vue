@@ -5,12 +5,13 @@
 <script setup lang="ts">
 import { state } from '@/state';
 import { onMounted, ref } from 'vue';
-import { editor as binaryContainer } from '../binaryData/manager';
+import { Editor } from '../binaryData/editor';
+const editor = new Editor();
 
 const container = ref<HTMLElement>();
 onMounted(()=>{
     if (container.value){
-        container.value.appendChild(binaryContainer);
+        container.value.appendChild(editor.element);
     }
 })
 </script>
