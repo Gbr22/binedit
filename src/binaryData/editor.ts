@@ -1,14 +1,13 @@
-import type { EditorFile } from "@/EditorFile";
-import { ImplCreateDom, type ICreateDom } from "./sub-classes/CreateDom";
+import { ImplCreateDom } from "./sub-classes/DomHandler";
 import { DerivedVar, TrackedVar, createDependantFunction } from "./reactivity";
-import { computed, watch } from "vue";
-import { state } from "@/state";
-import { bytesPerRow, rowHeight } from "./constants";
+import { bytesPerRow } from "./constants";
 import { getRowIndex, toHex, type Row, type Printable, byteToPrintable } from "./row";
 import styles from "./styles.module.scss";
-import { registerResizeObserver } from "./resize";
-import { ImplScrollHandler, type IScrollHandler } from "./sub-classes/ScrollHandler";
+import { ImplScrollHandler } from "./sub-classes/ScrollHandler";
 import { Implementations } from "./composition";
+import { ImplSizeHandler } from "./sub-classes/SizeHandler";
+import { ImplFileHandler } from "./sub-classes/FileHandler";
+import { ImplRenderingHandler } from "./sub-classes/RenderingHandler";
 
 export type EditorThis = InstanceType<typeof Editor>;
 
@@ -16,41 +15,20 @@ export class Editor
 extends Implementations
     (ImplCreateDom)
     (ImplScrollHandler)
+    (ImplSizeHandler)
+    (ImplFileHandler)
+    (ImplRenderingHandler)
 .$
 {
-    viewportRowCount = new TrackedVar(0);
-    topRow = new TrackedVar(0);
-    currentFile = new TrackedVar<EditorFile | undefined>(undefined);
-
-    fileRowCount = new DerivedVar(()=>{
-        return Math.ceil( (this.currentFile.value?.blob.size ?? 0) / bytesPerRow);
-    },this.currentFile);
-
-    scrollRowCount = new DerivedVar(()=>{
-        return Math.min(10000, this.fileRowCount.value);
-    },this.fileRowCount);
-
-    scrollBarType = new DerivedVar(()=>{
-        if (this.fileRowCount.value > 10000){
-            return "virtual";
-        }
-        return "native";
-    },this.fileRowCount);
-
     rowMap = new Map<number, Row>();
 
     constructor(){
         super();
 
-        this.createDom();
-        registerResizeObserver(this);
-        this.registerScrollEventListeners();
-    }
-
-    reflow(){
-        const rect = this.element.getBoundingClientRect();
-        this.viewportRowCount.value = Math.floor(rect.height / rowHeight);
-        this.updateDom();
+        this.initDomHandler();
+        this.initScrollHandler();
+        this.initSizeHandler();
+        this.initRenderingHandler();
     }
 
     overScollTop = 0;
@@ -70,38 +48,6 @@ extends Implementations
                 this.rowMap.delete(startByte);
             }
         }
-    }
-
-    updateDom = createDependantFunction(()=>{
-        this.element.dataset["scrollType"] = `${this.scrollBarType.value}`;
-        if (this.scrollBarType.value == "virtual"){
-            this.element.scrollTop = 0;
-        }
-        this.scrollView.style.setProperty('--row-count',this.scrollRowCount.value.toString());
-        const top = (this.topRow.value % 1024);
-        const shift = this.topRow.value - top;
-        this.dataView.style.setProperty('--top',top.toString());
-        console.group("update");
-        console.log(this.rowMap);
-        for(let renderIndex = 0; renderIndex < this.viewportRowCount.value; renderIndex++){
-            const index = this.topRow.value + renderIndex;
-            const startByte = index * bytesPerRow;
-            console.log(index,!!this.rowMap.get(startByte));
-            const row: Row = this.rowMap.get(startByte) ?? this.recycleOrCreateRow({
-                renderIndex,
-                startByte
-            });
-            const shiftedIndex = index - shift;
-            row.container.style.setProperty('--index',shiftedIndex.toString());
-        }
-        console.groupEnd();
-        this.collectGarbage();
-    }, this.topRow, this.currentFile, this.viewportRowCount)
-
-    async getBytes(startByte: number): Promise<Uint8Array> {
-        const buffer = await this.currentFile.value?.slice(startByte, startByte+bytesPerRow);
-        const bytes = buffer ? new Uint8Array(buffer) : new Uint8Array(0);
-        return bytes;
     }
 
     takeGarbageRow(){

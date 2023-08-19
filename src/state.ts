@@ -1,5 +1,5 @@
 import { reactive } from "vue";
-import type { EditorFile } from "./EditorFile";
+import type { EditorFile } from "./binaryData/EditorFile";
 
 export const state = reactive({
     files: [] as EditorFile[],
