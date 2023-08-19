@@ -5,7 +5,7 @@
 <script setup lang="ts">
 import { state } from '@/state';
 import { onMounted, ref } from 'vue';
-import { container as binaryContainer } from '../binaryData/manager';
+import { editor as binaryContainer } from '../binaryData/manager';
 
 const container = ref<HTMLElement>();
 onMounted(()=>{
