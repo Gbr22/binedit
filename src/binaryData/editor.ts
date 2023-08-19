@@ -1,11 +1,12 @@
 import type { EditorFile } from "@/EditorFile";
 import { createDom } from "./dom";
-import { DerivedVar, TrackedVar } from "./reactivity";
+import { DerivedVar, TrackedVar, createDependantFunction } from "./reactivity";
 import { computed, watch } from "vue";
 import { state } from "@/state";
 import { bytesPerRow, rowHeight } from "./constants";
 import { getRowIndex, toHex, type Row, type Printable, byteToPrintable } from "./row";
 import styles from "./styles.module.scss";
+import { registerResizeObserver } from "./resize";
 
 export class Editor {
 
@@ -13,16 +14,16 @@ export class Editor {
     topRow = new TrackedVar(0);
     currentFile = new TrackedVar<EditorFile | undefined>(undefined);
 
-    fileRowCount = new DerivedVar((currentFile)=>{
-        return Math.ceil( (currentFile.value?.blob.size ?? 0) / bytesPerRow);
+    fileRowCount = new DerivedVar(()=>{
+        return Math.ceil( (this.currentFile.value?.blob.size ?? 0) / bytesPerRow);
     },this.currentFile);
-    
-    scrollRowCount = new DerivedVar((fileRowCount)=>{
-        return Math.min(10000, fileRowCount.value);
+
+    scrollRowCount = new DerivedVar(()=>{
+        return Math.min(10000, this.fileRowCount.value);
     },this.fileRowCount);
 
-    scrollBarType = new DerivedVar((fileRowCount)=>{
-        if (fileRowCount.value > 10000){
+    scrollBarType = new DerivedVar(()=>{
+        if (this.fileRowCount.value > 10000){
             return "virtual";
         }
         return "native";
@@ -36,6 +37,7 @@ export class Editor {
 
     constructor(){
         createDom(this);
+        registerResizeObserver(this);
 
         this.element.addEventListener("scroll",()=>{
             const scrollPercent = this.element.scrollTop / ( this.element.scrollHeight - (this.element.clientHeight / 2) );
@@ -43,11 +45,7 @@ export class Editor {
             this.updateDom();
         })
 
-        watch(state, ()=>{
-            this.currentFile.value = state.currentFile;
-            this.updateDom();
-            this.redrawAll();
-        })
+        
 
         this.element.addEventListener("wheel",(e)=>{
             if (this.scrollBarType.value == "native"){
@@ -62,26 +60,12 @@ export class Editor {
             this.topRow.value = newTopRow;
             this.updateDom();
         })
-
-        const updateSizes = ()=>{
-            const rect = this.element.getBoundingClientRect();
-            this.viewportRowCount.value = Math.floor(rect.height / rowHeight);
-        }
-        
-        const resizeObserver = new ResizeObserver((entries) => {
-            updateSizes();
-            this.updateDom();
-        });
-        
-        resizeObserver.observe(this.element);
     }
 
-    lastDomUpdate = 0;
-    updateDom(){
-        if (!TrackedVar.changedSince(this.lastDomUpdate,this.topRow,this.viewportRowCount,this.currentFile)){
-            return;
-        }
-        this.forcefullyUpdateDom();
+    reflow(){
+        const rect = this.element.getBoundingClientRect();
+        this.viewportRowCount.value = Math.floor(rect.height / rowHeight);
+        this.updateDom();
     }
 
     overScollTop = 0;
@@ -103,7 +87,7 @@ export class Editor {
         }
     }
 
-    forcefullyUpdateDom(){
+    updateDom = createDependantFunction(()=>{
         this.element.dataset["scrollType"] = `${this.scrollBarType.value}`;
         if (this.scrollBarType.value == "virtual"){
             this.element.scrollTop = 0;
@@ -127,8 +111,7 @@ export class Editor {
         }
         console.groupEnd();
         this.collectGarbage();
-        this.lastDomUpdate = Date.now();
-    }
+    }, this.topRow, this.currentFile, this.viewportRowCount)
 
     async getBytes(startByte: number): Promise<Uint8Array> {
         const buffer = await this.currentFile.value?.slice(startByte, startByte+bytesPerRow);
