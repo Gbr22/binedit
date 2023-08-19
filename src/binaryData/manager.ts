@@ -2,6 +2,8 @@ import { computed, ref, watch } from "vue";
 import styles from "./styles.module.scss";
 import { state } from "@/state";
 import { preferences } from "@/preferences";
+import upIcon from '@/assets/icons/chevron-up.svg?raw';
+import downIcon from '@/assets/icons/chevron-down.svg?raw';
 
 export const container = document.createElement("div");
 container.classList.add(styles.container);
@@ -20,15 +22,20 @@ container.appendChild(scrollBar);
 
 const upArrow = document.createElement("button");
 upArrow.classList.add(styles["up-arrow"]);
+upArrow.innerHTML = upIcon;
 
 const downArrow = document.createElement("button");
 downArrow.classList.add(styles["down-arrow"]);
+downArrow.innerHTML = downIcon;
 
 const scrollBarTrack = document.createElement("div");
 scrollBarTrack.classList.add(styles["scroll-bar-track"]);
+const scrollBarTrackPadding = document.createElement("div");
+scrollBarTrackPadding.classList.add(styles["scroll-bar-track-padding"]);
 
 scrollBar.appendChild(upArrow);
 scrollBar.appendChild(scrollBarTrack);
+scrollBar.appendChild(scrollBarTrackPadding);
 scrollBar.appendChild(downArrow);
 
 const scrollBarHandle = document.createElement("button");
@@ -99,7 +106,7 @@ window.addEventListener("mousemove",(e)=>{
         if (topRow.value != newValue){
             topRow.value = newValue;
         }
-        console.log("scroll")
+        console.log("scroll",scrollPercent,topRow.value,fileRowCount.value);
     },2);
     scrollBar.style.setProperty("--scroll-percent",scrollPercent.toString());
 })
@@ -146,6 +153,15 @@ container.addEventListener("scroll",()=>{
     topRow.value = Math.ceil(fileRowCount.value * scrollPercent);
 })
 
+container.addEventListener("wheel",(e)=>{
+    if (scrollBarType.value == "native"){
+        return;
+    }
+    const delta = e.deltaY;
+    const deltaRow = Math.round(delta / rowHeight);
+    topRow.value += deltaRow;
+})
+
 interface Row {
     container: HTMLElement
     bytes: HTMLElement[]
@@ -169,6 +185,7 @@ function redrawAll(){
         });
     }
 }
+(globalThis as any).redrawAll = redrawAll;
 
 function getRowIndex(startByte: number){
     return Math.floor(startByte / bytesPerRow);
@@ -198,9 +215,12 @@ function updateDom(){
     const top = (topRow.value % 1024);
     const shift = topRow.value - top;
     dataView.style.setProperty('--top',top.toString());
+    console.group("update");
+    console.log(rowMap);
     for(let renderIndex = 0; renderIndex < viewportRowCount.value; renderIndex++){
         const index = topRow.value + renderIndex;
         const startByte = index * bytesPerRow;
+        console.log(index,!!rowMap.get(startByte));
         const row: Row = rowMap.get(startByte) ?? recycleOrCreateRow({
             renderIndex,
             startByte
@@ -208,8 +228,10 @@ function updateDom(){
         const shiftedIndex = index - shift;
         row.container.style.setProperty('--index',shiftedIndex.toString());
     }
+    console.groupEnd();
     collectGarbage();
 }
+(globalThis as any).updateDom = updateDom;
 
 async function getBytes(startByte: number): Promise<Uint8Array> {
     const buffer = await state.currentFile?.slice(startByte, startByte+bytesPerRow);
@@ -275,6 +297,7 @@ function recycleOrCreateRow(props:
     if (!recycled){
         return createNewRow(props);
     }
+    console.log("recycled");
     return recycled;
 }
 
@@ -305,6 +328,7 @@ function updateRowDom(row: Row, props:
     const top = (topRow.value % 1024);
     const shift = topRow.value - top;
     const shiftedIndex = index - shift;
+    container.dataset["index"] = index.toString();
     container.style.setProperty("--index",shiftedIndex.toString());
 
     const count = toHex(startByte).padStart(8,'0');

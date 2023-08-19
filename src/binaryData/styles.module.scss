@@ -39,6 +39,8 @@
     pointer-events: none;
 }
 .scroll-bar {
+    --scroll-bar-width: 16px;
+    --scroll-handle-size: 5vh;
     display: none;
     position: absolute;
     height: 100%;
@@ -46,7 +48,7 @@
     top: 0;
     width: 16px;
     background-color: #242424;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: var(--scroll-bar-width) 1fr var(--scroll-handle-size) var(--scroll-bar-width);
     flex-direction: column;
     --scroll-percent: 0;
 
@@ -56,8 +58,14 @@
     }
 }
 .up-arrow, .down-arrow {
-    width: 16px;
-    height: 16px;
+    width: 100%;
+    display: grid;
+    place-content: center;
+    color: #959595;
+
+    svg {
+        width: 100%;
+    }
 }
 .scroll-bar-track {
     display: flex;
