@@ -1,7 +1,7 @@
 import type { EditorThis } from "../editor";
 import styles from "../styles.module.scss";
 import { createVirtualScrollBar } from "../virtualScrollbar";
-import { Base, type Constructor, type ImplFun } from "../composition";
+import { Base, chainImpl, type Constructor } from "../composition";
 import { rowHeight } from "../constants";
 
 export interface IScrollHandler {
@@ -34,14 +34,5 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
         }
     };
 
-    function _continue<
-        TArg extends typeof cls,
-        TReturn extends (...args: any[])=>any,
-    >(extend: (arg: TArg)=>TReturn): TReturn {
-        return extend(cls as any);
-    }
-
-    return Object.assign(_continue,{
-        cls
-    })
+    return chainImpl(cls);
 }

@@ -14,9 +14,9 @@ export type EditorThis = InstanceType<typeof Editor>;
 
 export class Editor
 extends Implementations
-(ImplCreateDom)
-(ImplScrollHandler)
-.cls
+    (ImplCreateDom)
+    (ImplScrollHandler)
+.$
 {
     viewportRowCount = new TrackedVar(0);
     topRow = new TrackedVar(0);
