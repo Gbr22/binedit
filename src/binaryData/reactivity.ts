@@ -18,7 +18,7 @@ export class TrackedVar<V> {
     }
 }
 
-function changedSince(n: number, ...rest: (TrackedVar<any> | DerivedVar<any,any>)[]){
+function changedSince(n: number, ...rest: (TrackedVar<any> | DerivedVar<any>)[]){
     for (let e of rest){
         if (e.lastChanged > n){
             return true;
@@ -27,17 +27,17 @@ function changedSince(n: number, ...rest: (TrackedVar<any> | DerivedVar<any,any>
     return false;
 }
 
-export class DerivedVar<Var,Dependecies extends (TrackedVar<any> | DerivedVar<any,any>)[]> {
+export class DerivedVar<Var> {
 
     fn: ()=> Var;
 
-    deps: Dependecies;
+    deps: (TrackedVar<any> | DerivedVar<any>)[];
 
     get lastChanged(): number {
         return Math.max(...this.deps.map(e=>e.lastChanged));
     }
 
-    constructor(fn: ()=> Var, ...deps: Dependecies){
+    constructor(fn: ()=> Var, ...deps: (TrackedVar<any> | DerivedVar<any>)[]){
         this.fn = fn;
         this.deps = deps;
     }
@@ -51,7 +51,7 @@ export const DidNotExecute = Symbol("Did not execute");
 
 export function createDependantFunction<
     Fn extends (...args: any[])=>any,
-    Dependecies extends (TrackedVar<any> | DerivedVar<any,any>)[]
+    Dependecies extends (TrackedVar<any> | DerivedVar<any>)[]
 >(fn: Fn, ...deps: Dependecies){
     let lastCall = 0;
     const newFn = (...args: Parameters<Fn>): ReturnType<Fn> | typeof DidNotExecute =>{

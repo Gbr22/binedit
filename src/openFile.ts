@@ -1,4 +1,4 @@
-import { EditorFile } from './EditorFile';
+import { EditorFile } from './binaryData/EditorFile';
 import { state } from './state';
 
 const input = document.createElement("input");

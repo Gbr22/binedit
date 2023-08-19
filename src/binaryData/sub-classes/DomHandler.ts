@@ -3,20 +3,13 @@ import styles from "../styles.module.scss";
 import { createVirtualScrollBar } from "../virtualScrollbar";
 import { Base, type Constructor, chainImpl } from "../composition";
 
-export interface ICreateDom {
-    element: HTMLElement
-    scrollView: HTMLElement
-    dataView: HTMLElement
-    createDom: ()=>void
-}
-
 export function ImplCreateDom<T extends Constructor<Base>>(constructor: T = Base as any) {
-    const cls = class extends constructor implements ICreateDom {
+    const cls = class extends constructor {
         element!: HTMLElement
         scrollView!: HTMLElement
         dataView!: HTMLElement
         
-        public createDom() {
+        public initDomHandler() {
             const that = this as any as EditorThis;
             const container = document.createElement("div");
             container.classList.add(styles.container);
