@@ -1,17 +1,17 @@
 import styles from "./styles.module.scss";
 import upIcon from '@/assets/icons/chevron-up.svg?raw';
 import downIcon from '@/assets/icons/chevron-down.svg?raw';
-import { fileRowCount, queue, topRow, updateDom } from "./manager";
+import type { Editor } from "./editor";
 
 interface ScrollStart {
     y: number
     scrollPercent: number
 }
 
-export function createVirtualScrollBar(container: HTMLElement){
+export function createVirtualScrollBar(editor: Editor){
     const scrollBar = document.createElement("div");
     scrollBar.classList.add(styles["scroll-bar"]);
-    container.appendChild(scrollBar);
+    editor.element.appendChild(scrollBar);
 
     const upArrow = document.createElement("button");
     upArrow.classList.add(styles["up-arrow"]);
@@ -51,11 +51,9 @@ export function createVirtualScrollBar(container: HTMLElement){
         const height = scrollBarTrack.clientHeight;
         const percent = diff/height + scrollStart.scrollPercent;
         scrollPercent = Math.max(0,Math.min(percent,1));
-        queue("scroll",()=>{
-            topRow.value = Math.ceil(fileRowCount.value * scrollPercent);
-            console.log("scroll",scrollPercent,topRow.value,fileRowCount.value);
-            updateDom();
-        },2);
+        editor.topRow.value = Math.ceil(editor.fileRowCount.value * scrollPercent);
+        console.log("scroll",scrollPercent,editor.topRow.value,editor.fileRowCount.value);
+        editor.updateDom();
         scrollBar.style.setProperty("--scroll-percent",scrollPercent.toString());
     })
     window.addEventListener("mouseup",()=>{
