@@ -1,5 +1,5 @@
 import type { EditorFile } from "@/EditorFile";
-import { createDom } from "./dom";
+import { ImplCreateDom, type ICreateDom } from "./sub-classes/CreateDom";
 import { DerivedVar, TrackedVar, createDependantFunction } from "./reactivity";
 import { computed, watch } from "vue";
 import { state } from "@/state";
@@ -7,9 +7,13 @@ import { bytesPerRow, rowHeight } from "./constants";
 import { getRowIndex, toHex, type Row, type Printable, byteToPrintable } from "./row";
 import styles from "./styles.module.scss";
 import { registerResizeObserver } from "./resize";
+import { ImplScrollHandler, type IScrollHandler } from "./sub-classes/ScrollHandler";
 
-export class Editor {
+export type EditorThis = InstanceType<typeof Editor>;
 
+export class Editor
+extends ImplScrollHandler(ImplCreateDom())
+{
     viewportRowCount = new TrackedVar(0);
     topRow = new TrackedVar(0);
     currentFile = new TrackedVar<EditorFile | undefined>(undefined);
@@ -31,35 +35,12 @@ export class Editor {
 
     rowMap = new Map<number, Row>();
 
-    element!: HTMLElement
-    scrollView!: HTMLElement
-    dataView!: HTMLElement
-
     constructor(){
-        createDom(this);
+        super();
+
+        this.createDom();
         registerResizeObserver(this);
-
-        this.element.addEventListener("scroll",()=>{
-            const scrollPercent = this.element.scrollTop / ( this.element.scrollHeight - (this.element.clientHeight / 2) );
-            this.topRow.value = Math.ceil(this.fileRowCount.value * scrollPercent);
-            this.updateDom();
-        })
-
-        
-
-        this.element.addEventListener("wheel",(e)=>{
-            if (this.scrollBarType.value == "native"){
-                return;
-            }
-            const delta = e.deltaY;
-            const deltaRow = Math.round(delta / rowHeight);
-            let newTopRow = this.topRow.value + deltaRow;
-            if (newTopRow < 0){
-                newTopRow = 0;
-            }
-            this.topRow.value = newTopRow;
-            this.updateDom();
-        })
+        this.registerScrollEventListeners();
     }
 
     reflow(){
