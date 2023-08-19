@@ -4,9 +4,15 @@
 
 <script setup lang="ts">
 import { state } from '@/state';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { Editor } from '../binaryData/editor';
 const editor = new Editor();
+
+watch(state, ()=>{
+    editor.currentFile.value = state.currentFile;
+    editor.updateDom();
+    editor.redrawAll();
+})
 
 const container = ref<HTMLElement>();
 onMounted(()=>{
