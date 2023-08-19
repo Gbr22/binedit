@@ -1,6 +1,6 @@
 import type { EditorFile } from "@/EditorFile";
 import { createDom } from "./dom";
-import { TrackedVar } from "./trackedVar";
+import { DerivedVar, TrackedVar } from "./reactivity";
 import { computed, watch } from "vue";
 import { state } from "@/state";
 import { bytesPerRow, rowHeight } from "./constants";
@@ -9,25 +9,24 @@ import styles from "./styles.module.scss";
 
 export class Editor {
 
-
     viewportRowCount = new TrackedVar(0);
     topRow = new TrackedVar(0);
     currentFile = new TrackedVar<EditorFile | undefined>(undefined);
 
-    fileRowCount = computed(()=>{
-        return Math.ceil( (state.currentFile?.blob.size ?? 0) / bytesPerRow);
-    });
+    fileRowCount = new DerivedVar((currentFile)=>{
+        return Math.ceil( (currentFile.value?.blob.size ?? 0) / bytesPerRow);
+    },this.currentFile);
     
-    scrollRowCount = computed(()=>{
-        return Math.min(10000, this.fileRowCount.value);
-    })
-    
-    scrollBarType = computed(()=>{
-        if (this.fileRowCount.value > 10000){
+    scrollRowCount = new DerivedVar((fileRowCount)=>{
+        return Math.min(10000, fileRowCount.value);
+    },this.fileRowCount);
+
+    scrollBarType = new DerivedVar((fileRowCount)=>{
+        if (fileRowCount.value > 10000){
             return "virtual";
         }
         return "native";
-    })
+    },this.fileRowCount);
 
     rowMap = new Map<number, Row>();
 
@@ -106,6 +105,9 @@ export class Editor {
 
     forcefullyUpdateDom(){
         this.element.dataset["scrollType"] = `${this.scrollBarType.value}`;
+        if (this.scrollBarType.value == "virtual"){
+            this.element.scrollTop = 0;
+        }
         this.scrollView.style.setProperty('--row-count',this.scrollRowCount.value.toString());
         const top = (this.topRow.value % 1024);
         const shift = this.topRow.value - top;
@@ -129,7 +131,7 @@ export class Editor {
     }
 
     async getBytes(startByte: number): Promise<Uint8Array> {
-        const buffer = await state.currentFile?.slice(startByte, startByte+bytesPerRow);
+        const buffer = await this.currentFile.value?.slice(startByte, startByte+bytesPerRow);
         const bytes = buffer ? new Uint8Array(buffer) : new Uint8Array(0);
         return bytes;
     }
