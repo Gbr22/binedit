@@ -8,11 +8,15 @@ import { getRowIndex, toHex, type Row, type Printable, byteToPrintable } from ".
 import styles from "./styles.module.scss";
 import { registerResizeObserver } from "./resize";
 import { ImplScrollHandler, type IScrollHandler } from "./sub-classes/ScrollHandler";
+import { Implementations } from "./composition";
 
 export type EditorThis = InstanceType<typeof Editor>;
 
 export class Editor
-extends ImplScrollHandler(ImplCreateDom())
+extends Implementations
+(ImplCreateDom)
+(ImplScrollHandler)
+.cls
 {
     viewportRowCount = new TrackedVar(0);
     topRow = new TrackedVar(0);

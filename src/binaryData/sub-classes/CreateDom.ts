@@ -1,7 +1,7 @@
 import type { Editor, EditorThis } from "../editor";
 import styles from "../styles.module.scss";
 import { createVirtualScrollBar } from "../virtualScrollbar";
-import { Base, type Constructor } from "../composition";
+import { Base, Implementations, type Constructor, type ImplFun, type ReturnFunc } from "../composition";
 
 export interface ICreateDom {
     element: HTMLElement
@@ -11,8 +11,7 @@ export interface ICreateDom {
 }
 
 export function ImplCreateDom<T extends Constructor<Base>>(constructor: T = Base as any) {
-    
-    return class extends constructor implements ICreateDom {
+    const cls = class extends constructor implements ICreateDom {
         element!: HTMLElement
         scrollView!: HTMLElement
         dataView!: HTMLElement
@@ -37,4 +36,15 @@ export function ImplCreateDom<T extends Constructor<Base>>(constructor: T = Base
             createVirtualScrollBar(that);
         }
     };
+    
+    function _continue<
+        TArg extends typeof cls,
+        TReturn extends (...args: any[])=>any,
+    >(extend: (arg: TArg)=>TReturn): TReturn {
+        return extend(cls as any);
+    }
+
+    return Object.assign(_continue,{
+        cls
+    })
 }
