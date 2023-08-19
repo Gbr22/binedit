@@ -1,7 +1,7 @@
 import type { Editor, EditorThis } from "../editor";
 import styles from "../styles.module.scss";
 import { createVirtualScrollBar } from "../virtualScrollbar";
-import { Base, Implementations, type Constructor, type ImplFun, type ReturnFunc } from "../composition";
+import { Base, type Constructor, chainImpl } from "../composition";
 
 export interface ICreateDom {
     element: HTMLElement
@@ -36,15 +36,6 @@ export function ImplCreateDom<T extends Constructor<Base>>(constructor: T = Base
             createVirtualScrollBar(that);
         }
     };
-    
-    function _continue<
-        TArg extends typeof cls,
-        TReturn extends (...args: any[])=>any,
-    >(extend: (arg: TArg)=>TReturn): TReturn {
-        return extend(cls as any);
-    }
 
-    return Object.assign(_continue,{
-        cls
-    })
+    return chainImpl(cls);
 }
