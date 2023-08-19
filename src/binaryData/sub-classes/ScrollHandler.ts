@@ -1,7 +1,7 @@
 import type { EditorThis } from "../editor";
 import styles from "../styles.module.scss";
 import { createVirtualScrollBar } from "../virtualScrollbar";
-import { Base, type Constructor } from "../composition";
+import { Base, type Constructor, type ImplFun } from "../composition";
 import { rowHeight } from "../constants";
 
 export interface IScrollHandler {
@@ -9,8 +9,7 @@ export interface IScrollHandler {
 }
 
 export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = Base as any) {
-    
-    return class extends constructor implements IScrollHandler {
+    const cls = class extends constructor implements IScrollHandler {
         registerScrollEventListeners(): void {
             const that = this as any as EditorThis;
             that.element.addEventListener("scroll",()=>{
@@ -34,4 +33,15 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
             })
         }
     };
+
+    function _continue<
+        TArg extends typeof cls,
+        TReturn extends (...args: any[])=>any,
+    >(extend: (arg: TArg)=>TReturn): TReturn {
+        return extend(cls as any);
+    }
+
+    return Object.assign(_continue,{
+        cls
+    })
 }
