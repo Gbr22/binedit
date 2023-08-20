@@ -11,14 +11,12 @@ export function ImplSizeHandler<T extends Constructor<Base>>(constructor: T = Ba
             const that = this as any as EditorThis;
             const rect = that.element.getBoundingClientRect();
             this.viewportRowCount.value = Math.floor(rect.height / rowHeight);
-            that.updateDom();
         }
 
         initSizeHandler(){
             const that = this as any as EditorThis;
             const resizeObserver = new ResizeObserver((entries) => {
                 that.reflow();
-                that.updateDom();
             });
             
             resizeObserver.observe(that.element);

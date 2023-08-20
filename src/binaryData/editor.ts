@@ -8,6 +8,7 @@ import { Implementations } from "./composition";
 import { ImplSizeHandler } from "./sub-classes/SizeHandler";
 import { ImplFileHandler } from "./sub-classes/FileHandler";
 import { ImplRenderingHandler } from "./sub-classes/RenderingHandler";
+import { ImplUpdateHandler } from "./sub-classes/UpdateHandler";
 
 export type EditorThis = InstanceType<typeof Editor>;
 
@@ -18,6 +19,7 @@ extends Implementations
     (ImplSizeHandler)
     (ImplFileHandler)
     (ImplRenderingHandler)
+    (ImplUpdateHandler)
 .$
 {
     rowMap = new Map<number, Row>();
@@ -28,7 +30,7 @@ extends Implementations
         this.initDomHandler();
         this.initScrollHandler();
         this.initSizeHandler();
-        this.initRenderingHandler();
+        this.initUpdateHandler();
     }
 
     overScollTop = 0;
@@ -64,18 +66,17 @@ extends Implementations
         }
     }
 
-    recycleOrCreateRow(props:
+    async recycleOrCreateRow(props:
         { renderIndex: number, startByte: number }
     ){
-        const recycled = this.recycleRow(props);
+        const recycled = await this.recycleRow(props);
         if (!recycled){
             return this.createNewRow(props);
         }
-        console.log("recycled");
         return recycled;
     }
 
-    recycleRow(props:
+    async recycleRow(props:
         { renderIndex: number, startByte: number }
     ){
         const { renderIndex, startByte } = props;
@@ -85,12 +86,12 @@ extends Implementations
             return;
         }
     
-        this.updateRowDom(row,props);
+        await this.updateRowDom(row,props);
     
         return row;
     }
 
-    updateRowDom(row: Row, props:
+    async updateRowDom(row: Row, props:
         { renderIndex: number, startByte: number }
     ) {
         const { renderIndex, startByte } = props;
@@ -108,27 +109,26 @@ extends Implementations
         const count = toHex(startByte).padStart(8,'0');
         row.startByte.innerText = count;
     
-        this.getBytes(startByte).then((bytes)=>{
-            for (let i = 0; i < row.bytes.length; i++){
-                const byte: number | undefined = bytes[i];
-                if (byte == undefined){
-                    row.bytes[i].innerText = '';
-                    continue;
-                }
-                row.bytes[i].innerText = toHex(byte).padStart(2,'0');
+        const bytes = await this.getBytes(startByte);
+        for (let i = 0; i < row.bytes.length; i++){
+            const byte: number | undefined = bytes[i];
+            if (byte == undefined){
+                row.bytes[i].innerText = '';
+                continue;
             }
-            for (let i = 0; i < row.printables.length; i++){
-                const byte: number | undefined = bytes[i];
-                const printable: Printable | undefined = byte != undefined ? byteToPrintable(byte) : undefined;
-                if (!printable){
-                    row.printables[i].innerText = '';
-                    row.printables[i].dataset["type"] = "undefined";
-                    continue;
-                }
-                row.printables[i].innerText = printable.text;
-                row.printables[i].dataset["type"] = printable.type;
+            row.bytes[i].innerText = toHex(byte).padStart(2,'0');
+        }
+        for (let i = 0; i < row.printables.length; i++){
+            const byte: number | undefined = bytes[i];
+            const printable: Printable | undefined = byte != undefined ? byteToPrintable(byte) : undefined;
+            if (!printable){
+                row.printables[i].innerText = '';
+                row.printables[i].dataset["type"] = "undefined";
+                continue;
             }
-        })
+            row.printables[i].innerText = printable.text;
+            row.printables[i].dataset["type"] = printable.type;
+        }
     }
 
     createRowDom() {
@@ -187,12 +187,12 @@ extends Implementations
         }
     }
 
-    createNewRow(props:
+    async createNewRow(props:
         { renderIndex: number, startByte: number }
     ){
         const { renderIndex, startByte } = props;
         const row = this.createRowDom();
-        this.updateRowDom(row, props);
+        await this.updateRowDom(row, props);
     
         return row;
     }

@@ -30,7 +30,6 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
             that.element.addEventListener("scroll",()=>{
                 const scrollPercent = that.element.scrollTop / ( that.element.scrollHeight - (that.element.clientHeight / 2) );
                 that.topRow.value = Math.ceil(that.fileRowCount.value * scrollPercent);
-                that.updateDom();
             })
     
             that.element.addEventListener("wheel",(e)=>{
@@ -44,7 +43,6 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
                     newTopRow = 0;
                 }
                 that.topRow.value = newTopRow;
-                that.updateDom();
             })
         }
     };
