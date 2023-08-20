@@ -1,7 +1,4 @@
 import { ImplCreateDom } from "./sub-classes/DomHandler";
-import { DerivedVar, TrackedVar, createDependantFunction } from "./reactivity";
-import { bytesPerRow } from "./constants";
-import { getRowIndex, toHex, type Row, type Printable, byteToPrintable } from "./row";
 import { ImplScrollHandler } from "./sub-classes/ScrollHandler";
 import { Implementations } from "./composition";
 import { ImplSizeHandler } from "./sub-classes/SizeHandler";

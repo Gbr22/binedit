@@ -1,8 +1,6 @@
 import type { EditorThis } from "../editor";
 import { Base, type Constructor, chainImpl } from "../composition";
-import { DerivedVar, DidNotExecute, TrackedVar, createDependantFunction } from "../reactivity";
 import { bytesPerRow, rowHeight } from "../constants";
-import type { EditorFile } from "../EditorFile";
 import { getRowIndex, toHex, type Row, byteToPrintable, type Printable } from "../row";
 import styles from "../styles.module.scss";
 
@@ -88,7 +86,7 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
             }
 
             while (this.rows.size < that.viewportRowCount.value){
-                const row = that.createRowDom(-Infinity);
+                const row = that.createRow(-Infinity);
             }
             
             for(let renderIndex = 0; renderIndex < that.viewportRowCount.value; renderIndex++){
@@ -104,27 +102,18 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
                         let row = this.findGarbageRow();
                         if (row){
                             row.startByteNumber = startByte;
-                            await that.updateRowDom(row);
-                            this.updateRowPosition(row);
+                            await that.updateRow(row);
                         }
                     }
                 })()
                 promises.push(promise);
             }
+
             await Promise.all(promises);
         }
 
-        async updateRowDom(row: Row) {
+        async updateRow(row: Row) {
             const that = this as any as EditorThis;
-
-            const { container } = row;
-        
-            const index = getRowIndex(row.startByteNumber);
-            const top = (that.topRow.value % 1024);
-            const shift = that.topRow.value - top;
-            const shiftedIndex = index - shift;
-            container.dataset["index"] = index.toString();
-            container.style.setProperty("--index",shiftedIndex.toString());
         
             const count = toHex(row.startByteNumber).padStart(8,'0');
             row.startByte.innerText = count;
@@ -149,9 +138,11 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
                 row.printables[i].innerText = printable.text;
                 row.printables[i].dataset["type"] = printable.type;
             }
+
+            this.updateRowPosition(row);
         }
     
-        createRowDom(startByteNumber: number) {
+        createRow(startByteNumber: number) {
             const that = this as any as EditorThis;
 
             console.log("create row");

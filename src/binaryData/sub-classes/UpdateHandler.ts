@@ -1,17 +1,39 @@
 import type { EditorThis } from "../editor";
 import { Base, type Constructor, chainImpl } from "../composition";
-import { createDependantFunction } from "../reactivity";
 
-const map = new Map<string, boolean>()
+const animMap = new Map<string, boolean>()
 
 function queueAnimationFrame(key: string, fn: ()=>unknown){
-    if (map.get(key)){
+    if (animMap.get(key)){
         return;
     }
     requestAnimationFrame(()=>{
-        map.delete(key)
+        animMap.delete(key)
         fn();
     })
+}
+
+type PromiseMapItem<T> = {
+    promise: Promise<T>
+    after?: ()=>Promise<T>
+}
+
+const promiseMap = new Map<string, PromiseMapItem<unknown>>();
+
+function queueAsync<T>(key: string, fn: ()=>Promise<T>){
+    if (promiseMap.has(key)){
+        let item = promiseMap.get(key) as PromiseMapItem<T>;
+        item.after = fn;
+        return item.promise;
+    }
+    const promise = fn();
+    promise.finally(()=>{
+        promiseMap.delete(key);
+    })
+    promiseMap.set(key,{
+        promise,
+    })
+    return promise;
 }
 
 export function ImplUpdateHandler<T extends Constructor<Base>>(constructor: T = Base as any) {
@@ -22,7 +44,9 @@ export function ImplUpdateHandler<T extends Constructor<Base>>(constructor: T = 
 
             that.topRow.subscribe(()=>{
                 queueAnimationFrame("render",()=>{
-                    that.render();
+                    queueAsync("render",()=>{
+                        return that.render()
+                    });
                 })
             })
             that.viewportRowCount.subscribe(()=>{
