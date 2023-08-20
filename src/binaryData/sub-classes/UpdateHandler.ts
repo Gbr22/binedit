@@ -30,8 +30,10 @@ export function ImplUpdateHandler<T extends Constructor<Base>>(constructor: T = 
             })
             that.currentFile.subscribe(()=>{
                 that.topRow.value = 0;
+                that.rows.forEach(row=>{
+                    row.startByteNumber = -Infinity;
+                })
                 that.render();
-                that.redrawAll();
             });
         }
     };

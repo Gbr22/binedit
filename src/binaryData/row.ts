@@ -6,6 +6,7 @@ export interface Row {
     bytes: HTMLElement[]
     printables: HTMLElement[]
     startByte: HTMLElement
+    startByteNumber: number
 }
 
 export function getRowIndex(startByte: number){

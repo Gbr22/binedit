@@ -2,12 +2,15 @@ import type { Editor, EditorThis } from "../editor";
 import styles from "../styles.module.scss";
 import { createVirtualScrollBar } from "../virtualScrollbar";
 import { Base, type Constructor, chainImpl } from "../composition";
+import { TrackedVar } from "../reactivity";
 
 export function ImplCreateDom<T extends Constructor<Base>>(constructor: T = Base as any) {
     const cls = class extends constructor {
         element!: HTMLElement
         scrollView!: HTMLElement
         dataView!: HTMLElement
+
+        domRowCount = new TrackedVar(0);
         
         public initDomHandler() {
             const that = this as any as EditorThis;
