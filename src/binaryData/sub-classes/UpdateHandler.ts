@@ -13,26 +13,18 @@ function queueAnimationFrame(key: string, fn: ()=>unknown){
     })
 }
 
-type PromiseMapItem<T> = {
-    promise: Promise<T>
-    after?: ()=>Promise<T>
-}
+const promiseMap = new Map<string, Promise<unknown>>();
 
-const promiseMap = new Map<string, PromiseMapItem<unknown>>();
-
-function queueAsync<T>(key: string, fn: ()=>Promise<T>){
+function deduplicatePromise<T>(key: string, fn: ()=>Promise<T>, afterfn: ()=>unknown){
     if (promiseMap.has(key)){
-        let item = promiseMap.get(key) as PromiseMapItem<T>;
-        item.after = fn;
-        return item.promise;
+        return promiseMap.get(key) as Promise<T>;
     }
     const promise = fn();
     promise.finally(()=>{
         promiseMap.delete(key);
+        afterfn();
     })
-    promiseMap.set(key,{
-        promise,
-    })
+    promiseMap.set(key,promise);
     return promise;
 }
 
@@ -43,9 +35,15 @@ export function ImplUpdateHandler<T extends Constructor<Base>>(constructor: T = 
             const that = this as any as EditorThis;
 
             that.topRow.subscribe(()=>{
+                console.log("toprow",that.topRow.value);
                 queueAnimationFrame("render",()=>{
-                    queueAsync("render",()=>{
+                    let topRow = that.topRow.value;
+                    deduplicatePromise("render",()=>{
                         return that.render()
+                    },()=>{
+                        if (that.topRow.value != topRow){
+                            that.render();
+                        }
                     });
                 })
             })
