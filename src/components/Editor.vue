@@ -10,8 +10,6 @@ const editor = new Editor();
 
 watch(state, ()=>{
     editor.currentFile.value = state.currentFile;
-    editor.updateDom();
-    editor.redrawAll();
 })
 
 const container = ref<HTMLElement>();

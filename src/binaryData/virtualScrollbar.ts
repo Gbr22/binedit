@@ -52,8 +52,6 @@ export function createVirtualScrollBar(editor: Editor){
         const percent = diff/height + scrollStart.scrollPercent;
         scrollPercent = Math.max(0,Math.min(percent,1));
         editor.topRow.value = Math.ceil(editor.fileRowCount.value * scrollPercent);
-        console.log("scroll",scrollPercent,editor.topRow.value,editor.fileRowCount.value);
-        editor.updateDom();
         scrollBar.style.setProperty("--scroll-percent",scrollPercent.toString());
     })
     window.addEventListener("mouseup",()=>{
