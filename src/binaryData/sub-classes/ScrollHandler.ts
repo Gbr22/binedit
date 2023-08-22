@@ -10,16 +10,10 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
         scrollRowCount!: DerivedVar<number>;
         scrollBarType!: DerivedVar<"virtual" | "native">;
 
-        desiredTopRow!: TrackedVar<number>;
-        intermediateTopRow!: TrackedVar<number>;
-        renderedTopRow!: TrackedVar<number>;
+        
 
         initScrollHandler(): void {
             const that = this as any as EditorThis;
-
-            this.desiredTopRow = new TrackedVar(0);
-            this.intermediateTopRow = new TrackedVar(0);
-            this.renderedTopRow = new TrackedVar(0);
 
             this.scrollRowCount = new DerivedVar(()=>{
                 return Math.min(10000, that.fileRowCount.value);
@@ -34,7 +28,9 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
 
             that.element.addEventListener("scroll",()=>{
                 const scrollPercent = that.element.scrollTop / ( that.element.scrollHeight - (that.element.clientHeight / 2) );
-                that.desiredTopRow.value = Math.ceil(that.fileRowCount.value * scrollPercent);
+                that.desiredState.value = that.desiredState.value.with({
+                    topRow: Math.ceil(that.fileRowCount.value * scrollPercent)
+                })
             })
     
             that.element.addEventListener("wheel",(e)=>{
@@ -43,11 +39,13 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
                 }
                 const delta = e.deltaY;
                 const deltaRow = Math.round(delta / rowHeight);
-                let newTopRow = that.desiredTopRow.value + deltaRow;
+                let newTopRow = that.desiredState.value.topRow + deltaRow;
                 if (newTopRow < 0){
                     newTopRow = 0;
                 }
-                that.desiredTopRow.value = newTopRow;
+                that.desiredState.value = that.desiredState.value.with({
+                    topRow: newTopRow
+                });
             })
         }
     };

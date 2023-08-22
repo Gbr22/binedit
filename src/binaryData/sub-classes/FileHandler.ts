@@ -32,7 +32,7 @@ export function ImplFileHandler<T extends Constructor<Base>>(constructor: T = Ba
         getBytes(startByte: number): Uint8Array {
             const that = this as any as EditorThis;
 
-            const index = startByte - that.intermediateTopRow.value * bytesPerRow;
+            const index = startByte - that.intermediateState.value.topRow * bytesPerRow;
             const buffer = that.dataToRender.value.slice(index, index + bytesPerRow);
             return new Uint8Array(buffer);
         }
