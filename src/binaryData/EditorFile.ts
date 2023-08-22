@@ -51,6 +51,6 @@ export class EditorFile {
         const sectionStart = startByte - startInSection;
 
         let buffer: ArrayBuffer | undefined = await this.getSection(sectionStart);
-        return buffer?.slice(startInSection,length);
+        return buffer?.slice(startInSection,startInSection+length);
     }
 }

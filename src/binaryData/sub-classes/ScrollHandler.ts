@@ -9,12 +9,17 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
     const cls = class extends constructor {
         scrollRowCount!: DerivedVar<number>;
         scrollBarType!: DerivedVar<"virtual" | "native">;
-        topRow!: TrackedVar<number>;
+
+        desiredTopRow!: TrackedVar<number>;
+        intermediateTopRow!: TrackedVar<number>;
+        renderedTopRow!: TrackedVar<number>;
 
         initScrollHandler(): void {
             const that = this as any as EditorThis;
 
-            this.topRow = new TrackedVar(0);
+            this.desiredTopRow = new TrackedVar(0);
+            this.intermediateTopRow = new TrackedVar(0);
+            this.renderedTopRow = new TrackedVar(0);
 
             this.scrollRowCount = new DerivedVar(()=>{
                 return Math.min(10000, that.fileRowCount.value);
@@ -29,7 +34,7 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
 
             that.element.addEventListener("scroll",()=>{
                 const scrollPercent = that.element.scrollTop / ( that.element.scrollHeight - (that.element.clientHeight / 2) );
-                that.topRow.value = Math.ceil(that.fileRowCount.value * scrollPercent);
+                that.desiredTopRow.value = Math.ceil(that.fileRowCount.value * scrollPercent);
             })
     
             that.element.addEventListener("wheel",(e)=>{
@@ -38,11 +43,11 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
                 }
                 const delta = e.deltaY;
                 const deltaRow = Math.round(delta / rowHeight);
-                let newTopRow = that.topRow.value + deltaRow;
+                let newTopRow = that.desiredTopRow.value + deltaRow;
                 if (newTopRow < 0){
                     newTopRow = 0;
                 }
-                that.topRow.value = newTopRow;
+                that.desiredTopRow.value = newTopRow;
             })
         }
     };

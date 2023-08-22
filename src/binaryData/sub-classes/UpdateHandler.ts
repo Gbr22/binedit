@@ -1,5 +1,6 @@
 import type { EditorThis } from "../editor";
 import { Base, type Constructor, chainImpl } from "../composition";
+import { bytesPerRow } from "../constants";
 
 const animMap = new Map<string, boolean>()
 
@@ -34,27 +35,30 @@ export function ImplUpdateHandler<T extends Constructor<Base>>(constructor: T = 
         initUpdateHandler(){
             const that = this as any as EditorThis;
 
-            that.topRow.subscribe(()=>{
-                console.log("toprow",that.topRow.value);
-                queueAnimationFrame("render",()=>{
-                    let topRow = that.topRow.value;
-                    deduplicatePromise("render",()=>{
-                        return that.render()
-                    },()=>{
-                        if (that.topRow.value != topRow){
-                            that.render();
-                        }
-                    });
+            that.desiredTopRow.subscribe(()=>{
+                that.intermediateTopRow.value = that.desiredTopRow.value;
+            })
+            that.intermediateTopRow.subscribe(async ()=>{
+                that.intermediateTopRow.lock();
+                that.dataToRender.value = await that.getPage(that.intermediateTopRow.value * bytesPerRow);
+            })
+            that.dataToRender.subscribe(()=>{
+                requestAnimationFrame(()=>{
+                    that.render();
                 })
+            })
+            that.renderedTopRow.subscribe(()=>{
+                that.intermediateTopRow.unlock();
+                that.intermediateTopRow.value = that.desiredTopRow.value;
             })
             that.viewportRowCount.subscribe(()=>{
                 that.render();
             })
             that.currentFile.subscribe(()=>{
-                that.topRow.value = 0;
                 that.rows.forEach(row=>{
                     row.startByteNumber = -Infinity;
                 })
+                that.desiredTopRow.value = 0;
                 that.render();
             });
         }
