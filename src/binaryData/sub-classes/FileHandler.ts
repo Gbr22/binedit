@@ -21,7 +21,8 @@ export function ImplFileHandler<T extends Constructor<Base>>(constructor: T = Ba
             if (!file){
                 return new ArrayBuffer(length);
             }
-            const buffer = await file.slice(startByte,length);
+            const blob = await file.blob.slice(startByte,startByte+length);
+            const buffer = await blob.arrayBuffer();
             if (!buffer){
                 return new ArrayBuffer(length);
             }
