@@ -1,9 +1,14 @@
 export class TrackedVar<V> {
     #_value: V
+    #_isLocked: boolean = false
+
     get value(){
         return this.#_value;
     }
     set value(n){
+        if (this.#_isLocked){
+            return;
+        }
         if (this.#_value == n){
             return;
         }
@@ -16,6 +21,18 @@ export class TrackedVar<V> {
     lastChanged: number
 
     subs = new Set<()=>unknown>()
+
+    get locked(){
+        return this.#_isLocked;
+    }
+
+    lock(){
+        this.#_isLocked = true;
+    }
+
+    unlock(){
+        this.#_isLocked = false;
+    }
 
     subscribe(fn: ()=>unknown){
         this.subs.add(fn);

@@ -24,15 +24,15 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
             const that = this as any as EditorThis;
 
             const renderIndex = this.getRenderIndex(row.startByteNumber);
-            const shiftedIndex = renderIndex + that.topRow.value - this.getShift();
+            const shiftedIndex = renderIndex + that.intermediateTopRow.value - this.getShift();
             row.container.style.setProperty('--index',shiftedIndex.toString());
         }
 
         getShift(): number {
             const that = this as any as EditorThis;
 
-            const top = (that.topRow.value % 1024);
-            const shift = that.topRow.value - top;
+            const top = (that.intermediateTopRow.value % 1024);
+            const shift = that.intermediateTopRow.value - top;
             return shift;
         }
 
@@ -54,7 +54,7 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
             const that = this as any as EditorThis;
 
             const index = getRowIndex(startByte);
-            const renderIndex = index - that.topRow.value;
+            const renderIndex = index - that.intermediateTopRow.value;
             return renderIndex;
         }
 
@@ -64,7 +64,7 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
             return index >= 0 && index < that.viewportRowCount.value;
         }
 
-        async render(){
+        render(){
             const that = this as any as EditorThis;
 
             that.element.dataset["scrollType"] = `${that.scrollBarType.value}`;
@@ -73,8 +73,7 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
             }
             that.scrollView.style.setProperty('--row-count',that.scrollRowCount.value.toString());
             
-            that.dataView.style.setProperty('--top',(that.topRow.value - this.getShift()).toString());
-            const promises: Promise<void>[] = [];
+            that.dataView.style.setProperty('--top',(that.intermediateTopRow.value - this.getShift()).toString());
 
             while(this.rows.size > that.viewportRowCount.value){
                 const row = that.findGarbageRow();
@@ -90,35 +89,32 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
             }
             
             for(let renderIndex = 0; renderIndex < that.viewportRowCount.value; renderIndex++){
-                const promise = (async ()=>{
-                    const fileIndex = that.topRow.value + renderIndex;
-                    const startByte = fileIndex * bytesPerRow;
-                    
-                    const row = this.findRow(startByte);
+                const fileIndex = that.intermediateTopRow.value + renderIndex;
+                const startByte = fileIndex * bytesPerRow;
+                
+                const row = this.findRow(startByte);
+                if (row){
+                    this.updateRowPosition(row);
+                }
+                else {
+                    let row = this.findGarbageRow();
                     if (row){
-                        this.updateRowPosition(row);
+                        row.startByteNumber = startByte;
+                        that.updateRow(row);
                     }
-                    else {
-                        let row = this.findGarbageRow();
-                        if (row){
-                            row.startByteNumber = startByte;
-                            await that.updateRow(row);
-                        }
-                    }
-                })()
-                promises.push(promise);
+                }
             }
 
-            await Promise.all(promises);
+            that.renderedTopRow.value = that.intermediateTopRow.value;
         }
 
-        async updateRow(row: Row) {
+        updateRow(row: Row) {
             const that = this as any as EditorThis;
         
             const count = toHex(row.startByteNumber).padStart(8,'0');
             row.startByte.innerText = count;
         
-            const bytes = await that.getBytes(row.startByteNumber);
+            const bytes = that.getBytes(row.startByteNumber);
             for (let i = 0; i < row.bytes.length; i++){
                 const byte: number | undefined = bytes[i];
                 if (byte == undefined){
