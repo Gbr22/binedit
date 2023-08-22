@@ -24,15 +24,15 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
             const that = this as any as EditorThis;
 
             const renderIndex = this.getRenderIndex(row.startByteNumber);
-            const shiftedIndex = renderIndex + that.intermediateTopRow.value - this.getShift();
+            const shiftedIndex = renderIndex + that.intermediateState.value.topRow - this.getShift();
             row.container.style.setProperty('--index',shiftedIndex.toString());
         }
 
         getShift(): number {
             const that = this as any as EditorThis;
 
-            const top = (that.intermediateTopRow.value % 1024);
-            const shift = that.intermediateTopRow.value - top;
+            const top = (that.intermediateState.value.topRow % 1024);
+            const shift = that.intermediateState.value.topRow - top;
             return shift;
         }
 
@@ -54,7 +54,7 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
             const that = this as any as EditorThis;
 
             const index = getRowIndex(startByte);
-            const renderIndex = index - that.intermediateTopRow.value;
+            const renderIndex = index - that.intermediateState.value.topRow;
             return renderIndex;
         }
 
@@ -73,7 +73,7 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
             }
             that.scrollView.style.setProperty('--row-count',that.scrollRowCount.value.toString());
             
-            that.dataView.style.setProperty('--top',(that.intermediateTopRow.value - this.getShift()).toString());
+            that.dataView.style.setProperty('--top',(that.intermediateState.value.topRow - this.getShift()).toString());
 
             while(this.rows.size > that.viewportRowCount.value){
                 const row = that.findGarbageRow();
@@ -89,7 +89,7 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
             }
             
             for(let renderIndex = 0; renderIndex < that.viewportRowCount.value; renderIndex++){
-                const fileIndex = that.intermediateTopRow.value + renderIndex;
+                const fileIndex = that.intermediateState.value.topRow + renderIndex;
                 const startByte = fileIndex * bytesPerRow;
                 
                 const row = this.findRow(startByte);
@@ -105,7 +105,7 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
                 }
             }
 
-            that.renderedTopRow.value = that.intermediateTopRow.value;
+            that.renderedState.value = that.intermediateState.value;
         }
 
         updateRow(row: Row) {

@@ -1,3 +1,22 @@
+
+
+class StructClass<V> {
+    with(v: Partial<V>): Struct<V> {
+        const o = Object.assign({},this,v) as V;
+        return struct(o) as Struct<V>;
+    }
+}
+
+export type Struct<V> = Readonly<V & {
+    with(v: Partial<V>): Struct<V> 
+}>;
+
+export function struct<V>(v: V): Struct<V> {
+    const s = new StructClass<V>()
+    const o = Object.assign(s,v);
+    return Object.freeze(o);
+}
+
 export class TrackedVar<V> {
     #_value: V
     #_isLocked: boolean = false
