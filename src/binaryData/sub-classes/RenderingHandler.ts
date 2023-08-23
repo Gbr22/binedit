@@ -50,9 +50,9 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
 
             that.canvas.width = that.intermediateState.value.width;
             that.canvas.height = that.intermediateState.value.height;
-            that.canvas.style.setProperty("--device-pixel-ratio",window.devicePixelRatio.toString());
+            that.canvas.style.setProperty("--device-pixel-ratio",window.devicePixelRatio.toString())
 
-            ctx.fillStyle = "#111111"
+            ctx.fillStyle = "#1F1F1F"
             ctx.fillRect(0,0,canvas.width,canvas.height);
 
             {
@@ -214,9 +214,9 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
             let color = "#565656";
 
             if (printable.type == "ascii"){
-                color = "#0074D9"
+                color = "#5ac6f0"
             } else if (printable.type == "control"){
-                color = "#3D9970";
+                color = "#CE834A";
             }
 
             ctx.fillStyle = color;
