@@ -34,12 +34,16 @@ function deduplicatePromise<T>(key: string, fn: ()=>Promise<T>, afterfn: ()=>unk
 export interface State {
     topRow: number
     file: EditorFile | undefined
+    width: number
+    height: number
 }
 
 function createDefaultState(): Struct<State> {
     return struct({
         topRow: 0,
-        file: undefined
+        file: undefined,
+        width: 0,
+        height: 0,
     })
 }
 
@@ -76,9 +80,9 @@ export function ImplUpdateHandler<T extends Constructor<Base>>(constructor: T = 
                 that.rows.forEach(row=>{
                     row.startByteNumber = -Infinity;
                 })
-                that.desiredState.value = struct({
+                that.desiredState.value = that.desiredState.value.with({
                     topRow: 0,
-                    file: that.currentFile.value
+                    file: that.currentFile.value,
                 });
                 that.render();
             });
