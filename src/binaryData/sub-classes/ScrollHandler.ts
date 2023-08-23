@@ -29,8 +29,8 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
                 return "native";
             },that.fileRowCount);
 
-            that.element.addEventListener("scroll",()=>{
-                const scrollPercent = that.element.scrollTop / ( that.element.scrollHeight - (that.element.clientHeight / 2) );
+            that.scrollContainer.addEventListener("scroll",()=>{
+                const scrollPercent = that.scrollContainer.scrollTop / ( that.scrollContainer.scrollHeight - (that.scrollContainer.clientHeight / 2) );
                 that.desiredState.value = that.desiredState.value.with({
                     topRow: Math.ceil(that.fileRowCount.value * scrollPercent)
                 })
@@ -115,7 +115,13 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
                 const { topRow, file } = that.desiredState.value;
                 const percent = file ? ( (topRow * bytesPerRow) / file.blob.size ) : 0;
                 scrollPercent = Math.max(0,Math.min(percent,1));
-                scrollBar.style.setProperty("--scroll-percent",scrollPercent.toString());
+                if (that.scrollBarType.value == "virtual"){
+                    scrollBar.style.setProperty("--scroll-percent",scrollPercent.toString());
+                }
+            })
+
+            this.scrollRowCount.subscribe(()=>{
+                that.scrollView.style.setProperty('--row-count',that.scrollRowCount.value.toString());
             })
         }
     };

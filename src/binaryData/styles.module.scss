@@ -1,14 +1,24 @@
+$column-count: 16;
+$row-height: 16px;
+$byte-width: 24px;
+$bytes-width: $byte-width * $column-count;
+$char-width: 11px;
+$chars-width: $char-width * $column-count;
+$count-width: 80px;
+
 .container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     outline: 1px solid red;
     background-color: #111111;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
+    contain: strict;
     display: grid;
-    position: relative;
     --row-height: 16px;
     font-family: monospace;
-    max-height: 100%;
-    height: 100%;
     font-size: 14px;
 
     &[data-scroll-type="virtual"]{
@@ -22,35 +32,59 @@
         }
     }
 }
-.data-view {
-    position: sticky;
+.scroll-container {
+    contain: strict;
+    overflow-x: hidden;
+    overflow-y: auto;
+    position: absolute;
     top: 0;
-    height: 100%;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    contain: strict;
+    z-index: 105;
+}
+.data-container {
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    white-space: nowrap;
+    contain: strict;
+    z-index: 106;
+    pointer-events: none;
+}
+.data-view {
+    position: fixed;
+    top: 0;
     width: 100%;
-    --delta: 0;
-    --top: 0;
-    transform: translateY(calc(-1 * var(--top) * var(--row-height)));
+    transform: translateY(0);
+    will-change: transform;
 }
 .scroll-view {
     height: calc(var(--row-count) * var(--row-height));
     width: 100%;
     content: '';
     position: absolute;
-    pointer-events: none;
 }
 .scroll-bar {
     --scroll-bar-width: 16px;
     --scroll-handle-size: 5vh;
     display: none;
     position: absolute;
-    height: 100%;
     right: 0;
     top: 0;
+    bottom: 0;
     width: 16px;
     background-color: #242424;
     grid-template-rows: var(--scroll-bar-width) 1fr var(--scroll-handle-size) var(--scroll-bar-width);
     flex-direction: column;
+    contain: strict;
     --scroll-percent: 0;
+
+    z-index: 107;
 
     button {
         border: none;
@@ -80,14 +114,14 @@
     height: 5vh;
 }
 .row {
+    contain: strict;
     position: absolute;
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    height: var(--row-height);
     top: 0;
-    transform: translateY(calc(var(--row-height) * var(--index)));
     left: 0;
+    transform: translateY(0px);
+    width: 800px;
+    height: $row-height;
+    will-change: transform;
     overflow: hidden;
     white-space: nowrap;
 
@@ -108,39 +142,70 @@
     }
 
     .count {
+        white-space: nowrap;
         background-color: #1a1a1a;
-        width: 80px;
-        text-align: center;
+        width: $count-width;
+        height: $row-height;
+        text-align: right;
         color: #c8c8c8;
+        overflow: hidden;
+        position: absolute;
+        left: 0;
+        top: 0;
+        contain: strict;
+        contain-intrinsic-width: $count-width;
+        contain-intrinsic-height: $row-height;
     }
     .list {
-        --item-size: 24px;
-        display: flex;
-        box-sizing: content-box;
-        padding: 0 5px;
-        width: calc(var(--item-size) * 16);
+        position: absolute;
+        top: 0;
+        contain: strict;
+        left: $count-width;
+        width: $bytes-width;
+        height: $row-height;
         
         & > * {
-            height: 100%;
-            width: var(--item-size);
+            white-space: nowrap;
+            position: absolute;
+            contain: strict;
+            overflow: hidden;
+            height: $row-height;
+            width: $byte-width;
+            contain-intrinsic-width: $byte-width;
+            contain-intrinsic-height: $row-height;
 
             color: #a3a3a3;
+
+            @for $i from 1 through $column-count {
+                &:nth-child(#{$i}) {
+                    left: ($i - 1) * $byte-width;
+                }
+            }
         }
+        
         & > *:nth-child(2n) {
             color: #c8c8c8;
         }
     }
     .text {
-        --item-size: 11px;
-        display: flex;
-        flex-direction: row;
-        width: calc(var(--item-size) * 16);
+        position: absolute;
+        top: 0;
+        left: $count-width + $bytes-width;
+        contain: strict;
+        width: $chars-width;
+        height: $row-height;
         overflow: hidden;
 
         & > * {
-            width: var(--item-size);
+            white-space: nowrap;
+            position: absolute;
+            contain: strict;
             overflow: hidden;
-            height: 100%;
+            width: $char-width;
+            
+            height: $row-height;
+            contain-intrinsic-width: $char-width;
+            contain-intrinsic-height: $row-height;
 
             color: #565656;
 
@@ -150,6 +215,12 @@
             &[data-type="control"] {
                 color: #3D9970;
                 font-size: 17px;
+            }
+
+            @for $i from 1 through $column-count {
+                &:nth-child(#{$i}) {
+                    left: ($i - 1) * $char-width;
+                }
             }
         }
     }
