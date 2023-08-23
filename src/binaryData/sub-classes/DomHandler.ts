@@ -6,8 +6,10 @@ import { TrackedVar } from "../reactivity";
 export function ImplCreateDom<T extends Constructor<Base>>(constructor: T = Base as any) {
     const cls = class extends constructor {
         element!: HTMLElement
-        scrollView!: HTMLElement
-        dataView!: HTMLElement
+        canvasContainer = document.createElement("div")
+        scrollView = document.createElement("div")
+        canvas = document.createElement("canvas")
+        ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D 
 
         domRowCount = new TrackedVar(0);
         
@@ -17,17 +19,18 @@ export function ImplCreateDom<T extends Constructor<Base>>(constructor: T = Base
             const container = document.createElement("div");
             container.classList.add(styles.container);
 
-            const dataView = document.createElement("div");
-            dataView.classList.add(styles["data-view"]);
-            container.appendChild(dataView);
-
-            const scrollView = document.createElement("div");
+            const scrollView = this.scrollView;
             scrollView.classList.add(styles["scroll-view"]);
             container.appendChild(scrollView);
 
+            this.canvasContainer.classList.add(styles["canvas-container"]);
+            container.appendChild(this.canvasContainer);
+
+            this.canvas.classList.add(styles["canvas"]);
+            this.canvasContainer.appendChild(this.canvas);
+
             this.element = container;
             this.scrollView = scrollView;
-            this.dataView = dataView;
         }
     };
 

@@ -8,25 +8,25 @@ export function ImplFileHandler<T extends Constructor<Base>>(constructor: T = Ba
     const cls = class extends constructor {
         currentFile = new TrackedVar<EditorFile | undefined>(undefined);
 
-        dataToRender = new TrackedVar<ArrayBuffer>(new ArrayBuffer(0));
+        dataToRender = new TrackedVar<Uint8Array>(new Uint8Array(0));
 
         fileRowCount = new DerivedVar(()=>{
             return Math.ceil( (this.currentFile.value?.blob.size ?? 0) / bytesPerRow);
         },this.currentFile);
 
-        async getPage(startByte: number): Promise<ArrayBuffer> {
+        async getPage(startByte: number): Promise<Uint8Array> {
             const that = this as any as EditorThis;
             const file = that.currentFile.value;
             const length = that.viewportRowCount.value * bytesPerRow;
             if (!file){
-                return new ArrayBuffer(length);
+                return new Uint8Array();
             }
             const blob = await file.blob.slice(startByte,startByte+length);
             const buffer = await blob.arrayBuffer();
             if (!buffer){
-                return new ArrayBuffer(length);
+                return new Uint8Array();
             }
-            return buffer;
+            return new Uint8Array(buffer);
         }
         
         getBytes(startByte: number): Uint8Array {
@@ -35,6 +35,12 @@ export function ImplFileHandler<T extends Constructor<Base>>(constructor: T = Ba
             const index = startByte - that.intermediateState.value.topRow * bytesPerRow;
             const buffer = that.dataToRender.value.slice(index, index + bytesPerRow);
             return new Uint8Array(buffer);
+        }
+
+        getByte(i: number): number | undefined {
+            const that = this as any as EditorThis;
+
+            return that.dataToRender.value[i];
         }
     };
 
