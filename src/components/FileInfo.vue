@@ -6,8 +6,8 @@
         </div>
         <div>File size</div>
         <div>
-            {{ formatNumber(state.currentFile.blob.size) }} bytes
-            ({{ formatUnit(state.currentFile.blob.size) }})
+            {{ formatNumber(state.currentFile.file.size) }} bytes
+            ({{ formatUnit(state.currentFile.file.size) }})
         </div>
     </div>
 </template>

@@ -1,9 +1,9 @@
 export class EditorFile {
     name: string
-    blob: Blob
+    file: File
     
     constructor(file: File){
         this.name = file.name;
-        this.blob = file;
+        this.file = file;
     }
 }

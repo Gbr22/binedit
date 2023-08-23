@@ -6,6 +6,9 @@
             :class="{active: state.currentFile == file}"
             @click="openFile(file)"
             @mouseup="onClick($event,file)"
+            @dragstart="onDragStart($event,file)"
+            @drop="onDrop($event,file)"
+            @dragover="onDragOver($event,file)"
         >
             <div class="text">{{ file.name }}</div>
             <button
@@ -32,6 +35,19 @@ function onClick(event: MouseEvent, file: EditorFile){
         closeFile(file);
     }
 }
+
+let dragFile: EditorFile | undefined;
+
+function onDrop(event: MouseEvent, targetFile: EditorFile){
+    event.preventDefault();
+    if (dragFile){
+        const sourceIndex = state.files.findIndex(e=>e===dragFile);
+        const targetIndex = state.files.findIndex(e=>e===targetFile);
+        state.files[sourceIndex] = targetFile;
+        state.files[targetIndex] = dragFile;
+    }
+    dragFile = undefined;
+}
 function closeFile(file: EditorFile){
     const index = state.files.findIndex(e=>e === file);
     state.files.splice(index,1);
@@ -39,6 +55,19 @@ function closeFile(file: EditorFile){
         state.currentFile = undefined;
     }
 }
+
+function onDragStart(event: DragEvent, file: EditorFile){
+    if (event.dataTransfer){
+        event.dataTransfer.effectAllowed = "copy";
+        event.dataTransfer.clearData();
+        event.dataTransfer.items.add(file.file);
+        dragFile = file;
+    }
+}
+function onDragOver(event: DragEvent, file: EditorFile){
+    event.preventDefault();
+}
+
 </script>
 
 <style scoped lang="scss">
@@ -73,6 +102,7 @@ function closeFile(file: EditorFile){
             max-width: 100px;
             font-size: 13px;
             color: #959595;
+            pointer-events: none;
         }
         .close {
             position: relative;

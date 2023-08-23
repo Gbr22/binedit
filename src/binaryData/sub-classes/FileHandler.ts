@@ -11,7 +11,7 @@ export function ImplFileHandler<T extends Constructor<Base>>(constructor: T = Ba
         dataToRender = new TrackedVar<Uint8Array>(new Uint8Array(0));
 
         fileRowCount = new DerivedVar(()=>{
-            return Math.ceil( (this.currentFile.value?.blob.size ?? 0) / bytesPerRow);
+            return Math.ceil( (this.currentFile.value?.file.size ?? 0) / bytesPerRow);
         },this.currentFile);
 
         async getPage(startByte: number): Promise<Uint8Array> {
@@ -21,7 +21,7 @@ export function ImplFileHandler<T extends Constructor<Base>>(constructor: T = Ba
             if (!file){
                 return new Uint8Array();
             }
-            const blob = await file.blob.slice(startByte,startByte+length);
+            const blob = await file.file.slice(startByte,startByte+length);
             const buffer = await blob.arrayBuffer();
             if (!buffer){
                 return new Uint8Array();

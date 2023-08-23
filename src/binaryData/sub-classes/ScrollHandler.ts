@@ -113,7 +113,7 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
 
             that.desiredState.subscribe(()=>{
                 const { topRow, file } = that.desiredState.value;
-                const percent = file ? ( (topRow * bytesPerRow) / file.blob.size ) : 0;
+                const percent = file ? ( (topRow * bytesPerRow) / file.file.size ) : 0;
                 scrollPercent = Math.max(0,Math.min(percent,1));
                 scrollBar.style.setProperty("--scroll-percent",scrollPercent.toString());
             })
