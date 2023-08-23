@@ -7,7 +7,7 @@ export function ImplSizeHandler<T extends Constructor<Base>>(constructor: T = Ba
     const cls = class extends constructor {
         viewportRowCount = new TrackedVar(0);
         
-        reflow(){
+        resize(){
             const that = this as any as EditorThis;
             const rect = that.element.getBoundingClientRect();
             this.viewportRowCount.value = Math.floor(rect.height / rowHeight);
@@ -17,10 +17,22 @@ export function ImplSizeHandler<T extends Constructor<Base>>(constructor: T = Ba
             })
         }
 
+        toValidTopRow(topRow: number){
+            if (topRow < 0){
+                return 0;
+            }
+            const that = this as any as EditorThis;
+            const maxRow = that.fileRowCount.value - Math.floor(that.viewportRowCount.value / 2);
+            if (topRow > maxRow){
+                return maxRow;
+            }
+            return topRow;
+        }
+
         initSizeHandler(){
             const that = this as any as EditorThis;
             const resizeObserver = new ResizeObserver((entries) => {
-                that.reflow();
+                that.resize();
             });
             
             resizeObserver.observe(that.element);

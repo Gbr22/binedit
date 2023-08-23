@@ -8,6 +8,7 @@
     "paths": {
       "@/*": ["./src/*"]
     },
+    "lib": ["DOM", "es2022"],
     "experimentalDecorators": true
   }
 }
