@@ -25,7 +25,7 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
 
             const renderIndex = this.getRenderIndex(row.startByteNumber);
             const shiftedIndex = renderIndex + that.intermediateState.value.topRow - this.getShift();
-            row.container.style.setProperty('--index',shiftedIndex.toString());
+            row.container.style.transform = `translateY(${rowHeight * shiftedIndex}px)`;
         }
 
         getShift(): number {
@@ -71,9 +71,8 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
             if (that.scrollBarType.value == "virtual"){
                 that.element.scrollTop = 0;
             }
-            that.scrollView.style.setProperty('--row-count',that.scrollRowCount.value.toString());
             
-            that.dataView.style.setProperty('--top',(that.intermediateState.value.topRow - this.getShift()).toString());
+            that.dataView.style.transform = `translateY(-${(that.intermediateState.value.topRow - this.getShift()) * rowHeight}px)`;
 
             while(this.rows.size > that.viewportRowCount.value){
                 const row = that.findGarbageRow();
