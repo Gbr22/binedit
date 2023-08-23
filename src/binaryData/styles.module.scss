@@ -59,6 +59,15 @@
     display: grid;
     place-content: center;
     color: #959595;
+    background-color: transparent;
+
+    transition: color 0.3s ease;
+
+    &:hover {
+        color: white;
+    }
+
+    z-index: 1;
 
     svg {
         width: 100%;
@@ -75,82 +84,14 @@
     background-color: #484848;
     width: 12px;
     height: 5vh;
-}
-.row {
-    position: absolute;
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    height: var(--row-height);
-    top: 0;
-    transform: translateY(calc(var(--row-height) * var(--index)));
-    left: 0;
-    overflow: hidden;
-    white-space: nowrap;
+    
+    transition: background-color 0.2s ease;
 
-    * {
-        white-space: pre;
-        overflow: hidden;
-        -webkit-user-select: none;
-        user-select: none;
-        -webkit-touch-callout: none;
-    }
-
-    button {
-        outline: none;
-        border: none;
-        background-color: transparent;
-        font-family: inherit;
-        font-size: inherit;
-    }
-
-    .count {
-        background-color: #1a1a1a;
-        width: 80px;
-        text-align: center;
-        color: #c8c8c8;
-    }
-    .list {
-        --item-size: 24px;
-        display: flex;
-        box-sizing: content-box;
-        padding: 0 5px;
-        width: calc(var(--item-size) * 16);
-        
-        & > * {
-            height: 100%;
-            width: var(--item-size);
-
-            color: #a3a3a3;
-        }
-        & > *:nth-child(2n) {
-            color: #c8c8c8;
-        }
-    }
-    .text {
-        --item-size: 11px;
-        display: flex;
-        flex-direction: row;
-        width: calc(var(--item-size) * 16);
-        overflow: hidden;
-
-        & > * {
-            width: var(--item-size);
-            overflow: hidden;
-            height: 100%;
-
-            color: #565656;
-
-            &[data-type="ascii"] {
-                color: #0074D9
-            }
-            &[data-type="control"] {
-                color: #3D9970;
-                font-size: 17px;
-            }
-        }
+    &:hover, &:active {
+        background-color: #666666;
     }
 }
+
 .canvas-container {
     position: sticky;
     top: 0;

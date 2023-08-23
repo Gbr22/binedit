@@ -3,12 +3,16 @@
         <button
             class="tab"
             v-for="file in state.files" draggable="true"
-            :class="{active: state.currentFile == file}"
+            :class="{
+                'drop-target': file == dropTarget,
+                active: state.currentFile == file
+            }"
             @click="openFile(file)"
             @mouseup="onClick($event,file)"
             @dragstart="onDragStart($event,file)"
             @drop="onDrop($event,file)"
             @dragover="onDragOver($event,file)"
+            @dragend="onDragEnd()"
         >
             <div class="text">{{ file.name }}</div>
             <button
@@ -18,13 +22,20 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </button>
-        <div class="space"></div>
+        <div class="space"
+            :class="{
+                'drop-target': dropTarget == 'Space',
+            }"
+            @drop="onDrop($event,'Space')"
+            @dragover="onDragOver($event,'Space')"
+        ></div>
     </div>
 </template>
 
 <script setup lang="ts">
 import type { EditorFile } from '@/binaryData/EditorFile';
 import { state } from '@/state';
+import { ref } from 'vue';
 
 function openFile(file: EditorFile){
     state.currentFile = file;
@@ -36,14 +47,18 @@ function onClick(event: MouseEvent, file: EditorFile){
     }
 }
 
-let dragFile: EditorFile | undefined;
+type DragTarget = EditorFile | "Space";
 
-function onDrop(event: MouseEvent, targetFile: EditorFile){
+let dragFile: EditorFile | undefined;
+let dropTarget = ref<DragTarget | undefined>();
+
+function onDrop(event: MouseEvent, dragTarget: DragTarget){
     event.preventDefault();
     if (dragFile){
+        const tragetFile = dragTarget == "Space" ? state.files.at(-1) as EditorFile : dragTarget;
         const sourceIndex = state.files.findIndex(e=>e===dragFile);
-        const targetIndex = state.files.findIndex(e=>e===targetFile);
-        state.files[sourceIndex] = targetFile;
+        const targetIndex = state.files.findIndex(e=>e===tragetFile);
+        state.files[sourceIndex] = tragetFile;
         state.files[targetIndex] = dragFile;
     }
     dragFile = undefined;
@@ -64,8 +79,13 @@ function onDragStart(event: DragEvent, file: EditorFile){
         dragFile = file;
     }
 }
-function onDragOver(event: DragEvent, file: EditorFile){
+function onDragOver(event: DragEvent, file: DragTarget){
     event.preventDefault();
+    dropTarget.value = file;
+}
+
+function onDragEnd(){
+    dropTarget.value = undefined;
 }
 
 </script>
@@ -149,6 +169,9 @@ function onDragOver(event: DragEvent, file: EditorFile){
     }
     .tab, .space {
         background-color: #181818;
+    }
+    .drop-target {
+        filter: brightness(150%) grayscale(50%);
     }
 }
 </style>

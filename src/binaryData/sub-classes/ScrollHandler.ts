@@ -43,11 +43,8 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
                 const delta = e.deltaY;
                 const deltaRow = Math.round(delta / rowHeight);
                 let newTopRow = that.desiredState.value.topRow + deltaRow;
-                if (newTopRow < 0){
-                    newTopRow = 0;
-                }
                 that.desiredState.value = that.desiredState.value.with({
-                    topRow: newTopRow
+                    topRow: that.toValidTopRow(newTopRow)
                 });
             })
 
@@ -104,12 +101,26 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
                 const percent = diff/height + scrollStart.scrollPercent;
                 const scrollPercent = Math.max(0,Math.min(percent,1));
                 that.desiredState.value = that.desiredState.value.with({
-                    topRow: Math.ceil(that.fileRowCount.value * scrollPercent)
+                    topRow: that.toValidTopRow(Math.ceil(that.fileRowCount.value * scrollPercent))
                 });
             })
             window.addEventListener("mouseup",()=>{
                 scrollStart = null;
             })
+
+            function step(dir: 1 | -1){
+                let newTopRow = that.desiredState.value.topRow + dir;
+                that.desiredState.value = that.desiredState.value.with({
+                    topRow: that.toValidTopRow(newTopRow)
+                });
+            }
+
+            upArrow.onclick = ()=>{
+                step(-1);
+            }
+            downArrow.onclick = ()=>{
+                step(1);
+            }
 
             that.desiredState.subscribe(()=>{
                 const { topRow, file } = that.desiredState.value;
