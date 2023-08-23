@@ -56,9 +56,9 @@ function closeFile(file: EditorFile){
         align-items: center;
         grid-template-columns: 1fr auto;
         background-color: inherit;
-        font-family: Arial, Helvetica, sans-serif;
         border: none;
-        padding: 0 8px;
+        padding-left: 8px;
+        padding-right: 5px;
         gap: 5px;
         border-top: 1.5px solid transparent;
         border-right: 1px solid var(--border-color);
@@ -81,19 +81,23 @@ function closeFile(file: EditorFile){
             height: 21px;
             border-radius: 5px;
             border: none;
-            background-color: #313232;
             display: grid;
             place-content: center;
             font-size: 18px;
             color: #999999;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.2s ease, background-color 0.2s ease;
+            background-color: transparent;
             cursor: pointer;
 
             .feather {
                 width: 16px;
                 height: 16px;
+            }
+
+            &:hover {
+                background-color: #313232;
             }
         }
         &:hover .close {

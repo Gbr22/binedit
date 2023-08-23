@@ -1,10 +1,11 @@
 <template>
-    <div class="file-info" v-if="state.currentFile">
-        <div>
-            File name: {{ state.currentFile.name }}
+    <div class="file-info data-table" v-if="state.currentFile">
+        <div>File name</div>
+        <div class="name">
+            {{ state.currentFile.name }}
         </div>
+        <div>File size</div>
         <div>
-            File size:
             {{ formatNumber(state.currentFile.blob.size) }} bytes
             ({{ formatUnit(state.currentFile.blob.size) }})
         </div>
@@ -54,6 +55,8 @@ function formatUnit(byteCount: number){
 
 <style scoped lang="scss">
 .file-info {
-    font-size: 14px;
+    .name {
+        word-wrap: break-word;
+    }
 }
 </style>

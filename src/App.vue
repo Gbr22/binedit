@@ -8,7 +8,9 @@ import Tabs from './components/Tabs.vue';
 <template>
   <Menu />
   <div class="middle">
-    <FileInfo />
+    <div class="left-menu">
+      <FileInfo />
+    </div>
     <main>
       <Tabs />
       <Editor />
@@ -25,5 +27,8 @@ import Tabs from './components/Tabs.vue';
 main {
   display: grid;
   grid-template-rows: auto 1fr;
+}
+.left-menu {
+  border-right: 1px solid var(--border-color);
 }
 </style>
