@@ -1,6 +1,5 @@
 import type { Editor, EditorThis } from "../editor";
 import styles from "../styles.module.scss";
-import { createVirtualScrollBar } from "../virtualScrollbar";
 import { Base, type Constructor, chainImpl } from "../composition";
 import { TrackedVar } from "../reactivity";
 
@@ -12,8 +11,9 @@ export function ImplCreateDom<T extends Constructor<Base>>(constructor: T = Base
 
         domRowCount = new TrackedVar(0);
         
-        public initDomHandler() {
+        initDomHandler() {
             const that = this as any as EditorThis;
+            
             const container = document.createElement("div");
             container.classList.add(styles.container);
 
@@ -28,8 +28,6 @@ export function ImplCreateDom<T extends Constructor<Base>>(constructor: T = Base
             this.element = container;
             this.scrollView = scrollView;
             this.dataView = dataView;
-
-            createVirtualScrollBar(that);
         }
     };
 
