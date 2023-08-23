@@ -2,19 +2,28 @@
 import Editor from './components/Editor.vue';
 import Menu from './components/Menu.vue';
 import FileInfo from './components/FileInfo.vue';
+import Tabs from './components/Tabs.vue';
 </script>
 
 <template>
   <Menu />
-  <main>
+  <div class="middle">
     <FileInfo />
-    <Editor />
-  </main>
+    <main>
+      <Tabs />
+      <Editor />
+    </main>
+  </div>
 </template>
 
 <style scoped lang="scss">
-main {
+.middle {
   display: grid;
   grid-template-columns: 300px 1fr;
+  border-top: 1px solid var(--border-color);
+}
+main {
+  display: grid;
+  grid-template-rows: auto 1fr;
 }
 </style>
