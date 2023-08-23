@@ -37,9 +37,6 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
             }
             that.scrollView.style.setProperty('--row-count',that.scrollRowCount.value.toString());
             
-            const size = that.canvas.getBoundingClientRect();
-            that.canvas.width = Math.ceil(size.width * window.devicePixelRatio);
-            that.canvas.height = Math.ceil(size.height * window.devicePixelRatio);
             this.draw();
 
             that.renderedState.value = that.intermediateState.value;
@@ -50,6 +47,10 @@ export function ImplRenderingHandler<T extends Constructor<Base>>(constructor: T
             const ctx = that.ctx;
             const canvas = that.canvas;
             const scale = window.devicePixelRatio;
+
+            that.canvas.width = that.intermediateState.value.width;
+            that.canvas.height = that.intermediateState.value.height;
+            that.canvas.style.setProperty("--device-pixel-ratio",window.devicePixelRatio.toString());
 
             ctx.fillStyle = "#111111"
             ctx.fillRect(0,0,canvas.width,canvas.height);

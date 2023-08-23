@@ -11,6 +11,10 @@ export function ImplSizeHandler<T extends Constructor<Base>>(constructor: T = Ba
             const that = this as any as EditorThis;
             const rect = that.element.getBoundingClientRect();
             this.viewportRowCount.value = Math.floor(rect.height / rowHeight);
+            that.desiredState.value = that.desiredState.value.with({
+                width: Math.round(rect.width * window.devicePixelRatio),
+                height: Math.round(rect.height * window.devicePixelRatio)
+            })
         }
 
         initSizeHandler(){
