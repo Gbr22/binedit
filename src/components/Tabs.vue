@@ -2,12 +2,12 @@
     <div class="tabs">
         <div
             class="tab"
-            v-for="file in state.files" draggable="true"
+            v-for="file in state.tabs" draggable="true"
             :class="{
                 'drop-target': file == dropTarget,
-                active: state.currentFile == file
+                active: state.activeTab == file
             }"
-            @click="openFile(file)"
+            @click="onTabClick(file)"
             @mouseup="onClick($event,file)"
             @dragstart="onDragStart($event,file)"
             @drop="onDrop($event,file)"
@@ -33,45 +33,46 @@
 </template>
 
 <script setup lang="ts">
-import type { EditorFile } from '@/binaryData/EditorFile';
+import { TabData } from '@/TabData';
 import { state } from '@/state';
+import { switchTab } from '@/tabs';
 import { ref } from 'vue';
 
-function openFile(file: EditorFile){
-    state.currentFile = file;
+function onTabClick(tab: TabData){
+    switchTab(tab);
 }
-function onClick(event: MouseEvent, file: EditorFile){
+function onClick(event: MouseEvent, file: TabData){
     if (event.button === 1){
         event.preventDefault();
         closeFile(file);
     }
 }
 
-type DragTarget = EditorFile | "Space";
+type DragTarget = TabData | "Space";
 
-let dragFile: EditorFile | undefined;
+let dragFile: TabData | undefined;
 let dropTarget = ref<DragTarget | undefined>();
 
 function onDrop(event: MouseEvent, dragTarget: DragTarget){
     event.preventDefault();
     if (dragFile){
-        const tragetFile = dragTarget == "Space" ? state.files.at(-1) as EditorFile : dragTarget;
-        const sourceIndex = state.files.findIndex(e=>e===dragFile);
-        const targetIndex = state.files.findIndex(e=>e===tragetFile);
-        state.files[sourceIndex] = tragetFile;
-        state.files[targetIndex] = dragFile;
+        const tragetFile = dragTarget == "Space" ? state.tabs.at(-1) as TabData : dragTarget;
+        const sourceIndex = state.tabs.findIndex(e=>e===dragFile);
+        const targetIndex = state.tabs.findIndex(e=>e===tragetFile);
+        state.tabs[sourceIndex] = tragetFile;
+        state.tabs[targetIndex] = dragFile;
     }
     dragFile = undefined;
 }
-function closeFile(file: EditorFile){
-    const index = state.files.findIndex(e=>e === file);
-    state.files.splice(index,1);
-    if (file == state.currentFile){
-        state.currentFile = undefined;
+function closeFile(file: TabData){
+    const index = state.tabs.findIndex(e=>e === file);
+    state.tabs.splice(index,1);
+    if (file == state.activeTab){
+        state.activeTab = undefined;
     }
 }
 
-async function onDragStart(event: DragEvent, file: EditorFile){
+async function onDragStart(event: DragEvent, file: TabData){
     if (event.dataTransfer){
         event.dataTransfer.effectAllowed = "copy";
         event.dataTransfer.clearData();
@@ -175,4 +176,4 @@ function onDragEnd(){
         filter: brightness(150%) grayscale(50%);
     }
 }
-</style>
+</style>@/EditorFile@/TabData

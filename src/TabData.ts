@@ -1,8 +1,9 @@
-import { BlobProvider, type DataProvider } from "./dataProvider";
+import { BlobProvider, type DataProvider } from "./binaryData/dataProvider";
 
-export class EditorFile {
+export class TabData {
     name: string
     dataSource: DataProvider
+    scrollPercent: number = 0
     
     constructor(name: string, data: Blob){
         this.name = name;
@@ -10,6 +11,6 @@ export class EditorFile {
     }
 
     static fromFile(file: File){
-        return new EditorFile(file.name,file);
+        return new TabData(file.name,file);
     }
 }

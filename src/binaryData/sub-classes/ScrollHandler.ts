@@ -5,6 +5,7 @@ import { bytesPerRow, rowHeight } from "../constants";
 import { DerivedVar, TrackedVar } from "../reactivity";
 import upIcon from '@/assets/icons/chevron-up.svg?raw';
 import downIcon from '@/assets/icons/chevron-down.svg?raw';
+import { getDataProviderRowCount } from "./DataHandler";
 
 export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = Base as any) {
     const cls = class extends constructor {
@@ -19,20 +20,20 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
             const that = this as any as EditorThis;
 
             this.scrollRowCount = new DerivedVar(()=>{
-                return Math.min(10000, that.fileRowCount.value);
-            },that.fileRowCount)
+                return Math.min(10000, getDataProviderRowCount(that.desiredState.value.dataProvider));
+            },that.desiredState)
 
             this.scrollBarType = new DerivedVar(()=>{
-                if (that.fileRowCount.value > 10000){
+                if (getDataProviderRowCount(that.desiredState.value.dataProvider) > 10000){
                     return "virtual";
                 }
                 return "native";
-            },that.fileRowCount);
+            },that.desiredState);
 
             that.element.addEventListener("scroll",()=>{
                 const scrollPercent = that.element.scrollTop / ( that.element.scrollHeight - (that.element.clientHeight / 2) );
                 that.desiredState.value = that.desiredState.value.with({
-                    topRow: Math.ceil(that.fileRowCount.value * scrollPercent)
+                    topRow: Math.ceil(getDataProviderRowCount(that.desiredState.value.dataProvider) * scrollPercent)
                 })
             })
     
@@ -44,7 +45,7 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
                 const deltaRow = Math.round(delta / rowHeight);
                 let newTopRow = that.desiredState.value.topRow + deltaRow;
                 that.desiredState.value = that.desiredState.value.with({
-                    topRow: that.toValidTopRow(newTopRow)
+                    topRow: that.toValidTopRow(that.desiredState.value.dataProvider,newTopRow)
                 });
             })
 
@@ -101,7 +102,7 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
                 const percent = diff/height + scrollStart.scrollPercent;
                 const scrollPercent = Math.max(0,Math.min(percent,1));
                 that.desiredState.value = that.desiredState.value.with({
-                    topRow: that.toValidTopRow(Math.ceil(that.fileRowCount.value * scrollPercent))
+                    topRow: that.toValidTopRow(that.desiredState.value.dataProvider ,Math.ceil(getDataProviderRowCount(that.desiredState.value.dataProvider) * scrollPercent))
                 });
             })
             window.addEventListener("mouseup",()=>{
@@ -111,7 +112,7 @@ export function ImplScrollHandler<T extends Constructor<Base>>(constructor: T = 
             function step(dir: 1 | -1){
                 let newTopRow = that.desiredState.value.topRow + dir;
                 that.desiredState.value = that.desiredState.value.with({
-                    topRow: that.toValidTopRow(newTopRow)
+                    topRow: that.toValidTopRow(that.desiredState.value.dataProvider, newTopRow)
                 });
             }
 

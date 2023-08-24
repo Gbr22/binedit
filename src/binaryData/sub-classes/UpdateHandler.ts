@@ -2,8 +2,8 @@ import type { EditorThis } from "../editor";
 import { Base, type Constructor, chainImpl } from "../composition";
 import { bytesPerRow } from "../constants";
 import { TrackedVar, struct, type Struct } from "../reactivity";
-import type { EditorFile } from "../EditorFile";
-import type { DataProvider } from "../dataProvider";
+import type { TabData } from "../../TabData";
+import { BlobProvider, type DataProvider } from "../dataProvider";
 
 const animMap = new Map<string, boolean>()
 
@@ -34,7 +34,7 @@ function deduplicatePromise<T>(key: string, fn: ()=>Promise<T>, afterfn: ()=>unk
 
 export interface State {
     topRow: number
-    dataProvider: DataProvider | undefined
+    dataProvider: DataProvider
     width: number
     height: number
 }
@@ -42,7 +42,7 @@ export interface State {
 function createDefaultState(): Struct<State> {
     return struct({
         topRow: 0,
-        dataProvider: undefined,
+        dataProvider: new BlobProvider(new Blob([])),
         width: 0,
         height: 0,
     })
@@ -62,8 +62,14 @@ export function ImplUpdateHandler<T extends Constructor<Base>>(constructor: T = 
                 that.intermediateState.value = that.desiredState.value;
             })
             that.intermediateState.subscribe(async ()=>{
+                if (!that.intermediateState.value.dataProvider){
+                    return;
+                }
                 that.intermediateState.lock();
-                that.dataToRender.value = await that.getPage(that.intermediateState.value.topRow * bytesPerRow);
+                that.dataToRender.value = await that.getPage(
+                    that.intermediateState.value.dataProvider,
+                    that.intermediateState.value.topRow * bytesPerRow
+                );
             })
             that.dataToRender.subscribe(()=>{
                 requestAnimationFrame(()=>{
@@ -77,16 +83,6 @@ export function ImplUpdateHandler<T extends Constructor<Base>>(constructor: T = 
             that.viewportRowCount.subscribe(()=>{
                 that.render();
             })
-            that.dataProvider.subscribe(()=>{
-                that.rows.forEach(row=>{
-                    row.startByteNumber = -Infinity;
-                })
-                that.desiredState.value = that.desiredState.value.with({
-                    topRow: 0,
-                    dataProvider: that.dataProvider.value,
-                });
-                that.render();
-            });
         }
     };
 
