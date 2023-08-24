@@ -3,14 +3,8 @@
 </template>
 
 <script setup lang="ts">
-import { state } from '@/state';
+import { editor, state } from '@/state';
 import { onMounted, ref, watch } from 'vue';
-import { Editor } from '../binaryData/editor';
-const editor = new Editor();
-
-watch(state, ()=>{
-    editor.dataProvider.value = state.currentFile?.dataSource;
-})
 
 const container = ref<HTMLElement>();
 onMounted(()=>{

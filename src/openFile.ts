@@ -1,20 +1,21 @@
-import { EditorFile } from './binaryData/EditorFile';
+import { TabData } from './TabData';
+import { switchTab } from './tabs';
 import { state } from './state';
 
 const input = document.createElement("input");
 input.type = "file";
 
-export function openFile(){
-    input.click();
+export async function openFile(): Promise<File> {
+    return new Promise((resolve,reject)=>{
+        const listener = ()=>{
+            const file = input?.files?.[0];
+            input.removeEventListener("change",listener);
+            if (file){
+                resolve(file);
+            }
+            reject(new Error("No file"));
+        }
+        input.addEventListener("change", listener);
+        input.click();
+    })
 }
-
-input.addEventListener("change", async ()=>{
-    const domFile = input?.files?.[0];
-    if (!domFile){
-        return;
-    }
-    const file = EditorFile.fromFile(domFile);
-    console.log("open file",file);
-    state.files.push(file);
-    state.currentFile = file;
-})
