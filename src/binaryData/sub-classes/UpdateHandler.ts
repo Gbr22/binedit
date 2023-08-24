@@ -3,6 +3,7 @@ import { Base, type Constructor, chainImpl } from "../composition";
 import { bytesPerRow } from "../constants";
 import { TrackedVar, struct, type Struct } from "../reactivity";
 import type { EditorFile } from "../EditorFile";
+import type { DataProvider } from "../dataProvider";
 
 const animMap = new Map<string, boolean>()
 
@@ -33,7 +34,7 @@ function deduplicatePromise<T>(key: string, fn: ()=>Promise<T>, afterfn: ()=>unk
 
 export interface State {
     topRow: number
-    file: EditorFile | undefined
+    dataProvider: DataProvider | undefined
     width: number
     height: number
 }
@@ -41,7 +42,7 @@ export interface State {
 function createDefaultState(): Struct<State> {
     return struct({
         topRow: 0,
-        file: undefined,
+        dataProvider: undefined,
         width: 0,
         height: 0,
     })
@@ -76,13 +77,13 @@ export function ImplUpdateHandler<T extends Constructor<Base>>(constructor: T = 
             that.viewportRowCount.subscribe(()=>{
                 that.render();
             })
-            that.currentFile.subscribe(()=>{
+            that.dataProvider.subscribe(()=>{
                 that.rows.forEach(row=>{
                     row.startByteNumber = -Infinity;
                 })
                 that.desiredState.value = that.desiredState.value.with({
                     topRow: 0,
-                    file: that.currentFile.value,
+                    dataProvider: that.dataProvider.value,
                 });
                 that.render();
             });

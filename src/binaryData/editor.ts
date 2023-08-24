@@ -2,7 +2,7 @@ import { ImplCreateDom } from "./sub-classes/DomHandler";
 import { ImplScrollHandler } from "./sub-classes/ScrollHandler";
 import { Implementations } from "./composition";
 import { ImplSizeHandler } from "./sub-classes/SizeHandler";
-import { ImplFileHandler } from "./sub-classes/FileHandler";
+import { ImplDataHandler } from "./sub-classes/DataHandler";
 import { ImplRenderingHandler } from "./sub-classes/RenderingHandler";
 import { ImplUpdateHandler } from "./sub-classes/UpdateHandler";
 
@@ -13,7 +13,7 @@ extends Implementations
     (ImplCreateDom)
     (ImplScrollHandler)
     (ImplSizeHandler)
-    (ImplFileHandler)
+    (ImplDataHandler)
     (ImplRenderingHandler)
     (ImplUpdateHandler)
 .$

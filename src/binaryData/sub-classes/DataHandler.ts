@@ -3,30 +3,26 @@ import { Base, type Constructor, chainImpl } from "../composition";
 import { DerivedVar, TrackedVar } from "../reactivity";
 import { bytesPerRow, rowHeight } from "../constants";
 import type { EditorFile } from "../EditorFile";
+import type { DataProvider } from "../dataProvider";
 
-export function ImplFileHandler<T extends Constructor<Base>>(constructor: T = Base as any) {
+export function ImplDataHandler<T extends Constructor<Base>>(constructor: T = Base as any) {
     const cls = class extends constructor {
-        currentFile = new TrackedVar<EditorFile | undefined>(undefined);
+        dataProvider = new TrackedVar<DataProvider | undefined>(undefined);
 
         dataToRender = new TrackedVar<Uint8Array>(new Uint8Array(0));
 
         fileRowCount = new DerivedVar(()=>{
-            return Math.ceil( (this.currentFile.value?.file.size ?? 0) / bytesPerRow);
-        },this.currentFile);
+            return Math.ceil( (this.dataProvider.value?.size ?? 0) / bytesPerRow);
+        },this.dataProvider);
 
         async getPage(startByte: number): Promise<Uint8Array> {
             const that = this as any as EditorThis;
-            const file = that.currentFile.value;
+            const file = that.dataProvider.value;
             const length = that.viewportRowCount.value * bytesPerRow;
             if (!file){
                 return new Uint8Array();
             }
-            const blob = await file.file.slice(startByte,startByte+length);
-            const buffer = await blob.arrayBuffer();
-            if (!buffer){
-                return new Uint8Array();
-            }
-            return new Uint8Array(buffer);
+            return await file.readAsync(startByte,length);
         }
         
         getBytes(startByte: number): Uint8Array {
