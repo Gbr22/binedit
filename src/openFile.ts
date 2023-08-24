@@ -13,7 +13,7 @@ input.addEventListener("change", async ()=>{
     if (!domFile){
         return;
     }
-    const file = new EditorFile(domFile);
+    const file = EditorFile.fromFile(domFile);
     console.log("open file",file);
     state.files.push(file);
     state.currentFile = file;

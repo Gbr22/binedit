@@ -9,7 +9,7 @@ import { Editor } from '../binaryData/editor';
 const editor = new Editor();
 
 watch(state, ()=>{
-    editor.currentFile.value = state.currentFile;
+    editor.dataProvider.value = state.currentFile?.dataSource;
 })
 
 const container = ref<HTMLElement>();

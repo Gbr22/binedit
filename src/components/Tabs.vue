@@ -71,11 +71,11 @@ function closeFile(file: EditorFile){
     }
 }
 
-function onDragStart(event: DragEvent, file: EditorFile){
+async function onDragStart(event: DragEvent, file: EditorFile){
     if (event.dataTransfer){
         event.dataTransfer.effectAllowed = "copy";
         event.dataTransfer.clearData();
-        event.dataTransfer.items.add(file.file);
+        event.dataTransfer.items.add(await file.dataSource.asFile(file.name));
         dragFile = file;
     }
 }

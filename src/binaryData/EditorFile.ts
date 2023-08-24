@@ -1,9 +1,15 @@
+import { BlobProvider, type DataProvider } from "./dataProvider";
+
 export class EditorFile {
     name: string
-    file: File
+    dataSource: DataProvider
     
-    constructor(file: File){
-        this.name = file.name;
-        this.file = file;
+    constructor(name: string, data: Blob){
+        this.name = name;
+        this.dataSource = new BlobProvider(data);
+    }
+
+    static fromFile(file: File){
+        return new EditorFile(file.name,file);
     }
 }
