@@ -1,4 +1,6 @@
 @import './base.scss';
+@import './colors/dark.css';
+@import './themes/default.css';
 
 html, body, #app {
   overflow: hidden;
@@ -11,12 +13,11 @@ html, body, #app {
   grid-template-rows: auto 1fr;
 }
 
-body {
-  color-scheme: dark;
-  background-color: #181818;
-  color: #ebebeb;
-  --border-color: #2A2A2A;
-  font-family: Arial, Helvetica, sans-serif;
+html, body {
+  color-scheme: var(--color-scheme);
+  background-color: var(--background-color);
+  color: var(--foreground-color);
+  font-family: var(--font-family);
 }
 
 .data-table {

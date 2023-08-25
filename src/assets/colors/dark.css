@@ -1,0 +1,34 @@
+:root {
+    --color-scheme: dark;
+    --background-color: #181818;
+    --foreground-color: #ebebeb;
+    --mixer-background: #000;
+    --mixer-foreground: #fff;
+    --intense-foreground-color: #ffffff;
+    --foreground-primary-color: #0078D4;
+  
+    --font-family: Arial, Helvetica, sans-serif;
+    --border-color: #2A2A2A;
+  
+    --tab-background-color: var(--background-color);
+    --tab-active-background-color: var(--editor-background-color);
+    --tab-bar-background-color: var(--background-color);
+  
+    --editor-background-color: #1F1F1F;
+    --editor-border-color: #404040;
+    --editor-byte-1-foreground-color: #c8c8c8;
+    --editor-byte-2-foreground-color: #a3a3a3;
+    --editor-row-number-foreground-color: #c8c8c8;
+    --editor-row-number-background-color: var(--editor-background-color);
+    --editor-char-ascii-color: #5ac6f0;
+    --editor-char-control-color: #CE834A;
+    --editor-char-other-color: #565656;
+
+    --menu-background-color: #1F1F1F;
+    --menu-foreground-color: #dedede;
+
+    --scrollbar-background-color: #242424;
+    --scrollbar-arrow-background-color: var(--scrollbar-background-color);
+    --scrollbar-arrow-foreground-color: #959595;
+    --scrollbar-handle-background-color: #484848;
+}
