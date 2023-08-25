@@ -5,7 +5,7 @@ import { getRowIndex, toHex, type Row, byteToPrintable, type Printable } from ".
 import styles from "../styles.module.scss";
 import { emptyCssCache, getCssBoolean, getCssNumber, getCssString } from "@/theme";
 
-interface Rect {
+export interface Rect {
     x: number
     y: number
     width: number
