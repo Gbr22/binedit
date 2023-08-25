@@ -1,33 +1,41 @@
 <template>
-    <div>
-        <button @click="onOpenFile">
-            Open file
+    <div class="menu">
+        <button @click="openAction.fn()" class="button">
+            Open
+        </button>
+        <button @click="newAction.fn()" class="button">
+            New
         </button>
     </div>
 </template>
 
 <script setup lang="ts">
-import { TabData } from '@/TabData';
-import { openFiles } from '../openFile';
-import { editor, state } from '@/state';
-import { switchTab } from '@/tabs';
-
-function onOpenFile(){
-    openFiles().then(files=>{
-        const tabs = files.map(file=>new TabData(file.name,file));
-        for (let tab of tabs){
-            state.tabs.push(tab);
-        }
-        const last = tabs.at(-1);
-        if (last) {
-            switchTab(last);
-        }
-        
-    })
-}
+import { openAction } from "../actions/open";
+import { newAction } from "../actions/new";
 
 </script>
 
 <style scoped lang="scss">
+.menu {
+    background-color: #1F1F1F;
+    padding: 5px;
+    display: flex;
+    flex-direction: row;
+    gap: 2px;
+}
+.button {
+    font-size: 13px;
+    border: none;
+    height: 25px;
+    padding: 0 8px;
+    border-radius: 6px;
+    color: #dedede;
 
+    background-color: transparent;
+
+    &:focus, &:hover {
+        background-color: #2D2E2E;
+        color: #f0f0f0;
+    }
+}
 </style>

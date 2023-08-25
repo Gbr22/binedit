@@ -11,8 +11,8 @@
                     'drop-target': tab == dropTarget,
                     active: state.activeTab == tab
                 }"
-                @mousedown="onTabClick(tab)"
-                @mouseup="onClick($event,tab)"
+                @mousedown="onMouseDown($event,tab)"
+                @mouseup="onMouseUp($event,tab)"
                 @dragstart="onDragStart($event,tab)"
                 @drop="onDrop($event,tab)"
                 @dragover="onDragOver($event,tab)"
@@ -56,10 +56,13 @@ function onWheel(event: WheelEvent){
     })
 }
 
-function onTabClick(tab: TabData){
+function onMouseDown(event: MouseEvent,tab: TabData){
+    if (event.button === 1){
+        event.preventDefault();
+    }
     switchTab(tab);
 }
-function onClick(event: MouseEvent, file: TabData){
+function onMouseUp(event: MouseEvent, file: TabData){
     if (event.button === 1){
         event.preventDefault();
         closeTab(file);
@@ -94,9 +97,7 @@ function closeTab(file: TabData){
         }
         state.activeTab = switchTo;
         requestAnimationFrame(()=>{
-            if (switchTo){
-                switchTab(switchTo);
-            }
+            switchTab(switchTo);
         })
     }
 }
