@@ -1,0 +1,8 @@
+:root {
+    --editor-show-wireframe: 0;
+    --editor-font-family: monospace;
+    --editor-font-size: 14;
+    --editor-byte-width: 23;
+    --editor-char-width: 11;
+    --editor-row-number-digit-count: 8;
+}

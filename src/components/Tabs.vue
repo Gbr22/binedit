@@ -133,6 +133,7 @@ function onDragEnd(){
     grid-template-columns: 1fr;
     grid-template-rows: 1fr;
     scrollbar-width: none;
+    background-color: var(--tab-bar-background-color);
 
     &::-webkit-scrollbar {
         height: 0;
@@ -149,13 +150,19 @@ function onDragEnd(){
 
     .space {
         flex: 1;
+        background-color: var(--tab-bar-background-color);
+        border-bottom: 1px solid var(--border-color);
+
+        &.drop-target {
+            background-color: color-mix(in srgb, var(--tab-bar-background-color), 8% var(--mixer-foreground));
+        }
     }
     .tab {
         overflow: hidden;
         display: grid;
         align-items: center;
         grid-template-columns: 1fr auto;
-        background-color: inherit;
+        background-color: var(--tab-background-color);
         border: none;
         padding-left: 8px;
         padding-right: 5px;
@@ -172,7 +179,7 @@ function onDragEnd(){
             width: max-content;
             max-width: 100px;
             font-size: 13px;
-            color: #959595;
+            color: color-mix(in srgb, var(--foreground-color), 32% var(--mixer-background));
             pointer-events: none;
         }
         .close {
@@ -185,7 +192,7 @@ function onDragEnd(){
             display: grid;
             place-content: center;
             font-size: 18px;
-            color: #999999;
+            color: color-mix(in srgb, var(--foreground-color), 28% var(--mixer-background));
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s ease, background-color 0.2s ease;
@@ -198,31 +205,25 @@ function onDragEnd(){
             }
 
             &:hover {
-                background-color: #313232;
+                background-color: color-mix(in srgb, var(--tab-background-color), 10% var(--mixer-foreground));
             }
         }
         &:hover .close {
             opacity: 1;
             pointer-events: all;
         }
-
+        &.drop-target {
+            background-color: color-mix(in srgb, var(--tab-background-color), 8% var(--mixer-foreground));
+        }
         &.active {
-            background-color: #1F1F1F;
-            border-top-color: #0078D4;
-            color: #5ac6f0;
-            color: #CE834A;
+            background-color: var(--tab-active-background-color);
+            border-top-color: var(--foreground-primary-color);
             border-bottom-color: transparent;
 
             .text {
-                color: white;
+                color: var(--intense-foreground-color);
             }
         }
     }
-    .tab, .space {
-        background-color: #181818;
-    }
-    .drop-target {
-        filter: brightness(150%) grayscale(50%);
-    }
 }
-</style>@/EditorFile@/TabData
+</style>

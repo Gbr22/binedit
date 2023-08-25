@@ -17,7 +17,7 @@ import { newAction } from "../actions/new";
 
 <style scoped lang="scss">
 .menu {
-    background-color: #1F1F1F;
+    background-color: var(--menu-background-color);
     padding: 5px;
     display: flex;
     flex-direction: row;
@@ -29,13 +29,13 @@ import { newAction } from "../actions/new";
     height: 25px;
     padding: 0 8px;
     border-radius: 6px;
-    color: #dedede;
+    color: var(--menu-foreground-color);
 
     background-color: transparent;
 
     &:focus, &:hover {
-        background-color: #2D2E2E;
-        color: #f0f0f0;
+        background-color: color-mix(in srgb, var(--menu-background-color), 7% var(--mixer-foreground));
+        color: color-mix(in srgb, var(--menu-foreground-color), 75% var(--mixer-foreground));
     }
 }
 </style>
