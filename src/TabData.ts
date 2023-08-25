@@ -5,12 +5,12 @@ export class TabData {
     dataSource: DataProvider
     scrollPercent: number = 0
     
-    constructor(name: string, data: Blob){
+    constructor(name: string, data: DataProvider){
         this.name = name;
-        this.dataSource = new BlobProvider(data);
+        this.dataSource = data;
     }
 
     static fromFile(file: File){
-        return new TabData(file.name,file);
+        return new TabData(file.name,new BlobProvider(file));
     }
 }
