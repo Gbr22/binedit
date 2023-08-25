@@ -36,7 +36,7 @@ export async function clickFileInput(): Promise<File[]> {
             input.removeEventListener("change",listener);
         }
         input.addEventListener("change", listener);
-        input.click();
+        input.showPicker();
     })
     return promise;
 }
