@@ -106,7 +106,7 @@ async function onDragStart(event: DragEvent, file: TabData){
     if (event.dataTransfer){
         event.dataTransfer.effectAllowed = "copy";
         event.dataTransfer.clearData();
-        event.dataTransfer.items.add(await file.dataSource.asFile(file.name));
+        event.dataTransfer.items.add(await file.dataSource.getBlob(file.name));
         dragFile = file;
     }
 }
