@@ -3,6 +3,7 @@ import Editor from './components/Editor.vue';
 import Menu from './components/Menu.vue';
 import FileInfo from './components/FileInfo.vue';
 import Tabs from './components/Tabs.vue';
+import { state } from './state';
 </script>
 
 <template>
@@ -11,7 +12,7 @@ import Tabs from './components/Tabs.vue';
     <div class="left-menu">
       <FileInfo />
     </div>
-    <main>
+    <main v-if="state.tabs.length != 0">
       <Tabs />
       <Editor />
     </main>
