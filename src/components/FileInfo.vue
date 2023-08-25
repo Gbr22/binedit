@@ -1,13 +1,13 @@
 <template>
-    <div class="file-info data-table" v-if="state.currentFile">
+    <div class="file-info data-table" v-if="state.activeTab">
         <div>File name</div>
         <div class="name">
-            {{ state.currentFile.name }}
+            {{ state.activeTab.name }}
         </div>
         <div>File size</div>
         <div>
-            {{ formatNumber(state.currentFile.dataSource.size) }} bytes
-            ({{ formatUnit(state.currentFile.dataSource.size) }})
+            {{ formatNumber(state.activeTab.dataSource.size) }} bytes
+            ({{ formatUnit(state.activeTab.dataSource.size) }})
         </div>
     </div>
 </template>

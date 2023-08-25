@@ -1,7 +1,7 @@
 export interface DataProvider {
     size: number
     readAsync(from: number, length: number): Promise<Uint8Array>
-    asFile(name: string): Promise<File>
+    getBlob(): Promise<Blob>
 }
 
 export class BlobProvider implements DataProvider {
@@ -17,7 +17,7 @@ export class BlobProvider implements DataProvider {
         const bytes = new Uint8Array(buffer);
         return bytes;
     }
-    async asFile(name: string): Promise<File> {
-        return new File([this.blob], name);
+    async getBlob(): Promise<Blob> {
+        return new Blob([this.blob]);
     }
 }
