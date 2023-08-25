@@ -17,6 +17,55 @@
                 @drop="onDrop($event,tab)"
                 @dragover="onDragOver($event,tab)"
                 @dragend="onDragEnd()"
+                @contextmenu="openMenu($event,{
+                    sections: [
+                        {
+                            items: [
+                                {
+                                    name: 'Close',
+                                    fn() {
+                                        closeTab(tab)
+                                    },
+                                },
+                                {
+                                    name: 'Close All',
+                                    fn() {
+                                        closeTab(tab)
+                                    },
+                                },
+                                {
+                                    name: 'Rename',
+                                    fn() {
+                                        
+                                    },
+                                },
+                                {
+                                    name: 'Resize',
+                                    fn() {
+                                        
+                                    },
+                                },
+                                {
+                                    name: 'Save',
+                                    fn() {
+                                        
+                                    },
+                                },
+                                {
+                                    name: 'Save as',
+                                    fn() {
+                                        
+                                    },
+                                },
+                            ]
+                        },
+                        {
+                            items: [
+                                
+                            ]
+                        }
+                    ]
+                })"
             >
                 <div class="text">{{ tab.name }}</div>
                 <button
@@ -39,8 +88,9 @@
 
 <script setup lang="ts">
 import { TabData } from '@/TabData';
+import { openMenu } from '@/contextMenu';
 import { state } from '@/state';
-import { switchTab } from '@/tabs';
+import { closeTab, switchTab } from '@/tabs';
 import { ref } from 'vue';
 
 const tabsRef = ref<HTMLDivElement>();
@@ -84,22 +134,6 @@ function onDrop(event: MouseEvent, dragTarget: DragTarget){
         state.tabs[targetIndex] = dragFile;
     }
     dragFile = undefined;
-}
-function closeTab(file: TabData){
-    const index = state.tabs.findIndex(e=>e === file);
-    state.tabs.splice(index,1);
-    if (file == state.activeTab){
-        let switchTo: TabData | undefined;
-        if (index == state.tabs.length){
-            switchTo = state.tabs.at(-1);
-        } else {
-            switchTo = state.tabs.at(index);
-        }
-        state.activeTab = switchTo;
-        requestAnimationFrame(()=>{
-            switchTab(switchTo);
-        })
-    }
 }
 
 async function onDragStart(event: DragEvent, file: TabData){

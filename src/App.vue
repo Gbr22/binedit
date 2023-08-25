@@ -4,6 +4,7 @@ import Menu from './components/Menu.vue';
 import FileInfo from './components/FileInfo.vue';
 import Tabs from './components/Tabs.vue';
 import { state } from './state';
+import ContextMenuRoot from './components/ContextMenuRoot.vue';
 </script>
 
 <template>
@@ -17,6 +18,7 @@ import { state } from './state';
       <Editor />
     </main>
   </div>
+  <ContextMenuRoot />
 </template>
 
 <style scoped lang="scss">

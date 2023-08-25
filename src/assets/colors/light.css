@@ -8,7 +8,7 @@
     --foreground-primary-color: #258ede;
   
     --font-family: Arial, Helvetica, sans-serif;
-    --border-color: #ccd0da;
+    --border-color: #dedede;
   
     --tab-background-color: var(--background-color);
     --tab-active-background-color: var(--editor-background-color);
@@ -31,4 +31,6 @@
     --scrollbar-arrow-background-color: var(--scrollbar-background-color);
     --scrollbar-arrow-foreground-color: #7a7a7a;
     --scrollbar-handle-background-color: #b4b4b4;
+
+    --context-menu-border-color: #b8b8b8;
 }
