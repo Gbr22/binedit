@@ -11,7 +11,7 @@
                     'drop-target': tab == dropTarget,
                     active: state.activeTab == tab
                 }"
-                @click="onTabClick(tab)"
+                @mousedown="onTabClick(tab)"
                 @mouseup="onClick($event,tab)"
                 @dragstart="onDragStart($event,tab)"
                 @drop="onDrop($event,tab)"
@@ -51,10 +51,8 @@ function onWheel(event: WheelEvent){
         return;
     }
     const delta = event.deltaY;
-    const left = tabsRef.value.scrollLeft + delta;
-    tabsRef.value.scrollTo({
-        left,
-        behavior: "instant",
+    tabsRef.value.scrollBy({
+        left: delta,
     })
 }
 
@@ -88,11 +86,18 @@ function closeTab(file: TabData){
     const index = state.tabs.findIndex(e=>e === file);
     state.tabs.splice(index,1);
     if (file == state.activeTab){
+        let switchTo: TabData | undefined;
         if (index == state.tabs.length){
-            state.activeTab = state.tabs.at(-1);
+            switchTo = state.tabs.at(-1);
         } else {
-            state.activeTab = state.tabs.at(index);
+            switchTo = state.tabs.at(index);
         }
+        state.activeTab = switchTo;
+        requestAnimationFrame(()=>{
+            if (switchTo){
+                switchTab(switchTo);
+            }
+        })
     }
 }
 
