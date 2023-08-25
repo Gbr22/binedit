@@ -1,34 +1,39 @@
 <template>
-    <div class="tabs">
-        <div
-            class="tab"
-            v-for="file in state.tabs" draggable="true"
-            :class="{
-                'drop-target': file == dropTarget,
-                active: state.activeTab == file
-            }"
-            @click="onTabClick(file)"
-            @mouseup="onClick($event,file)"
-            @dragstart="onDragStart($event,file)"
-            @drop="onDrop($event,file)"
-            @dragover="onDragOver($event,file)"
-            @dragend="onDragEnd()"
-        >
-            <div class="text">{{ file.name }}</div>
-            <button
-                class="close"
-                @click="closeFile(file)"
+    <div class="tabs"
+        ref="tabsRef"
+        @wheel="onWheel($event)"
+    >
+        <div class="inner">
+            <div
+                class="tab"
+                v-for="tab in state.tabs" draggable="true"
+                :class="{
+                    'drop-target': tab == dropTarget,
+                    active: state.activeTab == tab
+                }"
+                @click="onTabClick(tab)"
+                @mouseup="onClick($event,tab)"
+                @dragstart="onDragStart($event,tab)"
+                @drop="onDrop($event,tab)"
+                @dragover="onDragOver($event,tab)"
+                @dragend="onDragEnd()"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
+                <div class="text">{{ tab.name }}</div>
+                <button
+                    class="close"
+                    @click="closeTab(tab)"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="space"
+                :class="{
+                    'drop-target': dropTarget == 'Space',
+                }"
+                @drop="onDrop($event,'Space')"
+                @dragover="onDragOver($event,'Space')"
+            ></div>
         </div>
-        <div class="space"
-            :class="{
-                'drop-target': dropTarget == 'Space',
-            }"
-            @drop="onDrop($event,'Space')"
-            @dragover="onDragOver($event,'Space')"
-        ></div>
     </div>
 </template>
 
@@ -38,13 +43,28 @@ import { state } from '@/state';
 import { switchTab } from '@/tabs';
 import { ref } from 'vue';
 
+const tabsRef = ref<HTMLDivElement>();
+
+function onWheel(event: WheelEvent){
+    event.preventDefault();
+    if (!tabsRef.value){
+        return;
+    }
+    const delta = event.deltaY;
+    const left = tabsRef.value.scrollLeft + delta;
+    tabsRef.value.scrollTo({
+        left,
+        behavior: "instant",
+    })
+}
+
 function onTabClick(tab: TabData){
     switchTab(tab);
 }
 function onClick(event: MouseEvent, file: TabData){
     if (event.button === 1){
         event.preventDefault();
-        closeFile(file);
+        closeTab(file);
     }
 }
 
@@ -64,11 +84,15 @@ function onDrop(event: MouseEvent, dragTarget: DragTarget){
     }
     dragFile = undefined;
 }
-function closeFile(file: TabData){
+function closeTab(file: TabData){
     const index = state.tabs.findIndex(e=>e === file);
     state.tabs.splice(index,1);
     if (file == state.activeTab){
-        state.activeTab = undefined;
+        if (index == state.tabs.length){
+            state.activeTab = state.tabs.at(-1);
+        } else {
+            state.activeTab = state.tabs.at(index);
+        }
     }
 }
 
@@ -95,9 +119,27 @@ function onDragEnd(){
 .tabs {
     height: 35px;
     width: 100%;
-    display: flex;
-    flex-direction: row;
+    max-width: 100%;
     user-select: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        height: 0;
+        width: 0;
+    }
+
+    .inner {
+        display: flex;
+        flex-direction: row;
+        width: max-content;
+        overflow-y: hidden;
+    }
+
     .space {
         flex: 1;
     }
