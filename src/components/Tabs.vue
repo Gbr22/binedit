@@ -33,6 +33,10 @@
                                         closeTab(tab)
                                     },
                                 },
+                            ]
+                        },
+                        {
+                            items: [
                                 {
                                     name: 'Rename',
                                     fn() {
@@ -45,6 +49,10 @@
                                         
                                     },
                                 },
+                            ]
+                        },
+                        {
+                            items: [
                                 {
                                     name: 'Save',
                                     fn() {
@@ -57,11 +65,6 @@
                                         
                                     },
                                 },
-                            ]
-                        },
-                        {
-                            items: [
-                                
                             ]
                         }
                     ]
