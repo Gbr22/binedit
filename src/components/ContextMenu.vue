@@ -28,13 +28,19 @@ function callAction(action: MenuAction){
 .menu {
     background-color: var(--menu-background-color);
     border-radius: 9px;
-    padding: 4px;
+    padding: 0 4px;
     border: 1px solid var(--context-menu-border-color);
 }
 .section {
     display: flex;
     flex-direction: column;
     gap: 3px;
+    border-top: 1px solid var(--context-menu-border-color);
+    padding: 4px 0;
+
+    &:first-child {
+        border-top: none;
+    }
 }
 .action {
     border: none;

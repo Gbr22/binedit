@@ -1,7 +1,7 @@
 import type { Action } from "./actions/action"
 import { newAction } from "./actions/new"
 import { openAction } from "./actions/open"
-import { saveAction } from "./actions/save"
+import { saveAction, saveAsAction } from "./actions/save"
 
 interface ShortCut {
     action: Action
@@ -30,6 +30,13 @@ const shortCuts: ShortCut[] = [
         ctrl: true,
         code: "KeyS",
         action: saveAction,
+        at: "keypress"
+    },
+    {
+        ctrl: true,
+        shift: true,
+        code: "KeyS",
+        action: saveAsAction,
         at: "keypress"
     }
 ];
