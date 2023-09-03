@@ -1,4 +1,4 @@
-import { BlobProvider, type DataProvider } from "./binaryData/dataProvider";
+import { BlobProvider, createDataProvider, type DataProvider } from "./binaryData/dataProvider";
 
 export class TabData {
     name: string
@@ -10,7 +10,8 @@ export class TabData {
         this.dataSource = data;
     }
 
-    static fromFile(file: File){
-        return new TabData(file.name,new BlobProvider(file));
+    static async fromFile(file: File | FileSystemFileHandle){
+        const provider = await createDataProvider(file);
+        return new TabData(file.name,provider);
     }
 }

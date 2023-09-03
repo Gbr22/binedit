@@ -7,7 +7,7 @@ input.type = "file";
 
 let clean = ()=>undefined
 
-export async function openFile(): Promise<File> {
+export async function openFileStandard(): Promise<File> {
     input.multiple = false;
     const files = await clickFileInput();
     return files[0];
@@ -21,6 +21,7 @@ export async function clickFileInput(): Promise<File[]> {
         const listener = ()=>{
             settled = true;
             clean();
+            console.log(input.webkitEntries);
             const files = Array.from(input.files || []);
             input.removeEventListener("change",listener);
             if (files.length){
@@ -40,7 +41,18 @@ export async function clickFileInput(): Promise<File[]> {
     })
     return promise;
 }
-export async function openFiles(): Promise<File[]> {
+export async function openFilesStandard(): Promise<File[]> {
     input.multiple = true;
     return await clickFileInput();
+}
+
+export async function openFiles() {
+    return openFilesFsa();
+}
+
+export async function openFilesFsa(): Promise<FileSystemFileHandle[]> {
+    const files = await window.showOpenFilePicker({
+        multiple: true
+    });
+    return files;
 }
