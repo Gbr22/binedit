@@ -7,7 +7,6 @@ export function saveBlob(blob: Blob, filename: string){
     a.href = url;
     a.download = filename;
     a.click();
-    console.log("save");
 }
 
 export const saveAction: Action = {

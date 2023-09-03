@@ -30,21 +30,21 @@ const shortCuts: ShortCut[] = [
         ctrl: true,
         code: "KeyS",
         action: saveAction,
-        at: "keypress"
+        at: "keydown"
     },
     {
         ctrl: true,
         shift: true,
         code: "KeyS",
         action: saveAsAction,
-        at: "keypress"
+        at: "keydown"
     }
 ];
 
 function checkShortCuts(e: KeyboardEvent, type: "keypress" | "keyup" | "keydown"){
     for (let shortCut of shortCuts){
         const match =
-            e.type == type &&
+            e.type == shortCut.at &&
             e.code == shortCut.code &&
             e.ctrlKey == !!shortCut.ctrl &&
             e.altKey == !!shortCut.alt &&
