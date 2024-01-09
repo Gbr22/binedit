@@ -16,9 +16,6 @@ export const DataHandler = defineSubsystem({
         dataToRender: TrackedVar<Uint8Array>
     }>(),
     proto: {
-        initDataHandler(this: Editor){
-            this.dataToRender = new TrackedVar<Uint8Array>(new Uint8Array(0));
-        },
         async getPage(this: Editor, dataProvider: DataProvider, startByte: number): Promise<Uint8Array> {
             const length = this.viewportRowCount.value * bytesPerRow;
            
@@ -34,7 +31,7 @@ export const DataHandler = defineSubsystem({
         }
     },
     init(this: Editor) {
-        
+        this.dataToRender = new TrackedVar<Uint8Array>(new Uint8Array(0));
     }
 })
 
