@@ -1,17 +1,24 @@
-import { patchDataHandler, type IDataHandler } from "./interfaces/DataHandler";
+import { DataHandler } from "./interfaces/DataHandler";
+import { SizeHandler } from "./interfaces/SizeHandler";
 import { patchDomHandler, type IDomHandler } from "./interfaces/DomHandler";
 import { patchScrollHandler, type IScrollHandler } from "./interfaces/ScrollHandler";
-import { patchSizeHandler, type ISizeHandler } from "./interfaces/SizeHandler";
 import { patchRenderingHandler, type IRenderingHandler } from "./interfaces/RenderingHandler";
 import { patchUpdateHandler, type IUpdateHandler } from "./interfaces/UpdateHandler";
 import { patchEventHandler, type IEventHandler } from "./interfaces/EventHandler";
+import { type CombinedSubsystemInterface, Subsystems, applySubsystems } from "./composition";
+
+const subsystems = Subsystems(
+    DataHandler,
+    SizeHandler
+);
+
+type Combined = CombinedSubsystemInterface<typeof subsystems>;
 
 export interface Editor
 extends
+    Combined,
     IDomHandler,
     IScrollHandler,
-    ISizeHandler,
-    IDataHandler,
     IRenderingHandler,
     IUpdateHandler,
     IEventHandler
@@ -29,10 +36,10 @@ export class Editor
     }
 }
 
-patchDataHandler();
+applySubsystems(Editor,subsystems);
+
 patchDomHandler();
 patchScrollHandler();
-patchSizeHandler();
 patchRenderingHandler();
 patchUpdateHandler();
 patchEventHandler();
