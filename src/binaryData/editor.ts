@@ -1,31 +1,38 @@
-import { ImplCreateDom } from "./sub-classes/DomHandler";
-import { ImplScrollHandler } from "./sub-classes/ScrollHandler";
-import { Implementations } from "./composition";
-import { ImplSizeHandler } from "./sub-classes/SizeHandler";
-import { ImplDataHandler } from "./sub-classes/DataHandler";
-import { ImplRenderingHandler } from "./sub-classes/RenderingHandler";
-import { ImplUpdateHandler } from "./sub-classes/UpdateHandler";
-import { ImplEventHandler } from "./sub-classes/EventHandler";
+import { patchDataHandler, type IDataHandler } from "./sub-classes/DataHandler";
+import { patchDomHandler, type IDomHandler } from "./sub-classes/DomHandler";
+import { patchScrollHandler, type IScrollHandler } from "./sub-classes/ScrollHandler";
+import { patchSizeHandler, type ISizeHandler } from "./sub-classes/SizeHandler";
+import { patchRenderingHandler, type IRenderingHandler } from "./sub-classes/RenderingHandler";
+import { patchUpdateHandler, type IUpdateHandler } from "./sub-classes/UpdateHandler";
+import { patchEventHandler, type IEventHandler } from "./sub-classes/EventHandler";
 
-export type EditorThis = InstanceType<typeof Editor>;
+export interface Editor
+extends
+    IDomHandler,
+    IScrollHandler,
+    ISizeHandler,
+    IDataHandler,
+    IRenderingHandler,
+    IUpdateHandler,
+    IEventHandler
+{}
 
 export class Editor
-extends Implementations
-    (ImplCreateDom)
-    (ImplScrollHandler)
-    (ImplSizeHandler)
-    (ImplDataHandler)
-    (ImplRenderingHandler)
-    (ImplUpdateHandler)
-    (ImplEventHandler)
-.$
 {
     constructor(){
-        super();
-
+        this.initRenderingHandler();
+        this.initDataHandler();
         this.initDomHandler();
-        this.initScrollHandler();
         this.initSizeHandler();
         this.initUpdateHandler();
+        this.initScrollHandler();
     }
 }
+
+patchDataHandler();
+patchDomHandler();
+patchScrollHandler();
+patchSizeHandler();
+patchRenderingHandler();
+patchUpdateHandler();
+patchEventHandler();

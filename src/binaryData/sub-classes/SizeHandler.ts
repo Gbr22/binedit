@@ -1,46 +1,45 @@
-import type { EditorThis } from "../editor";
-import { Base, type Constructor, chainImpl } from "../composition";
+import { Editor } from "../editor";
 import { TrackedVar } from "../reactivity";
 import { rowHeight } from "../constants";
 import type { DataProvider } from "../dataProvider";
 import { getDataProviderRowCount } from "./DataHandler";
 
-export function ImplSizeHandler<T extends Constructor<Base>>(constructor: T = Base as any) {
-    const cls = class extends constructor {
-        viewportRowCount = new TrackedVar(0);
+export interface ISizeHandler {
+    viewportRowCount: TrackedVar<number>;
+
+    initSizeHandler: ()=>void
+    resize: ()=>void
+    toValidTopRow: (dataProvider: DataProvider, topRow: number)=>number
+}
+
+export function patchSizeHandler(){
+    Editor.prototype.initSizeHandler = function(){
+        this.viewportRowCount = new TrackedVar(0);
+    
+        const resizeObserver = new ResizeObserver((entries) => {
+            this.resize();
+        });
         
-        resize(){
-            const that = this as any as EditorThis;
-            const rect = that.element.getBoundingClientRect();
-            this.viewportRowCount.value = Math.floor(rect.height / rowHeight);
-            that.desiredState.value = that.desiredState.value.with({
-                width: Math.round(rect.width * window.devicePixelRatio),
-                height: Math.round(rect.height * window.devicePixelRatio)
-            })
+        resizeObserver.observe(this.element);
+    }
+    
+    Editor.prototype.resize = function(){
+        const rect = this.element.getBoundingClientRect();
+        this.viewportRowCount.value = Math.floor(rect.height / rowHeight);
+        this.desiredState.value = this.desiredState.value.with({
+            width: Math.round(rect.width * window.devicePixelRatio),
+            height: Math.round(rect.height * window.devicePixelRatio)
+        })
+    }
+    
+    Editor.prototype.toValidTopRow = function(dataProvider: DataProvider, topRow: number){
+        if (topRow < 0){
+            return 0;
         }
-
-        toValidTopRow(dataProvider: DataProvider, topRow: number){
-            if (topRow < 0){
-                return 0;
-            }
-            const that = this as any as EditorThis;
-            
-            const maxRow = getDataProviderRowCount(dataProvider) - Math.floor(that.viewportRowCount.value / 2);
-            if (topRow > maxRow){
-                return maxRow;
-            }
-            return topRow;
+        const maxRow = getDataProviderRowCount(dataProvider) - Math.floor(this.viewportRowCount.value / 2);
+        if (topRow > maxRow){
+            return maxRow;
         }
-
-        initSizeHandler(){
-            const that = this as any as EditorThis;
-            const resizeObserver = new ResizeObserver((entries) => {
-                that.resize();
-            });
-            
-            resizeObserver.observe(that.element);
-        }
-    };
-
-    return chainImpl(cls);
+        return topRow;
+    }
 }
