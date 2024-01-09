@@ -13,15 +13,6 @@ export const SizeHandler = defineSubsystem({
         viewportRowCount: TrackedVar<number>
     }>(),
     proto: {
-        initSizeHandler(this: Editor){
-            this.viewportRowCount = new TrackedVar(0);
-        
-            const resizeObserver = new ResizeObserver((entries) => {
-                this.resize();
-            });
-            
-            resizeObserver.observe(this.element);
-        },
         resize(this: Editor){
             const rect = this.element.getBoundingClientRect();
             this.viewportRowCount.value = Math.floor(rect.height / rowHeight);
@@ -41,8 +32,14 @@ export const SizeHandler = defineSubsystem({
             return topRow;
         }
     },
-    init() {
-        
+    init(this: Editor) {
+        this.viewportRowCount = new TrackedVar(0);
+    
+        const resizeObserver = new ResizeObserver((entries) => {
+            this.resize();
+        });
+
+        resizeObserver.observe(this.element);
     },
 });
 

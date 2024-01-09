@@ -28,9 +28,9 @@ export class Editor
 {
     constructor(){
         this.initRenderingHandler();
-        this.initDataHandler();
+        this.DataHandler.init();
         this.initDomHandler();
-        this.initSizeHandler();
+        this.SizeHandler.init();
         this.initUpdateHandler();
         this.initScrollHandler();
     }

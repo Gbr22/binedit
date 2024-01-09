@@ -38,16 +38,20 @@ export function subsystemProps<Fields extends object>(): ()=>Fields {
     };
 }
 
-function getSubsystemExtras<Subsystem extends AnySubsystem>(subsystem: Subsystem): SubsystemExtras<Subsystem> {
+function getSubsystemExtras<Subsystem extends AnySubsystem>(that: unknown, subsystem: Subsystem): SubsystemExtras<Subsystem> {
     return {
-        init: subsystem.init,
-        name: subsystem.name
-    }
+        name: subsystem.name,
+        init: subsystem.init.bind(that),
+    };
 }
 
 export function applySubsystem<Subsystem extends AnySubsystem>(cls: { prototype: {} }, subsystem: Subsystem) {
     Object.assign(cls.prototype,subsystem.proto);
-    Object.assign(cls.prototype,{[subsystem.name]: getSubsystemExtras(subsystem)});
+    Object.defineProperty(cls.prototype, subsystem.name,{
+        get: function() {
+            return getSubsystemExtras(this,subsystem);
+        }
+    })
 }
 
 export function applySubsystems(cls: { prototype: {} }, subSystems: AnySubsystem[]){
