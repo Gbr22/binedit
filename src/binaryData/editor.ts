@@ -1,10 +1,10 @@
-import { patchDataHandler, type IDataHandler } from "./sub-classes/DataHandler";
-import { patchDomHandler, type IDomHandler } from "./sub-classes/DomHandler";
-import { patchScrollHandler, type IScrollHandler } from "./sub-classes/ScrollHandler";
-import { patchSizeHandler, type ISizeHandler } from "./sub-classes/SizeHandler";
-import { patchRenderingHandler, type IRenderingHandler } from "./sub-classes/RenderingHandler";
-import { patchUpdateHandler, type IUpdateHandler } from "./sub-classes/UpdateHandler";
-import { patchEventHandler, type IEventHandler } from "./sub-classes/EventHandler";
+import { patchDataHandler, type IDataHandler } from "./interfaces/DataHandler";
+import { patchDomHandler, type IDomHandler } from "./interfaces/DomHandler";
+import { patchScrollHandler, type IScrollHandler } from "./interfaces/ScrollHandler";
+import { patchSizeHandler, type ISizeHandler } from "./interfaces/SizeHandler";
+import { patchRenderingHandler, type IRenderingHandler } from "./interfaces/RenderingHandler";
+import { patchUpdateHandler, type IUpdateHandler } from "./interfaces/UpdateHandler";
+import { patchEventHandler, type IEventHandler } from "./interfaces/EventHandler";
 
 export interface Editor
 extends
