@@ -1,39 +1,35 @@
-import type { EditorThis } from "../editor";
-import { Base, type Constructor, chainImpl } from "../composition";
-import { DerivedVar, TrackedVar } from "../reactivity";
-import { bytesPerRow, rowHeight } from "../constants";
-import type { TabData } from "../../TabData";
+import { Editor } from "../editor";
+import { TrackedVar } from "../reactivity";
+import { bytesPerRow } from "../constants";
 import type { DataProvider } from "../dataProvider";
 
 export function getDataProviderRowCount(dataProvider: DataProvider){
     return Math.ceil( dataProvider.size / bytesPerRow );
 }
 
-export function ImplDataHandler<T extends Constructor<Base>>(constructor: T = Base as any) {
-    const cls = class extends constructor {
-        dataToRender = new TrackedVar<Uint8Array>(new Uint8Array(0));
+export interface IDataHandler {
+    initDataHandler: ()=>void
+    dataToRender: TrackedVar<Uint8Array>
+    getPage: (dataProvider: DataProvider, startByte: number)=>Promise<Uint8Array>
+    getBytes: (startByte: number)=>Uint8Array
+    getByte: (i: number)=>number | undefined
+}
 
-        async getPage(dataProvider: DataProvider, startByte: number): Promise<Uint8Array> {
-            const that = this as any as EditorThis;
-            const length = that.viewportRowCount.value * bytesPerRow;
-           
-            return await dataProvider.readAsync(startByte,length);
-        }
-        
-        getBytes(startByte: number): Uint8Array {
-            const that = this as any as EditorThis;
-
-            const index = startByte - that.intermediateState.value.topRow * bytesPerRow;
-            const buffer = that.dataToRender.value.slice(index, index + bytesPerRow);
-            return new Uint8Array(buffer);
-        }
-
-        getByte(i: number): number | undefined {
-            const that = this as any as EditorThis;
-
-            return that.dataToRender.value[i];
-        }
-    };
-
-    return chainImpl(cls);
+export function patchDataHandler(){
+    Editor.prototype.initDataHandler = function(this: Editor){
+        this.dataToRender = new TrackedVar<Uint8Array>(new Uint8Array(0));
+    }
+    Editor.prototype.getPage = async function(this: Editor, dataProvider: DataProvider, startByte: number): Promise<Uint8Array> {
+        const length = this.viewportRowCount.value * bytesPerRow;
+       
+        return await dataProvider.readAsync(startByte,length);
+    }
+    Editor.prototype.getBytes = function(this: Editor, startByte: number): Uint8Array {
+        const index = startByte - this.intermediateState.value.topRow * bytesPerRow;
+        const buffer = this.dataToRender.value.slice(index, index + bytesPerRow);
+        return new Uint8Array(buffer);
+    }
+    Editor.prototype.getByte = function(i: number): number | undefined {
+        return this.dataToRender.value[i];
+    }
 }
