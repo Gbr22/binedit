@@ -6,9 +6,9 @@ import { ScrollHandler } from "./interfaces/ScrollHandler";
 import { RenderingHandler } from "./interfaces/RenderingHandler";
 import { UpdateHandler } from "./interfaces/UpdateHandler";
 
-import { type CombinedSubsystemInterface, Subsystems, attachSubsystems } from "./composition";
+import { type CombinedSubsystems, Subsystems } from "./composition";
 
-const subsystems = Subsystems(
+const subsystems = new Subsystems(
     RenderingHandler,
     DataHandler,
     DomHandler,
@@ -18,22 +18,14 @@ const subsystems = Subsystems(
     ScrollHandler,
 );
 
-type Combined = CombinedSubsystemInterface<typeof subsystems>;
+type EditorSubsystems = CombinedSubsystems<typeof subsystems>;
 
-export interface Editor
-extends Combined {}
+export interface Editor extends EditorSubsystems {}
 
-export class Editor
-{
+export class Editor {
     constructor(){
-        this.RenderingHandler.init();
-        this.DataHandler.init();
-        this.DomHandler.init();
-        this.SizeHandler.init();
-        this.EventHandler.init();
-        this.UpdateHandler.init();
-        this.ScrollHandler.init();
+        subsystems.init(this);
     }
 }
 
-attachSubsystems(Editor,subsystems);
+subsystems.attach(Editor);
