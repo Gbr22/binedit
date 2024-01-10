@@ -1,16 +1,8 @@
 import { Editor } from "../editor";
 import { bytesPerRow } from "../constants";
 import { TrackedVar, struct, type Struct } from "../reactivity";
-import type { TabData } from "../../TabData";
 import { BlobProvider, type DataProvider } from "../dataProvider";
-
-export interface IUpdateHandler {
-    desiredState: TrackedVar<Struct<State>>;
-    intermediateState: TrackedVar<Struct<State>>;
-    renderedState: TrackedVar<Struct<State>>;
-
-    initUpdateHandler: ()=>void
-}
+import { defineSubsystem, subsystemProps } from "../composition";
 
 const animMap = new Map<string, boolean>()
 
@@ -55,8 +47,17 @@ function createDefaultState(): Struct<State> {
     })
 }
 
-export function patchUpdateHandler(){
-    Editor.prototype.initUpdateHandler = function(){
+export const UpdateHandler = defineSubsystem({
+    name: "UpdateHandler",
+    props: subsystemProps<{
+        desiredState: TrackedVar<Struct<State>>;
+        intermediateState: TrackedVar<Struct<State>>;
+        renderedState: TrackedVar<Struct<State>>;
+    }>(),
+    proto: {
+
+    },
+    init(this: Editor): void {
         this.desiredState = new TrackedVar(createDefaultState());
         this.intermediateState = new TrackedVar(createDefaultState());
         this.renderedState = new TrackedVar(createDefaultState());
@@ -86,5 +87,5 @@ export function patchUpdateHandler(){
         this.viewportRowCount.subscribe(()=>{
             this.render();
         })
-    }
-}
+    },
+});

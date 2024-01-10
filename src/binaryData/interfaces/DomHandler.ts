@@ -1,20 +1,20 @@
 import { Editor } from "../editor";
 import styles from "../styles.module.scss";
 import { TrackedVar } from "../reactivity";
+import { defineSubsystem, subsystemProps } from "../composition";
 
-export interface IDomHandler {
-    element: HTMLElement
-    canvasContainer: HTMLDivElement
-    scrollView: HTMLDivElement
-    canvas: HTMLCanvasElement
-    ctx: CanvasRenderingContext2D
-    domRowCount: TrackedVar<number>
-
-    initDomHandler: ()=>void
-}
-
-export function patchDomHandler(){
-    Editor.prototype.initDomHandler = function(){
+export const DomHandler = defineSubsystem({
+    name: "DomHandler",
+    props: subsystemProps<{
+        element: HTMLElement
+        canvasContainer: HTMLDivElement
+        scrollView: HTMLDivElement
+        canvas: HTMLCanvasElement
+        ctx: CanvasRenderingContext2D
+        domRowCount: TrackedVar<number>
+    }>(),
+    proto: {},
+    init(this: Editor): void {
         this.canvasContainer = document.createElement("div")
         this.scrollView = document.createElement("div")
         this.canvas = document.createElement("canvas")
@@ -36,5 +36,5 @@ export function patchDomHandler(){
     
         this.element = container;
         this.scrollView = scrollView;
-    }
-}
+    },
+})

@@ -2,13 +2,11 @@ import { Editor } from "../editor";
 import { TrackedVar } from "../reactivity";
 import { bytesPerRow } from "../constants";
 import type { DataProvider } from "../dataProvider";
-import { applySubsystem, defineSubsystem, subsystemProps, type SubsystemInterface } from "../composition";
+import { attachSubsystem, defineSubsystem, subsystemProps, type SubsystemInterface } from "../composition";
 
 export function getDataProviderRowCount(dataProvider: DataProvider){
     return Math.ceil( dataProvider.size / bytesPerRow );
 }
-
-export type IDataHandler = SubsystemInterface<typeof DataHandler>;
 
 export const DataHandler = defineSubsystem({
     name: "DataHandler",
@@ -30,11 +28,7 @@ export const DataHandler = defineSubsystem({
             return this.dataToRender.value[i];
         }
     },
-    init(this: Editor) {
+    init(this: Editor): void {
         this.dataToRender = new TrackedVar<Uint8Array>(new Uint8Array(0));
     }
-})
-
-export function patchDataHandler(){
-    applySubsystem(Editor,DataHandler);
-}
+});
