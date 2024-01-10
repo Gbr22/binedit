@@ -9,7 +9,7 @@ type Subsystem<
     init: ()=>void
 }
 
-type AnySubsystem = Subsystem<any,any,any>;
+type AnySubsystem = Subsystem<string,any,any>;
 
 type SubsystemExtras<Subsystem extends AnySubsystem> = {
     init: Subsystem["init"],
@@ -45,7 +45,9 @@ function getSubsystemExtras<Subsystem extends AnySubsystem>(that: unknown, subsy
     };
 }
 
-export function attachSubsystem<Subsystem extends AnySubsystem>(cls: { prototype: {} }, subsystem: Subsystem) {
+type Classlike = { prototype: {} } & object;
+
+export function attachSubsystem<Subsystem extends AnySubsystem>(cls: Classlike, subsystem: Subsystem) {
     Object.assign(cls.prototype,subsystem.proto);
     Object.defineProperty(cls.prototype, subsystem.name,{
         get: function() {
@@ -54,15 +56,46 @@ export function attachSubsystem<Subsystem extends AnySubsystem>(cls: { prototype
     })
 }
 
-export function attachSubsystems(cls: { prototype: {} }, subSystems: AnySubsystem[]){
-    for (let s of subSystems) {
+export function attachSubsystems(cls: Classlike, subsystems: AnySubsystem[]){
+    for (let s of subsystems) {
         attachSubsystem(cls,s);
     }
 }
 
-export function Subsystems<Arr extends AnySubsystem[]>(...rest: Arr): Arr {
-    return rest;
+export class Subsystems<Arr extends AnySubsystem[]> {
+    definitions: Arr;
+
+    constructor(...definitions: Arr){
+        this.definitions = definitions;
+    }
+
+    attach(cls: Classlike) {
+        attachSubsystems(cls,this.definitions);
+    }
+
+    init(instance: object) {
+        for (let definition of this.definitions){
+            const { name } = definition;
+            if (!(name in instance)) {
+                continue;
+            }
+            const obj = (instance as any)[name] as unknown;
+            if (!(obj instanceof Object)) {
+                continue;
+            }
+            if (!("init" in obj)){
+                continue;
+            }
+            const init = obj["init"];
+            if (!(init instanceof Function)){
+                continue;
+            }
+            init();
+        }
+    }
 }
+
+type AnySubsystems = Subsystems<AnySubsystem[]>;
 
 type TakeFirst<Arr extends any[]> = Arr extends [infer First,...infer Rest] ? {
     first: First
@@ -93,6 +126,6 @@ type MapSubsystemInterface<Arr extends AnySubsystem[]> = {
     [Index in keyof Arr]: SubsystemInterface<Arr[Index]>
 }
 
-export type CombinedSubsystemInterface<Arr extends AnySubsystem[]> = (
-    ArrayIntersection<MapSubsystemInterface<Arr>>
+export type CombinedSubsystems<S extends AnySubsystems> = (
+    ArrayIntersection<MapSubsystemInterface<S["definitions"]>>
 );
