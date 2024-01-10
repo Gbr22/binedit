@@ -1,10 +1,10 @@
-import { DataHandler } from "./interfaces/DataHandler";
-import { SizeHandler } from "./interfaces/SizeHandler";
-import { DomHandler } from "./interfaces/DomHandler";
-import { EventHandler } from "./interfaces/EventHandler";
-import { ScrollHandler } from "./interfaces/ScrollHandler";
-import { RenderingHandler } from "./interfaces/RenderingHandler";
-import { UpdateHandler } from "./interfaces/UpdateHandler";
+import { DataHandler } from "./subsystems/DataHandler";
+import { SizeHandler } from "./subsystems/SizeHandler";
+import { DomHandler } from "./subsystems/DomHandler";
+import { EventHandler } from "./subsystems/EventHandler";
+import { ScrollHandler } from "./subsystems/ScrollHandler";
+import { RenderingHandler } from "./subsystems/RenderingHandler";
+import { UpdateHandler } from "./subsystems/UpdateHandler";
 
 import { type CombinedSubsystems, Subsystems } from "./composition";
 
