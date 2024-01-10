@@ -46,19 +46,26 @@ type PartialSubsystemDefinition<
     init?: Init
 })
 
-type ValueOf<Obj extends object, Key extends string> = (
-    Obj extends { [key in Key]: infer Value extends {} }
-        ? Value
-        : undefined
+const NeverSymbol = Symbol("never");
+type NeverSymbol = typeof NeverSymbol;
+
+type NeverToSymbol<V> = (
+    (V | NeverSymbol) extends NeverSymbol | infer Type
+        ? Type
+        : NeverSymbol
 );
 
-type Test1 = ValueOf<{
-    init: 1
-},"init">
+type NeverToUndefined<V> = (
+    NeverToSymbol<V> extends NeverSymbol
+        ? undefined
+        : V
+);
 
-type TestUndefined = ValueOf<{
-    init: never
-},"init">
+type ValueOf<Obj extends object, Key extends string> = (
+    Obj extends { [key in Key]: infer Value extends {} }
+        ? NeverToUndefined<Value>
+        : undefined
+);
 
 type AsCompleteSubsystem<SO extends PartialSubsystemDefinition<string,object,OptionalInitFunction,object>> = (
     SubsystemDefinition<
