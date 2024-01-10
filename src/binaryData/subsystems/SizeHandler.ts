@@ -7,9 +7,7 @@ import { defineSubsystem, subsystemProps, type SubsystemInterface, attachSubsyst
 
 export const SizeHandler = defineSubsystem({
     name: "SizeHandler",
-    props: subsystemProps<{
-        viewportRowCount: TrackedVar<number>
-    }>(),
+    props: subsystemProps<{}>(),
     proto: {
         resize(this: Editor){
             const rect = this.element.getBoundingClientRect();
@@ -31,12 +29,16 @@ export const SizeHandler = defineSubsystem({
         }
     },
     init(this: Editor) {
-        this.viewportRowCount = new TrackedVar(0);
+        const viewportRowCount = new TrackedVar(0);
     
         const resizeObserver = new ResizeObserver((entries) => {
             this.resize();
         });
 
         resizeObserver.observe(this.element);
+
+        return {
+            viewportRowCount
+        };
     },
 });

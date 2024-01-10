@@ -95,7 +95,7 @@ export const ScrollHandler = defineSubsystem({
             })
         }
     },
-    init(this: Editor): void {
+    init(this: Editor) {
         this.scrollHandler = {
             scrollBar: document.createElement("div")
         }
@@ -131,5 +131,7 @@ export const ScrollHandler = defineSubsystem({
         })
     
         this.createVirtualScrollBar();
+
+        return {};
     },
 });

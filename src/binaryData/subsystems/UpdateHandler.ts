@@ -49,23 +49,21 @@ function createDefaultState(): Struct<State> {
 
 export const UpdateHandler = defineSubsystem({
     name: "UpdateHandler",
-    props: subsystemProps<{
+    props: subsystemProps<{}>(),
+    proto: {},
+    init(this: Editor): {
         desiredState: TrackedVar<Struct<State>>;
         intermediateState: TrackedVar<Struct<State>>;
         renderedState: TrackedVar<Struct<State>>;
-    }>(),
-    proto: {
-
-    },
-    init(this: Editor): void {
-        this.desiredState = new TrackedVar(createDefaultState());
-        this.intermediateState = new TrackedVar(createDefaultState());
-        this.renderedState = new TrackedVar(createDefaultState());
+    } {
+        const desiredState = new TrackedVar(createDefaultState());
+        const intermediateState = new TrackedVar(createDefaultState());
+        const renderedState = new TrackedVar(createDefaultState());
     
-        this.desiredState.subscribe(()=>{
+        desiredState.subscribe(()=>{
             this.intermediateState.value = this.desiredState.value;
         })
-        this.intermediateState.subscribe(async ()=>{
+        intermediateState.subscribe(async ()=>{
             if (!this.intermediateState.value.dataProvider){
                 return;
             }
@@ -80,12 +78,18 @@ export const UpdateHandler = defineSubsystem({
                 this.render();
             })
         })
-        this.renderedState.subscribe(()=>{
+        renderedState.subscribe(()=>{
             this.intermediateState.unlock();
             this.intermediateState.value = this.desiredState.value;
         })
         this.viewportRowCount.subscribe(()=>{
             this.render();
         })
+
+        return {
+            desiredState,
+            intermediateState,
+            renderedState
+        };
     },
 });
