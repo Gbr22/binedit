@@ -11,15 +11,15 @@ export const DomHandler = defineSubsystem({
         scrollView: HTMLDivElement
         canvas: HTMLCanvasElement
         ctx: CanvasRenderingContext2D
-        domRowCount: TrackedVar<number>
     }>(),
     proto: {},
-    init(this: Editor): void {
+    init(this: Editor): {
+        domRowCount: TrackedVar<number>
+    } {
         this.canvasContainer = document.createElement("div")
         this.scrollView = document.createElement("div")
         this.canvas = document.createElement("canvas")
         this.ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D 
-        this.domRowCount = new TrackedVar(0);
     
         const container = document.createElement("div");
         container.classList.add(styles.container);
@@ -36,5 +36,9 @@ export const DomHandler = defineSubsystem({
     
         this.element = container;
         this.scrollView = scrollView;
+
+        return {
+            domRowCount: new TrackedVar(0)
+        };
     },
 })

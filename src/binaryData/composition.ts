@@ -1,15 +1,16 @@
-type Subsystem<
+type SubsystemDefinition<
     Name extends string,
     Fields extends object,
+    InitFields extends object,
     Methods extends object
 > = {
     name: Name,
     props: ()=>Fields
     proto: Methods
-    init: ()=>void
+    init: ()=>InitFields
 }
 
-type AnySubsystem = Subsystem<string,any,any>;
+type AnySubsystem = SubsystemDefinition<string,any,object,any>;
 
 type SubsystemExtras<Subsystem extends AnySubsystem> = {
     init: Subsystem["init"],
@@ -18,18 +19,85 @@ type SubsystemExtras<Subsystem extends AnySubsystem> = {
 
 export type SubsystemInterface<Subsystem extends AnySubsystem> = (
     ReturnType<Subsystem["props"]> &
+    ReturnType<Subsystem["init"]> &
     Subsystem["proto"] &
     {
         [Key in `${Subsystem["name"]}`]: SubsystemExtras<Subsystem>
     }
 );
 
+type VoidAsEmptyObject<T extends object | void | undefined> = (
+    T extends (infer Obj extends object)
+        ? Obj
+        : object
+);
+
+type OptionalInitFunction = (()=>object) | (()=>void);
+
+type PartialSubsystemDefinition<
+    Name extends string,
+    Fields extends object,
+    InitFunction extends OptionalInitFunction,
+    Methods extends object
+> = {
+    name: Name,
+    props: ()=>Fields
+    proto: Methods
+    init: InitFunction
+}
+
+type AsCompleteSubsystem<SO extends PartialSubsystemDefinition<string,object,OptionalInitFunction,object>> = (
+    SubsystemDefinition<
+        SO["name"],
+        ReturnType<SO["props"]>,
+        (
+            SO["init"] extends (()=>infer Obj extends object)
+                ? Obj
+                : object
+        ),
+        SO["proto"]
+    >
+);
+
 export function defineSubsystem<
     Name extends string,
     Fields extends object,
+    InitFunction extends (()=>object) | (()=>void),
     Methods extends object
->(props: Subsystem<Name,Fields,Methods>){
-    return props;
+>(args: PartialSubsystemDefinition<Name,Fields,InitFunction,Methods>):
+    AsCompleteSubsystem<PartialSubsystemDefinition<Name,Fields,InitFunction,Methods>>
+{
+    type T = AsCompleteSubsystem<PartialSubsystemDefinition<Name,Fields,InitFunction,Methods>>;
+    return defineSubsystemComplete<
+        T["name"],
+        ReturnType<T["props"]>,
+        ReturnType<T["init"]>,
+        T["proto"]
+    >({
+        name: args.name,
+        props: args.props,
+        proto: args.proto,
+        init: function(this: object){
+            const initalizedProps = (args.init.bind(this)() ?? {});
+            return initalizedProps;
+        } as T["init"]
+    })
+}
+
+export function defineSubsystemComplete<
+    Name extends string,
+    Fields extends object,
+    InitFields extends object,
+    Methods extends object
+>(props: SubsystemDefinition<Name,Fields,InitFields,Methods>){
+    return {
+        ...props,
+        init: function(this: object){
+            const initalizedProps = props.init.bind(this)();
+            Object.assign(this,initalizedProps);
+            return initalizedProps;
+        }
+    };
 }
 
 export function subsystemProps<Fields extends object>(): ()=>Fields {
@@ -38,7 +106,7 @@ export function subsystemProps<Fields extends object>(): ()=>Fields {
     };
 }
 
-function getSubsystemExtras<Subsystem extends AnySubsystem>(that: unknown, subsystem: Subsystem): SubsystemExtras<Subsystem> {
+function getSubsystemExtras<Subsystem extends AnySubsystem>(that: object, subsystem: Subsystem): SubsystemExtras<Subsystem> {
     return {
         name: subsystem.name,
         init: subsystem.init.bind(that),

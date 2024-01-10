@@ -14,11 +14,11 @@ export interface Rect {
 
 export const RenderingHandler = defineSubsystem({
     name: "RenderingHandler",
-    props: subsystemProps<{
-        rows: Set<Row>
-    }>(),
-    init(this: Editor): void {
-        this.rows = new Set<Row>();
+    props: subsystemProps<{}>(),
+    init(this: Editor) {
+        return {
+            rows: new Set<Row>()
+        };
     },
     proto: {
         getRenderIndex(this: Editor, startByte: number): number {

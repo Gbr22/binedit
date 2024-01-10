@@ -6,9 +6,7 @@ import { getDataProviderRowCount } from "./DataHandler";
 
 export const EventHandler = defineSubsystem({
     name: "EventHandler",
-    props: subsystemProps<{
-
-    }>(),
+    props: subsystemProps<{}>(),
     proto: {
         onScroll(this: Editor, fn: (scrollPercent: number)=>void): void {
             this.renderedState.subscribe(()=>{
@@ -28,7 +26,7 @@ export const EventHandler = defineSubsystem({
             })
         }
     },
-    init(): void {
+    init() {
         
     },
 });
