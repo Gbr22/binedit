@@ -32,26 +32,40 @@ type VoidAsEmptyObject<T extends object | void | undefined> = (
         : object
 );
 
-type OptionalInitFunction = (()=>object) | (()=>void);
+type OptionalInitFunction = (()=>object) | (()=>void) | undefined;
 
 type PartialSubsystemDefinition<
     Name extends string,
     Fields extends object,
-    InitFunction extends OptionalInitFunction,
+    Init extends OptionalInitFunction,
     Methods extends object
-> = {
+> = ({
     name: Name,
     props: ()=>Fields
     proto: Methods
-    init: InitFunction
-}
+    init?: Init
+})
+
+type ValueOf<Obj extends object, Key extends string> = (
+    Obj extends { [key in Key]: infer Value extends {} }
+        ? Value
+        : undefined
+);
+
+type Test1 = ValueOf<{
+    init: 1
+},"init">
+
+type TestUndefined = ValueOf<{
+    init: never
+},"init">
 
 type AsCompleteSubsystem<SO extends PartialSubsystemDefinition<string,object,OptionalInitFunction,object>> = (
     SubsystemDefinition<
         SO["name"],
         ReturnType<SO["props"]>,
         (
-            SO["init"] extends (()=>infer Obj extends object)
+            ValueOf<SO,"init"> extends (()=>infer Obj extends object)
                 ? Obj
                 : object
         ),
@@ -59,28 +73,33 @@ type AsCompleteSubsystem<SO extends PartialSubsystemDefinition<string,object,Opt
     >
 );
 
+function isVoid(arg: unknown): arg is void {
+    return arg == undefined;
+}
+
 export function defineSubsystem<
-    Name extends string,
-    Fields extends object,
-    InitFunction extends (()=>object) | (()=>void),
-    Methods extends object
->(args: PartialSubsystemDefinition<Name,Fields,InitFunction,Methods>):
-    AsCompleteSubsystem<PartialSubsystemDefinition<Name,Fields,InitFunction,Methods>>
+    Def extends PartialSubsystemDefinition<string,object,OptionalInitFunction,object>
+>(args: Def):
+    AsCompleteSubsystem<Def>
 {
-    type T = AsCompleteSubsystem<PartialSubsystemDefinition<Name,Fields,InitFunction,Methods>>;
+    type CompleteType = AsCompleteSubsystem<Def>;
     return defineSubsystemComplete<
-        T["name"],
-        ReturnType<T["props"]>,
-        ReturnType<T["init"]>,
-        T["proto"]
+        CompleteType["name"],
+        ReturnType<CompleteType["props"]>,
+        ReturnType<CompleteType["init"]>,
+        CompleteType["proto"]
     >({
         name: args.name,
-        props: args.props,
+        props: args.props as CompleteType["props"],
         proto: args.proto,
         init: function(this: object){
-            const initalizedProps = (args.init.bind(this)() ?? {});
-            return initalizedProps;
-        } as T["init"]
+            const fn = args.init ?? function(){ return {} };
+            const fnResult = fn.bind(this)();
+            if (isVoid(fnResult) || !fnResult){
+                return {};
+            }
+            return fnResult;
+        } as CompleteType["init"]
     })
 }
 
