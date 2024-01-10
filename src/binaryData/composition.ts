@@ -45,7 +45,7 @@ function getSubsystemExtras<Subsystem extends AnySubsystem>(that: unknown, subsy
     };
 }
 
-export function applySubsystem<Subsystem extends AnySubsystem>(cls: { prototype: {} }, subsystem: Subsystem) {
+export function attachSubsystem<Subsystem extends AnySubsystem>(cls: { prototype: {} }, subsystem: Subsystem) {
     Object.assign(cls.prototype,subsystem.proto);
     Object.defineProperty(cls.prototype, subsystem.name,{
         get: function() {
@@ -54,9 +54,9 @@ export function applySubsystem<Subsystem extends AnySubsystem>(cls: { prototype:
     })
 }
 
-export function applySubsystems(cls: { prototype: {} }, subSystems: AnySubsystem[]){
+export function attachSubsystems(cls: { prototype: {} }, subSystems: AnySubsystem[]){
     for (let s of subSystems) {
-        applySubsystem(cls,s);
+        attachSubsystem(cls,s);
     }
 }
 

@@ -3,9 +3,7 @@ import { TrackedVar } from "../reactivity";
 import { rowHeight } from "../constants";
 import type { DataProvider } from "../dataProvider";
 import { getDataProviderRowCount } from "./DataHandler";
-import { defineSubsystem, subsystemProps, type SubsystemInterface, applySubsystem } from "../composition";
-
-export type ISizeHandler = SubsystemInterface<typeof SizeHandler>;
+import { defineSubsystem, subsystemProps, type SubsystemInterface, attachSubsystem } from "../composition";
 
 export const SizeHandler = defineSubsystem({
     name: "SizeHandler",
@@ -42,7 +40,3 @@ export const SizeHandler = defineSubsystem({
         resizeObserver.observe(this.element);
     },
 });
-
-export function patchSizeHandler(){
-    applySubsystem(Editor,SizeHandler);
-}

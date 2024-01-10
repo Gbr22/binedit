@@ -1,45 +1,39 @@
 import { DataHandler } from "./interfaces/DataHandler";
 import { SizeHandler } from "./interfaces/SizeHandler";
-import { patchDomHandler, type IDomHandler } from "./interfaces/DomHandler";
-import { patchScrollHandler, type IScrollHandler } from "./interfaces/ScrollHandler";
-import { patchRenderingHandler, type IRenderingHandler } from "./interfaces/RenderingHandler";
-import { patchUpdateHandler, type IUpdateHandler } from "./interfaces/UpdateHandler";
-import { patchEventHandler, type IEventHandler } from "./interfaces/EventHandler";
-import { type CombinedSubsystemInterface, Subsystems, applySubsystems } from "./composition";
+import { DomHandler } from "./interfaces/DomHandler";
+import { EventHandler } from "./interfaces/EventHandler";
+import { ScrollHandler } from "./interfaces/ScrollHandler";
+import { RenderingHandler } from "./interfaces/RenderingHandler";
+import { UpdateHandler } from "./interfaces/UpdateHandler";
+
+import { type CombinedSubsystemInterface, Subsystems, attachSubsystems } from "./composition";
 
 const subsystems = Subsystems(
+    RenderingHandler,
     DataHandler,
-    SizeHandler
+    DomHandler,
+    SizeHandler,
+    EventHandler,
+    UpdateHandler,
+    ScrollHandler,
 );
 
 type Combined = CombinedSubsystemInterface<typeof subsystems>;
 
 export interface Editor
-extends
-    Combined,
-    IDomHandler,
-    IScrollHandler,
-    IRenderingHandler,
-    IUpdateHandler,
-    IEventHandler
-{}
+extends Combined {}
 
 export class Editor
 {
     constructor(){
-        this.initRenderingHandler();
+        this.RenderingHandler.init();
         this.DataHandler.init();
-        this.initDomHandler();
+        this.DomHandler.init();
         this.SizeHandler.init();
-        this.initUpdateHandler();
-        this.initScrollHandler();
+        this.EventHandler.init();
+        this.UpdateHandler.init();
+        this.ScrollHandler.init();
     }
 }
 
-applySubsystems(Editor,subsystems);
-
-patchDomHandler();
-patchScrollHandler();
-patchRenderingHandler();
-patchUpdateHandler();
-patchEventHandler();
+attachSubsystems(Editor,subsystems);
