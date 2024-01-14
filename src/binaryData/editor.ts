@@ -5,8 +5,11 @@ import { EventHandler } from "./subsystems/EventHandler";
 import { ScrollHandler } from "./subsystems/ScrollHandler";
 import { RenderingHandler } from "./subsystems/RenderingHandler";
 import { UpdateHandler } from "./subsystems/UpdateHandler";
+import { MouseHandler } from "./subsystems/MouseHandler";
+import { SelectionHandler } from "./subsystems/SelectionHandler";
 
 import { type CombinedSubsystems, Subsystems } from "./composition";
+import { KeyboardHandler } from "./subsystems/KeyboardHandler";
 
 const subsystems = new Subsystems(
     RenderingHandler,
@@ -14,8 +17,11 @@ const subsystems = new Subsystems(
     DomHandler,
     SizeHandler,
     EventHandler,
+    SelectionHandler,
     UpdateHandler,
     ScrollHandler,
+    MouseHandler,
+    KeyboardHandler
 );
 
 type EditorSubsystems = CombinedSubsystems<typeof subsystems>;

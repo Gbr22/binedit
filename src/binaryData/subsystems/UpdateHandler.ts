@@ -67,7 +67,7 @@ export const UpdateHandler = defineSubsystem({
                 return;
             }
             this.intermediateState.lock();
-            this.dataToRender.value = await this.getPage(
+            this.dataToRender.value = await this.getRenderPage(
                 this.intermediateState.value.dataProvider,
                 this.intermediateState.value.topRow * bytesPerRow
             );

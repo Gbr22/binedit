@@ -11,18 +11,26 @@ export function getDataProviderRowCount(dataProvider: DataProvider){
 export const DataHandler = defineSubsystem({
     name: "DataHandler",
     proto: {
-        async getPage(this: Editor, dataProvider: DataProvider, startByte: number): Promise<Uint8Array> {
+        async getRenderPage(this: Editor, dataProvider: DataProvider, startByte: number): Promise<Uint8Array> {
             const length = this.viewportRowCount.value * bytesPerRow;
            
             return await dataProvider.readAsync(startByte,length);
         },
-        getBytes(this: Editor, startByte: number): Uint8Array {
+        getRenderBytes(this: Editor, startByte: number): Uint8Array {
             const index = startByte - this.intermediateState.value.topRow * bytesPerRow;
             const buffer = this.dataToRender.value.slice(index, index + bytesPerRow);
             return new Uint8Array(buffer);
         },
-        getByte(this: Editor, i: number): number | undefined {
+        getRenderByte(this: Editor, i: number): number | undefined {
             return this.dataToRender.value[i];
+        },
+        async getByte(this: Editor, index: number): Promise<number | undefined> {
+            const dataProvider = this.intermediateState.value.dataProvider;
+            const arr = await dataProvider.readAsync(index,1);
+            if (arr.length == 0){
+                return undefined;
+            }
+            return arr[0];
         }
     },
     init(this: Editor) {
