@@ -6,6 +6,12 @@
     --editor-char-width: 11;
     --editor-row-number-digit-count: 8;
 }
+.editor div::part(container) {
+    border: 1px solid transparent;
+}
+.editor div::part(container):focus {
+    border-color: color-mix(in srgb, var(--editor-background-color), 25% var(--mixer-foreground));
+}
 .editor div::part(scrollbar) {
     --width: 15px;
     --handle-height: 10vh;

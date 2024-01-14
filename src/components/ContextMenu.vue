@@ -2,7 +2,7 @@
     <div class="menu">
         <div v-for="section in props.menu.sections" class="section">
             <template v-for="item in section.items">
-                <button v-if="isMenuAction(item)" class="action" @click="callAction(item)">
+                <button v-if="isMenuAction(item)" class="action" @click="callAction(item)" tabindex="0" @keyup="keyup">
                     {{ item.name }}
                 </button>
             </template>
@@ -17,6 +17,12 @@ import { isMenuAction, type RootMenu, type SubMenu, type MenuAction } from '@/co
 const props = defineProps<{
     menu: RootMenu | SubMenu
 }>()
+
+function keyup(e: KeyboardEvent){
+    if (e.code == "Escape") {
+        closeMenu();
+    }
+}
 
 function callAction(action: MenuAction){
     closeMenu();
@@ -53,6 +59,10 @@ function callAction(action: MenuAction){
     text-align: left;
 
     &:hover {
+        background-color: color-mix(in srgb, var(--menu-background-color), 7% var(--mixer-foreground));
+        color: color-mix(in srgb, var(--menu-foreground-color), 75% var(--mixer-foreground));
+    }
+    &:focus {
         background-color: color-mix(in srgb, var(--menu-background-color), 7% var(--mixer-foreground));
         color: color-mix(in srgb, var(--menu-foreground-color), 75% var(--mixer-foreground));
     }

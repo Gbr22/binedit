@@ -70,10 +70,11 @@
                     ]
                 })"
             >
-                <div class="text">{{ tab.name }}</div>
+                <button class="text">{{ tab.name }}</button>
                 <button
                     class="close"
                     @click="closeTab(tab)"
+                    tabindex="-1"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
@@ -218,6 +219,9 @@ function onDragEnd(){
             font-size: 13px;
             color: color-mix(in srgb, var(--foreground-color), 32% var(--mixer-background));
             pointer-events: none;
+            background-color: transparent;
+            border: none;
+            outline: none;
         }
         .close {
             position: relative;
@@ -246,6 +250,10 @@ function onDragEnd(){
             }
         }
         &:hover .close {
+            opacity: 1;
+            pointer-events: all;
+        }
+        & .text:focus + .close {
             opacity: 1;
             pointer-events: all;
         }

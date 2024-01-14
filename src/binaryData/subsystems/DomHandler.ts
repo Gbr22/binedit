@@ -21,6 +21,7 @@ export const DomHandler = defineSubsystem({
         const innerContainer = document.createElement("div");
         shadowRoot.appendChild(innerContainer);
         innerContainer.classList.add("container");
+        (innerContainer as any).part = "container";
         innerContainer.tabIndex = 0;
 
         const styleSheet = new CSSStyleSheet();
