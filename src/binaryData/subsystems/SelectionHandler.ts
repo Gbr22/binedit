@@ -97,17 +97,23 @@ export const SelectionHandler = defineSubsystem({
         },
         onMouseUpByte(this: Editor, index: number, e: MouseEvent) {
             const range = this.getSelectionRange();
+            this.setCursor(index);
             if (range){
                 this.selections = (this.getCombinedSelection());
+                this.selectionStartIndex = undefined;
+                this.selectionEndIndex = undefined;
                 compressRanges(this.selections);
+                this.render();
+            } else {
+                this.selectionStartIndex = undefined;
+                this.selectionEndIndex = undefined;
             }
-            this.setCursor(index);
-
-            this.selectionStartIndex = undefined;
-            this.selectionEndIndex = undefined;
         },
         onHoverByte(this: Editor, index: number) {
             this.selectionEndIndex = index;
+            if (this.selectionStartIndex){
+                this.setCursor(index);
+            }
         },
         getCombinedSelection(this: Editor): Range[] {
             const range = this.getSelectionRange();
