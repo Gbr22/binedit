@@ -3,7 +3,7 @@ import { bytesPerRow, rowHeight } from "../constants";
 import { getRowIndex, toHex, type Row, byteToPrintable, type Printable } from "../row";
 import styles from "../styles.module.scss";
 import { emptyCssCache, getCssBoolean, getCssNumber, getCssString } from "@/theme";
-import { defineSubsystem, subsystemProps } from "../composition";
+import { defineSubsystem } from "../composition";
 
 export interface Rect {
     x: number
@@ -14,7 +14,6 @@ export interface Rect {
 
 export const RenderingHandler = defineSubsystem({
     name: "RenderingHandler",
-    props: subsystemProps<{}>(),
     init(this: Editor) {
         return {
             rows: new Set<Row>()

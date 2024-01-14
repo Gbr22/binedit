@@ -2,7 +2,7 @@ import { Editor } from "../editor";
 import { TrackedVar } from "../reactivity";
 import { bytesPerRow } from "../constants";
 import type { DataProvider } from "../dataProvider";
-import { defineSubsystem, subsystemProps } from "../composition";
+import { defineSubsystem } from "../composition";
 
 export function getDataProviderRowCount(dataProvider: DataProvider){
     return Math.ceil( dataProvider.size / bytesPerRow );
@@ -10,7 +10,6 @@ export function getDataProviderRowCount(dataProvider: DataProvider){
 
 export const DataHandler = defineSubsystem({
     name: "DataHandler",
-    props: subsystemProps<{}>(),
     proto: {
         async getPage(this: Editor, dataProvider: DataProvider, startByte: number): Promise<Uint8Array> {
             const length = this.viewportRowCount.value * bytesPerRow;

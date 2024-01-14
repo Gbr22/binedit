@@ -5,17 +5,10 @@ import { DerivedVar } from "../reactivity";
 import upIcon from '@/assets/icons/chevron-up.svg?raw';
 import downIcon from '@/assets/icons/chevron-down.svg?raw';
 import { getDataProviderRowCount } from "./DataHandler";
-import { defineSubsystem, subsystemProps } from "../composition";
+import { defineSubsystem } from "../composition";
 
 export const ScrollHandler = defineSubsystem({
     name: "ScrollHandler",
-    props: subsystemProps<{
-        scrollRowCount: DerivedVar<number>;
-        scrollBarType: DerivedVar<"virtual" | "native">;
-        scrollHandler: {
-            scrollBar: HTMLDivElement
-        }
-    }>(),
     proto: {
         createVirtualScrollBar(this: Editor): void {
             const scrollBar = this.scrollHandler.scrollBar;
@@ -95,16 +88,21 @@ export const ScrollHandler = defineSubsystem({
             })
         }
     },
-    init(this: Editor) {
-        this.scrollHandler = {
+    init(this: Editor): {
+        scrollRowCount: DerivedVar<number>;
+        scrollBarType: DerivedVar<"virtual" | "native">;
+        scrollHandler: {
+            scrollBar: HTMLDivElement
+        }
+    } {
+        const scrollHandler = {
             scrollBar: document.createElement("div")
         }
-    
-        this.scrollRowCount = new DerivedVar(()=>{
+        const scrollRowCount = new DerivedVar(()=>{
             return Math.min(10000, getDataProviderRowCount(this.desiredState.value.dataProvider));
         },this.desiredState)
     
-        this.scrollBarType = new DerivedVar(()=>{
+        const scrollBarType = new DerivedVar(()=>{
             if (getDataProviderRowCount(this.desiredState.value.dataProvider) > 10000){
                 return "virtual";
             }
@@ -119,7 +117,7 @@ export const ScrollHandler = defineSubsystem({
         })
     
         this.element.addEventListener("wheel",(e)=>{
-            if (this.scrollBarType.value == "native"){
+            if (scrollBarType.value == "native"){
                 return;
             }
             const delta = e.deltaY;
@@ -130,8 +128,15 @@ export const ScrollHandler = defineSubsystem({
             });
         })
     
+        const props = {
+            scrollHandler,
+            scrollBarType,
+            scrollRowCount
+        }
+
+        Object.assign(this,props);
         this.createVirtualScrollBar();
 
-        return {};
+        return props;
     },
 });
