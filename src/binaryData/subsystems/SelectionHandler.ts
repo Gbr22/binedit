@@ -6,18 +6,28 @@ export const SelectionHandler = defineSubsystem({
     init(this: Editor) {
         const cursorPosition = 0;
         const onUpdateCursorListeners = [] as ((cursorPosition: number)=>void)[];
+        const selectionStartIndex = undefined as number | undefined;
+        const selectionEndIndex = undefined as number | undefined;
 
         return {
             cursorPosition,
-            onUpdateCursorListeners
+            onUpdateCursorListeners,
+            selectionStartIndex,
+            selectionEndIndex
         }
     },
     proto: {
         onUpdateCursor(this: Editor, fn: (cursorPosition: number)=>void) {
             this.onUpdateCursorListeners.push(fn);
         },
-        onSelectByte(this: Editor, index: number){
-            this.setCursor(index);  
+        onClickByte(this: Editor, index: number, e: MouseEvent) {
+            // noop
+        },
+        onMouseDownByte(this: Editor, index: number, e: MouseEvent) {
+
+        },
+        onMouseUpByte(this: Editor, index: number, e: MouseEvent) {
+            this.setCursor(index);
         },
         setCursor(this: Editor, index: number, clampToBounds?: true) {
             let clampedIndex = index;

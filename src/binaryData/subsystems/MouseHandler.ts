@@ -57,7 +57,19 @@ export const MouseHandler = defineSubsystem({
         this.element.onclick = (e)=>{
             const hover = this.currentHover;
             if (hover.type == "byte" || hover.type == "char"){
-                this.onSelectByte(this.pointToFileIndex(hover.pos));
+                this.onClickByte(this.pointToFileIndex(hover.pos),e);
+            }
+        }
+        this.element.onmousedown = (e)=>{
+            const hover = this.currentHover;
+            if (hover.type == "byte" || hover.type == "char"){
+                this.onMouseDownByte(this.pointToFileIndex(hover.pos),e);
+            }
+        }
+        this.element.onmouseup = (e)=>{
+            const hover = this.currentHover;
+            if (hover.type == "byte" || hover.type == "char"){
+                this.onMouseUpByte(this.pointToFileIndex(hover.pos),e);
             }
         }
 
