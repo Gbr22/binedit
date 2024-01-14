@@ -1,7 +1,6 @@
 import { Editor } from "../editor";
 import { bytesPerRow, rowHeight } from "../constants";
-import { getRowIndex, toHex, type Row, byteToPrintable, type Printable } from "../row";
-import styles from "../styles.module.scss";
+import { getRowIndex, toHex, type Row, byteToPrintable } from "../row";
 import { emptyCssCache, getCssBoolean, getCssNumber, getCssString } from "@/theme";
 import { defineSubsystem } from "../composition";
 
@@ -49,7 +48,7 @@ export const RenderingHandler = defineSubsystem({
             this.canvas.height = this.intermediateState.value.height;
             this.canvas.style.setProperty("--device-pixel-ratio",window.devicePixelRatio.toString())
         
-            ctx.fillStyle = getCssString("--editor-background-color");
+            ctx.fillStyle = getCssString(this.element,"--editor-background-color");
             ctx.fillRect(0,0,canvas.width,canvas.height);
         
             {
@@ -60,9 +59,9 @@ export const RenderingHandler = defineSubsystem({
                     rect.width * scale,
                     canvas.height
                 ]
-                ctx.strokeStyle = getCssString("--editor-border-color");
+                ctx.strokeStyle = getCssString(this.element,"--editor-border-color");
                 ctx.strokeRect(...r);
-                ctx.fillStyle = getCssString("--editor-row-number-background-color");
+                ctx.fillStyle = getCssString(this.element,"--editor-row-number-background-color");
                 ctx.fillRect(...r);
             }
         
@@ -121,9 +120,9 @@ export const RenderingHandler = defineSubsystem({
             const top = this.getRowPosition(y);
             const count = this.getByteCountRect(y);
             return {
-                x: x * getCssNumber("--editor-byte-width") + count.x + count.width,
+                x: x * getCssNumber(this.element,"--editor-byte-width") + count.x + count.width,
                 y: top,
-                width: getCssNumber("--editor-byte-width"),
+                width: getCssNumber(this.element,"--editor-byte-width"),
                 height: rowHeight,
             }
         },
@@ -132,24 +131,24 @@ export const RenderingHandler = defineSubsystem({
             const pos = this.getByteRect(y,16);
         
             return {
-                x: pos.x + (x * getCssNumber("--editor-char-width")),
+                x: pos.x + (x * getCssNumber(this.element,"--editor-char-width")),
                 y: top,
-                width: getCssNumber("--editor-char-width"),
+                width: getCssNumber(this.element,"--editor-char-width"),
                 height: rowHeight
             }
         },
         getByteCountOfRow(this: Editor, renderIndex: number){
             return renderIndex + this.intermediateState.value.topRow;
         },
-        getPaddedByteCount(count: number){
-            return toHex(count).padStart(getCssNumber("--editor-row-number-digit-count"),'0');
+        getPaddedByteCount(this: Editor, count: number){
+            return toHex(count).padStart(getCssNumber(this.element,"--editor-row-number-digit-count"),'0');
         },
         /**
          * @returns the **scaled** font for the byte count text 
          */
         getByteCountFont(this: Editor) {
             const scale = window.devicePixelRatio;
-            return `${getCssNumber("--editor-font-size") * scale}px ${getCssString("--editor-font-family")}`
+            return `${getCssNumber(this.element,"--editor-font-size") * scale}px ${getCssString(this.element,"--editor-font-family")}`
         },
         drawByteCount(this: Editor, renderIndex: number): void {
             const ctx = this.ctx;
@@ -162,13 +161,13 @@ export const RenderingHandler = defineSubsystem({
             
             const pos = this.getByteCountRect(renderIndex);
         
-            if (getCssBoolean("--editor-show-wireframe")){
+            if (getCssBoolean(this.element,"--editor-show-wireframe")){
                 ctx.strokeStyle = "green";
                 ctx.lineWidth = 1*scale;
                 ctx.strokeRect(pos.x*scale,pos.y*scale,pos.width*scale,pos.height*scale);
             }
         
-            ctx.fillStyle = getCssString("--editor-row-number-foreground-color");
+            ctx.fillStyle = getCssString(this.element,"--editor-row-number-foreground-color");
             ctx.textBaseline = "middle";
             ctx.textAlign = "center";
             ctx.fillText(text,
@@ -188,17 +187,17 @@ export const RenderingHandler = defineSubsystem({
         
             const pos = this.getByteRect(renderIndex,byteIndex);
         
-            if (getCssBoolean("--editor-show-wireframe")){
+            if (getCssBoolean(this.element,"--editor-show-wireframe")){
                 ctx.strokeStyle = "red";
                 ctx.lineWidth = 1*scale;
                 ctx.strokeRect(pos.x*scale,pos.y*scale,pos.width*scale,pos.height*scale);
             }
         
             const text = toHex(value).padStart(2,'0');
-            ctx.font = `${getCssNumber("--editor-font-size") * scale}px ${getCssString("--editor-font-family")}`;
+            ctx.font = `${getCssNumber(this.element,"--editor-font-size") * scale}px ${getCssString(this.element,"--editor-font-family")}`;
             ctx.fillStyle = byteIndex % 2 == 0 ?
-                getCssString("--editor-byte-1-foreground-color") :
-                getCssString("--editor-byte-2-foreground-color")
+                getCssString(this.element,"--editor-byte-1-foreground-color") :
+                getCssString(this.element,"--editor-byte-2-foreground-color")
             ;
         
             ctx.textBaseline = "middle";
@@ -221,7 +220,7 @@ export const RenderingHandler = defineSubsystem({
         
             const pos = this.getCharRect(renderIndex,byteIndex);
         
-            if (getCssBoolean("--editor-show-wireframe")){
+            if (getCssBoolean(this.element,"--editor-show-wireframe")){
                 ctx.strokeStyle = "blue";
                 ctx.lineWidth = 1*scale;
                 ctx.strokeRect(pos.x*scale,pos.y*scale,pos.width*scale,pos.height*scale);
@@ -229,10 +228,10 @@ export const RenderingHandler = defineSubsystem({
         
             const printable = byteToPrintable(value);
             const text = printable.text;
-            ctx.font = `${getCssNumber("--editor-font-size") * scale}px ${getCssString("--editor-font-family")}`;
+            ctx.font = `${getCssNumber(this.element,"--editor-font-size") * scale}px ${getCssString(this.element,"--editor-font-family")}`;
             const size = ctx.measureText(text);
         
-            ctx.fillStyle = getCssString(`--editor-char-${printable.type}-color`);
+            ctx.fillStyle = getCssString(this.element,`--editor-char-${printable.type}-color`);
         
             ctx.textBaseline = "middle";
             ctx.textAlign = "center";

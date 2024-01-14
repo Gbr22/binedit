@@ -17,7 +17,6 @@ export async function clickFileInput(): Promise<File[]> {
         const listener = ()=>{
             settled = true;
             clean();
-            console.log(input.webkitEntries);
             const files = Array.from(input.files || []);
             input.removeEventListener("change",listener);
             if (files.length){

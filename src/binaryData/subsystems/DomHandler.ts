@@ -20,7 +20,7 @@ export const DomHandler = defineSubsystem({
         const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     
         const element = document.createElement("div");
-        element.classList.add(styles.container);
+        element.classList.add(styles["editor"]);
     
         scrollView.classList.add(styles["scroll-view"]);
         element.appendChild(scrollView);
