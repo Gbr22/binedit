@@ -1,7 +1,3 @@
-import { TabData } from './TabData';
-import { switchTab } from './tabs';
-import { state } from './state';
-
 const input = document.createElement("input");
 input.type = "file";
 
@@ -47,7 +43,11 @@ export async function openFilesStandard(): Promise<File[]> {
 }
 
 export async function openFiles() {
-    return openFilesFsa();
+    if ("showOpenFilePicker" in window){
+        return openFilesFsa();
+    } else {
+        return openFilesStandard();
+    }
 }
 
 export async function openFilesFsa(): Promise<FileSystemFileHandle[]> {
