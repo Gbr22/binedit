@@ -54,9 +54,9 @@ export const RenderingHandler = defineSubsystem({
             {
                 const rect = this.getByteCountRect(0);
                 const r: [number, number, number, number] = [
-                    rect.x * scale,
+                    rect.x,
                     0,
-                    rect.width * scale,
+                    rect.width,
                     canvas.height
                 ]
                 ctx.strokeStyle = getCssString(this.innerContainer,"--editor-border-color");
@@ -92,12 +92,12 @@ export const RenderingHandler = defineSubsystem({
                 })
             }
         },
+        getScale(this: Editor): number {
+            return window.devicePixelRatio;
+        },
         getRowPosition(this: Editor, y: number){
             return y * rowHeight;
         },
-        /**
-         * @returns The **unscaled** dimensions of the byte counter.
-         */
         getByteCountRect(this: Editor, y: number): Rect {
             const ctx = this.ctx;
             const scale = window.devicePixelRatio;
@@ -106,24 +106,24 @@ export const RenderingHandler = defineSubsystem({
             ctx.font = this.getByteCountFont();
             const text = this.getPaddedByteCount(count);
             const size = ctx.measureText(text);
-            const textWidth = size.width / scale;
+            const textWidth = size.width;
             const padding = 10;
         
             return {
                 x: 0,
-                y: this.getRowPosition(y),
-                width: textWidth + padding,
-                height: rowHeight
+                y: this.getRowPosition(y) * this.getScale(),
+                width: textWidth + padding * this.getScale(),
+                height: rowHeight * this.getScale()
             }
         },
         getByteRect(this: Editor, y: number,x: number): Rect {
             const top = this.getRowPosition(y);
             const count = this.getByteCountRect(y);
             return {
-                x: x * getCssNumber(this.innerContainer,"--editor-byte-width") + count.x + count.width,
-                y: top,
-                width: getCssNumber(this.innerContainer,"--editor-byte-width"),
-                height: rowHeight,
+                x: x * getCssNumber(this.innerContainer,"--editor-byte-width") * this.getScale() + count.x + count.width,
+                y: top * this.getScale(),
+                width: getCssNumber(this.innerContainer,"--editor-byte-width") * this.getScale(),
+                height: rowHeight * this.getScale(),
             }
         },
         getCharRect(this: Editor, y: number,x: number): Rect {
@@ -131,10 +131,10 @@ export const RenderingHandler = defineSubsystem({
             const pos = this.getByteRect(y,16);
         
             return {
-                x: pos.x + (x * getCssNumber(this.innerContainer,"--editor-char-width")),
-                y: top,
-                width: getCssNumber(this.innerContainer,"--editor-char-width"),
-                height: rowHeight
+                x: pos.x + (x * getCssNumber(this.innerContainer,"--editor-char-width")) * this.getScale(),
+                y: top * this.getScale(),
+                width: getCssNumber(this.innerContainer,"--editor-char-width") * this.getScale(),
+                height: rowHeight * this.getScale()
             }
         },
         getByteCountOfRow(this: Editor, renderIndex: number){
@@ -143,9 +143,6 @@ export const RenderingHandler = defineSubsystem({
         getPaddedByteCount(this: Editor, count: number){
             return toHex(count).padStart(getCssNumber(this.innerContainer,"--editor-row-number-digit-count"),'0');
         },
-        /**
-         * @returns the **scaled** font for the byte count text 
-         */
         getByteCountFont(this: Editor) {
             const scale = window.devicePixelRatio;
             return `${getCssNumber(this.innerContainer,"--editor-font-size") * scale}px ${getCssString(this.innerContainer,"--editor-font-family")}`
@@ -164,15 +161,15 @@ export const RenderingHandler = defineSubsystem({
             if (getCssBoolean(this.element,"--editor-show-wireframe")){
                 ctx.strokeStyle = "green";
                 ctx.lineWidth = 1*scale;
-                ctx.strokeRect(pos.x*scale,pos.y*scale,pos.width*scale,pos.height*scale);
+                ctx.strokeRect(pos.x,pos.y,pos.width,pos.height);
             }
         
             ctx.fillStyle = getCssString(this.innerContainer,"--editor-row-number-foreground-color");
             ctx.textBaseline = "middle";
             ctx.textAlign = "center";
             ctx.fillText(text,
-                ( pos.x + pos.width/2 ) * scale,
-                ( pos.y + pos.height/2 ) * scale,
+                ( pos.x + pos.width/2 ),
+                ( pos.y + pos.height/2 ),
             );
         },
         drawByte(this: Editor, props: { renderIndex: number, byteIndex: number, value: number | undefined }): void {
@@ -190,7 +187,7 @@ export const RenderingHandler = defineSubsystem({
             if (getCssBoolean(this.element,"--editor-show-wireframe")){
                 ctx.strokeStyle = "red";
                 ctx.lineWidth = 1*scale;
-                ctx.strokeRect(pos.x*scale,pos.y*scale,pos.width*scale,pos.height*scale);
+                ctx.strokeRect(pos.x,pos.y,pos.width,pos.height);
             }
         
             const text = toHex(value).padStart(2,'0');
@@ -203,8 +200,8 @@ export const RenderingHandler = defineSubsystem({
             ctx.textBaseline = "middle";
             ctx.textAlign = "center";
             ctx.fillText(text,
-                ( pos.x + pos.width/2 ) * scale,
-                ( pos.y + pos.height/2 ) * scale,
+                ( pos.x + pos.width/2 ),
+                ( pos.y + pos.height/2 ),
             );
         },
         drawChar(this: Editor, props: { renderIndex: number, byteIndex: number, value: number | undefined }): void {
@@ -223,7 +220,7 @@ export const RenderingHandler = defineSubsystem({
             if (getCssBoolean(this.element,"--editor-show-wireframe")){
                 ctx.strokeStyle = "blue";
                 ctx.lineWidth = 1*scale;
-                ctx.strokeRect(pos.x*scale,pos.y*scale,pos.width*scale,pos.height*scale);
+                ctx.strokeRect(pos.x,pos.y,pos.width,pos.height);
             }
         
             const printable = byteToPrintable(value);
@@ -236,8 +233,8 @@ export const RenderingHandler = defineSubsystem({
             ctx.textBaseline = "middle";
             ctx.textAlign = "center";
             ctx.fillText(text,
-                ( pos.x + pos.width/2 ) * scale,
-                ( pos.y + pos.height/2 ) * scale,
+                ( pos.x + pos.width/2 ),
+                ( pos.y + pos.height/2 ),
             );
         }
     }
