@@ -1,17 +1,21 @@
 import { Editor } from "../editor";
 import { defineSubsystem } from "../composition";
-import { TrackedVar } from "../reactivity";
 
 export const SelectionHandler = defineSubsystem({
     name: "SelectionHandler",
     init(this: Editor) {
         const cursorPosition = 0;
+        const onUpdateCursorListeners = [] as ((cursorPosition: number)=>void)[];
 
         return {
-            cursorPosition
+            cursorPosition,
+            onUpdateCursorListeners
         }
     },
     proto: {
+        onUpdateCursor(this: Editor, fn: (cursorPosition: number)=>void) {
+            this.onUpdateCursorListeners.push(fn);
+        },
         onSelectByte(this: Editor, index: number){
             this.setCursor(index);  
         },
@@ -31,6 +35,9 @@ export const SelectionHandler = defineSubsystem({
             if (this.cursorPosition == prev) {
                 return;
             }
+            this.onUpdateCursorListeners.forEach(fn=>{
+                fn(this.cursorPosition);
+            })
             requestAnimationFrame(()=>{
                 this.render();
             })

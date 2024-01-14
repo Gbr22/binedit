@@ -9,11 +9,13 @@ export function switchTab(tab: TabData | undefined){
             dataProvider: tab.dataSource,
             scrollPercent: tab.scrollPercent
         });
+        editor.cursorPosition = tab.cursorPosition;
     } else {
         editor.setState({
             dataProvider: new BlobProvider(new Blob([])),
             scrollPercent: 0
         });
+        editor.cursorPosition = 0;
     }
 }
 export function closeTab(file: TabData){
