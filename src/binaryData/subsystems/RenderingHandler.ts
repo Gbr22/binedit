@@ -53,7 +53,7 @@ export const RenderingHandler = defineSubsystem({
             ctx.fillRect(0,0,canvas.width,canvas.height);
         
             {
-                const rect = this.getCountRect(0);
+                const rect = this.getByteCountRect(0);
                 const r: [number, number, number, number] = [
                     rect.x * scale,
                     0,
@@ -77,7 +77,7 @@ export const RenderingHandler = defineSubsystem({
             const fileIndex = this.intermediateState.value.topRow + renderIndex;
             const startByte = fileIndex * bytesPerRow;
         
-            this.drawCount(renderIndex);
+            this.drawByteCount(renderIndex);
         
             for(let byteIndex = 0; byteIndex < bytesPerRow; byteIndex++){
                 const value = this.getByte(renderIndex * bytesPerRow + byteIndex);
@@ -96,27 +96,30 @@ export const RenderingHandler = defineSubsystem({
         getRowPosition(this: Editor, y: number){
             return y * rowHeight;
         },
-        getCountRect(this: Editor, y: number): Rect {
+        /**
+         * @returns The **unscaled** dimensions of the byte counter.
+         */
+        getByteCountRect(this: Editor, y: number): Rect {
             const ctx = this.ctx;
-            const canvas = this.canvas;
             const scale = window.devicePixelRatio;
         
-            const count = this.intermediateState.value.topRow + this.viewportRowCount.value;
-            const text = toHex(count).padStart(getCssNumber("--editor-row-number-digit-count"),'0');
-        
-            ctx.font = `${getCssNumber("--editor-font-size") * scale}px ${getCssString("--editor-font-family")}`;
+            const count = this.getByteCountOfRow(0);
+            ctx.font = this.getByteCountFont();
+            const text = this.getPaddedByteCount(count);
             const size = ctx.measureText(text);
+            const textWidth = size.width / scale;
+            const padding = 10;
         
             return {
                 x: 0,
                 y: this.getRowPosition(y),
-                width: size.width,
+                width: textWidth + padding,
                 height: rowHeight
             }
         },
         getByteRect(this: Editor, y: number,x: number): Rect {
             const top = this.getRowPosition(y);
-            const count = this.getCountRect(y);
+            const count = this.getByteCountRect(y);
             return {
                 x: x * getCssNumber("--editor-byte-width") + count.x + count.width,
                 y: top,
@@ -135,18 +138,29 @@ export const RenderingHandler = defineSubsystem({
                 height: rowHeight
             }
         },
-        drawCount(this: Editor, renderIndex: number): void {
+        getByteCountOfRow(this: Editor, renderIndex: number){
+            return renderIndex + this.intermediateState.value.topRow;
+        },
+        getPaddedByteCount(count: number){
+            return toHex(count).padStart(getCssNumber("--editor-row-number-digit-count"),'0');
+        },
+        /**
+         * @returns the **scaled** font for the byte count text 
+         */
+        getByteCountFont(this: Editor) {
+            const scale = window.devicePixelRatio;
+            return `${getCssNumber("--editor-font-size") * scale}px ${getCssString("--editor-font-family")}`
+        },
+        drawByteCount(this: Editor, renderIndex: number): void {
             const ctx = this.ctx;
-            const canvas = this.canvas;
             const scale = window.devicePixelRatio;
         
-            const count = renderIndex + this.intermediateState.value.topRow;
+            const count = this.getByteCountOfRow(renderIndex);
         
-            const text = toHex(count).padStart(getCssNumber("--editor-row-number-digit-count"),'0');
-            ctx.font = `${getCssNumber("--editor-font-size") * scale}px ${getCssString("--editor-font-family")}`;
-            const size = ctx.measureText(text);
+            const text = this.getPaddedByteCount(count);
+            ctx.font = this.getByteCountFont();
             
-            const pos = this.getCountRect(renderIndex);
+            const pos = this.getByteCountRect(renderIndex);
         
             if (getCssBoolean("--editor-show-wireframe")){
                 ctx.strokeStyle = "green";
@@ -164,7 +178,6 @@ export const RenderingHandler = defineSubsystem({
         },
         drawByte(this: Editor, props: { renderIndex: number, byteIndex: number, value: number | undefined }): void {
             const ctx = this.ctx;
-            const canvas = this.canvas;
             const scale = window.devicePixelRatio;
         
             const { value, renderIndex, byteIndex } = props;
@@ -183,7 +196,6 @@ export const RenderingHandler = defineSubsystem({
         
             const text = toHex(value).padStart(2,'0');
             ctx.font = `${getCssNumber("--editor-font-size") * scale}px ${getCssString("--editor-font-family")}`;
-            const size = ctx.measureText(text);
             ctx.fillStyle = byteIndex % 2 == 0 ?
                 getCssString("--editor-byte-1-foreground-color") :
                 getCssString("--editor-byte-2-foreground-color")
