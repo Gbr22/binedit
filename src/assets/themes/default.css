@@ -7,9 +7,10 @@
     --editor-row-number-digit-count: 8;
 }
 .editor div::part(scrollbar) {
-    --width: 16px;
-    --handle-height: 5vh;
+    --width: 15px;
+    --handle-height: 10vh;
     background-color: var(--scrollbar-background-color);
+    border-left: 1px solid var(--editor-border-color);
 }
 .editor div::part(scrollbar-button)::before {
     background-size: contain;
@@ -35,7 +36,6 @@
     background-image: url("/icons/chevron-down.svg");
 }
 .editor div::part(scrollbar-handle) {
-    width: 75%;
     transition: background-color 0.2s ease;
     background-color: var(--scrollbar-handle-background-color);
 }
