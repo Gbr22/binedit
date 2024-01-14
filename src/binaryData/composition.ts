@@ -1,16 +1,14 @@
 type SubsystemDefinition<
     Name extends string,
-    Fields extends object,
     InitFields extends object,
     Methods extends object
 > = {
     name: Name,
-    props: ()=>Fields
     proto: Methods
     init: ()=>InitFields
 }
 
-type AnySubsystem = SubsystemDefinition<string,any,object,any>;
+type AnySubsystem = SubsystemDefinition<string,object,any>;
 
 type SubsystemExtras<Subsystem extends AnySubsystem> = {
     init: Subsystem["init"],
@@ -18,7 +16,6 @@ type SubsystemExtras<Subsystem extends AnySubsystem> = {
 }
 
 export type SubsystemInterface<Subsystem extends AnySubsystem> = (
-    ReturnType<Subsystem["props"]> &
     ReturnType<Subsystem["init"]> &
     Subsystem["proto"] &
     {
@@ -36,12 +33,10 @@ type OptionalInitFunction = (()=>object) | (()=>void) | undefined;
 
 type PartialSubsystemDefinition<
     Name extends string,
-    Fields extends object,
     Init extends OptionalInitFunction,
     Methods extends object
 > = ({
     name: Name,
-    props: ()=>Fields
     proto: Methods
     init?: Init
 })
@@ -90,10 +85,9 @@ type UseDefaultFunctionWithReturn<
         : undefined
 ),DefaultFn>;
 
-type AsCompleteSubsystem<SO extends PartialSubsystemDefinition<string,object,OptionalInitFunction,object>> = (
+type AsCompleteSubsystem<SO extends PartialSubsystemDefinition<string,OptionalInitFunction,object>> = (
     SubsystemDefinition<
         SO["name"],
-        ReturnType<SO["props"]>,
         (
             ValueOf<SO,"init"> extends (()=>infer Obj extends object)
                 ? Obj
@@ -128,19 +122,17 @@ function useDefaultFunctionWithReturn<
 }
 
 export function defineSubsystem<
-    Def extends PartialSubsystemDefinition<string,object,OptionalInitFunction,object>
+    Def extends PartialSubsystemDefinition<string,OptionalInitFunction,object>
 >(args: Def):
     AsCompleteSubsystem<Def>
 {
     type CompleteType = AsCompleteSubsystem<Def>;
     return defineSubsystemComplete<
         CompleteType["name"],
-        ReturnType<CompleteType["props"]>,
         ReturnType<CompleteType["init"]>,
         CompleteType["proto"]
     >({
         name: args.name,
-        props: args.props as CompleteType["props"],
         proto: args.proto,
         init: useDefaultFunctionWithReturn(args.init,(()=>{
             return {};
@@ -150,10 +142,9 @@ export function defineSubsystem<
 
 export function defineSubsystemComplete<
     Name extends string,
-    Fields extends object,
     InitFields extends object,
     Methods extends object
->(props: SubsystemDefinition<Name,Fields,InitFields,Methods>){
+>(props: SubsystemDefinition<Name,InitFields,Methods>){
     return {
         ...props,
         init: function(this: object){
@@ -161,12 +152,6 @@ export function defineSubsystemComplete<
             Object.assign(this,initalizedProps);
             return initalizedProps;
         }
-    };
-}
-
-export function subsystemProps<Fields extends object>(): ()=>Fields {
-    return ()=>{
-        throw new Error("Unexpected call on subsystemFields");
     };
 }
 

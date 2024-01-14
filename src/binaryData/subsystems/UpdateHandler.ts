@@ -2,7 +2,7 @@ import { Editor } from "../editor";
 import { bytesPerRow } from "../constants";
 import { TrackedVar, struct, type Struct } from "../reactivity";
 import { BlobProvider, type DataProvider } from "../dataProvider";
-import { defineSubsystem, subsystemProps } from "../composition";
+import { defineSubsystem } from "../composition";
 
 const animMap = new Map<string, boolean>()
 
@@ -49,7 +49,6 @@ function createDefaultState(): Struct<State> {
 
 export const UpdateHandler = defineSubsystem({
     name: "UpdateHandler",
-    props: subsystemProps<{}>(),
     proto: {},
     init(this: Editor): {
         desiredState: TrackedVar<Struct<State>>;

@@ -3,11 +3,10 @@ import { TrackedVar } from "../reactivity";
 import { rowHeight } from "../constants";
 import type { DataProvider } from "../dataProvider";
 import { getDataProviderRowCount } from "./DataHandler";
-import { defineSubsystem, subsystemProps, type SubsystemInterface, attachSubsystem } from "../composition";
+import { defineSubsystem } from "../composition";
 
 export const SizeHandler = defineSubsystem({
     name: "SizeHandler",
-    props: subsystemProps<{}>(),
     proto: {
         resize(this: Editor){
             const rect = this.element.getBoundingClientRect();

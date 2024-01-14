@@ -1,44 +1,43 @@
 import { Editor } from "../editor";
 import styles from "../styles.module.scss";
 import { TrackedVar } from "../reactivity";
-import { defineSubsystem, subsystemProps } from "../composition";
+import { defineSubsystem } from "../composition";
 
 export const DomHandler = defineSubsystem({
     name: "DomHandler",
-    props: subsystemProps<{
-        element: HTMLElement
-        canvasContainer: HTMLDivElement
-        scrollView: HTMLDivElement
-        canvas: HTMLCanvasElement
-        ctx: CanvasRenderingContext2D
-    }>(),
     proto: {},
     init(this: Editor): {
         domRowCount: TrackedVar<number>
+        canvasContainer: HTMLDivElement
+        canvas: HTMLCanvasElement
+        ctx: CanvasRenderingContext2D
+        scrollView: HTMLDivElement
+        element: HTMLElement
     } {
-        this.canvasContainer = document.createElement("div")
-        this.scrollView = document.createElement("div")
-        this.canvas = document.createElement("canvas")
-        this.ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D 
+        const canvasContainer = document.createElement("div");
+        const scrollView = document.createElement("div");
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     
-        const container = document.createElement("div");
-        container.classList.add(styles.container);
+        const element = document.createElement("div");
+        element.classList.add(styles.container);
     
-        const scrollView = this.scrollView;
         scrollView.classList.add(styles["scroll-view"]);
-        container.appendChild(scrollView);
+        element.appendChild(scrollView);
     
-        this.canvasContainer.classList.add(styles["canvas-container"]);
-        container.appendChild(this.canvasContainer);
+        canvasContainer.classList.add(styles["canvas-container"]);
+        element.appendChild(canvasContainer);
     
-        this.canvas.classList.add(styles["canvas"]);
-        this.canvasContainer.appendChild(this.canvas);
-    
-        this.element = container;
-        this.scrollView = scrollView;
+        canvas.classList.add(styles["canvas"]);
+        canvasContainer.appendChild(canvas);
 
         return {
-            domRowCount: new TrackedVar(0)
+            domRowCount: new TrackedVar(0),
+            canvasContainer,
+            canvas,
+            ctx,
+            scrollView,
+            element
         };
     },
 })

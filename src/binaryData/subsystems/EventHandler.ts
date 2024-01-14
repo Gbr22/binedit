@@ -1,4 +1,4 @@
-import { defineSubsystem, subsystemProps } from "../composition";
+import { defineSubsystem } from "../composition";
 import { bytesPerRow } from "../constants";
 import type { DataProvider } from "../dataProvider";
 import { Editor } from "../editor";
@@ -6,7 +6,6 @@ import { getDataProviderRowCount } from "./DataHandler";
 
 export const EventHandler = defineSubsystem({
     name: "EventHandler",
-    props: subsystemProps<{}>(),
     proto: {
         onScroll(this: Editor, fn: (scrollPercent: number)=>void): void {
             this.renderedState.subscribe(()=>{
