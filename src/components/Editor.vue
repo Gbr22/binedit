@@ -3,8 +3,8 @@
 </template>
 
 <script setup lang="ts">
-import { editor, state } from '@/state';
-import { onMounted, ref, watch } from 'vue';
+import { editor } from '@/state';
+import { onMounted, ref } from 'vue';
 
 const container = ref<HTMLElement>();
 onMounted(()=>{
