@@ -12,29 +12,19 @@ export const DomHandler = defineSubsystem({
         canvas: HTMLCanvasElement
         ctx: CanvasRenderingContext2D
         scrollView: HTMLDivElement
-        element: HTMLElement
+        element: HTMLDivElement
         shadowRoot: ShadowRoot
-        shadowContainer: HTMLDivElement
         innerContainer: HTMLDivElement
     } {
         const element = document.createElement("div");
-        element.classList.add("editor");
-
-        const shadowContainer = document.createElement("div");
-        shadowContainer.classList.add("shadow-container");
-        shadowContainer.style.width = "100%";
-        shadowContainer.style.height = "100%";
-        shadowContainer.style.maxWidth = "100%";
-        shadowContainer.style.maxHeight = "100%";
-        const shadowRoot = shadowContainer.attachShadow({ mode: "closed" });
-        element.appendChild(shadowContainer);
+        const shadowRoot = element.attachShadow({ mode: "closed" });
         const innerContainer = document.createElement("div");
         shadowRoot.appendChild(innerContainer);
         innerContainer.classList.add("container");
 
-        const styleEl = document.createElement("style");
-        styleEl.innerHTML = getStyles();
-        shadowRoot.appendChild(styleEl);
+        const styleSheet = new CSSStyleSheet();
+        styleSheet.replaceSync(getStyles());
+        shadowRoot.adoptedStyleSheets.push(styleSheet);
 
         const canvasContainer = document.createElement("div");
         const scrollView = document.createElement("div");
@@ -56,8 +46,7 @@ export const DomHandler = defineSubsystem({
             canvas,
             ctx,
             scrollView,
-            element,
-            shadowContainer,
+            element: element,
             shadowRoot,
             innerContainer
         };
