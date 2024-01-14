@@ -67,6 +67,29 @@ type ValueOf<Obj extends object, Key extends string> = (
         : undefined
 );
 
+type UseDefaultReturn<
+    Fn extends (...rest: unknown[])=>unknown,
+    Default
+> = (
+    Fn extends ((...rest: any[])=>undefined) | (()=>null) | (()=>void)
+        ? (...rest: Parameters<Fn>)=>Default
+        : Fn
+);
+type UseDefault<Value, Default> = (
+    Value extends (void | undefined | null)
+        ? Default
+        : Value
+);
+
+type UseDefaultFunctionWithReturn<
+    MaybeFn extends Function | undefined | null | void,
+    DefaultFn extends (...rest: any[])=>any
+> = UseDefault<(
+    MaybeFn extends infer Fn extends ((...rest: any[])=>any)
+        ? UseDefaultReturn<Fn,ReturnType<DefaultFn>>
+        : undefined
+),DefaultFn>;
+
 type AsCompleteSubsystem<SO extends PartialSubsystemDefinition<string,object,OptionalInitFunction,object>> = (
     SubsystemDefinition<
         SO["name"],
@@ -84,6 +107,26 @@ function isVoid(arg: unknown): arg is void {
     return arg == undefined;
 }
 
+function useDefault<
+    T extends any | undefined | null | void,
+    Default
+>(v: T, d: Default): UseDefault<T,Default> {
+    if (isVoid(v)){
+        return d as UseDefault<T,Default>;
+    }
+    return (v ?? d) as UseDefault<T,Default>;
+}
+
+function useDefaultFunctionWithReturn<
+    MaybeFn extends Function | undefined | null | void | never,
+    DefaultFn extends (...rest: any[])=>any
+>(maybeFn: MaybeFn, defaultFn: DefaultFn): UseDefaultFunctionWithReturn<MaybeFn,DefaultFn> {
+    const fn = useDefault(maybeFn,defaultFn);
+    return function(this: any, ...rest: any[]){
+        return fn.bind(this)(...rest);
+    } as any;
+}
+
 export function defineSubsystem<
     Def extends PartialSubsystemDefinition<string,object,OptionalInitFunction,object>
 >(args: Def):
@@ -99,14 +142,9 @@ export function defineSubsystem<
         name: args.name,
         props: args.props as CompleteType["props"],
         proto: args.proto,
-        init: function(this: object){
-            const fn = args.init ?? function(){ return {} };
-            const fnResult = fn.bind(this)();
-            if (isVoid(fnResult) || !fnResult){
-                return {};
-            }
-            return fnResult;
-        } as CompleteType["init"]
+        init: useDefaultFunctionWithReturn(args.init,(()=>{
+            return {};
+        }) as CompleteType["init"])
     })
 }
 
