@@ -1,5 +1,4 @@
 import { Editor } from "../editor";
-import styles from "../styles.module.scss";
 import { bytesPerRow, rowHeight } from "../constants";
 import { DerivedVar } from "../reactivity";
 import upIcon from '@/assets/icons/chevron-up.svg?raw';
@@ -12,21 +11,21 @@ export const ScrollHandler = defineSubsystem({
     proto: {
         createVirtualScrollBar(this: Editor): void {
             const scrollBar = this.scrollHandler.scrollBar;
-            scrollBar.classList.add(styles["scroll-bar"]);
+            scrollBar.classList.add("scroll-bar");
             this.element.appendChild(scrollBar);
         
             const upArrow = document.createElement("button");
-            upArrow.classList.add(styles["up-arrow"]);
+            upArrow.classList.add("up-arrow");
             upArrow.innerHTML = upIcon;
         
             const downArrow = document.createElement("button");
-            downArrow.classList.add(styles["down-arrow"]);
+            downArrow.classList.add("down-arrow");
             downArrow.innerHTML = downIcon;
         
             const scrollBarTrack = document.createElement("div");
-            scrollBarTrack.classList.add(styles["scroll-bar-track"]);
+            scrollBarTrack.classList.add("scroll-bar-track");
             const scrollBarTrackPadding = document.createElement("div");
-            scrollBarTrackPadding.classList.add(styles["scroll-bar-track-padding"]);
+            scrollBarTrackPadding.classList.add("scroll-bar-track-padding");
         
             scrollBar.appendChild(upArrow);
             scrollBar.appendChild(scrollBarTrack);
@@ -34,7 +33,7 @@ export const ScrollHandler = defineSubsystem({
             scrollBar.appendChild(downArrow);
         
             const scrollBarHandle = document.createElement("button");
-            scrollBarHandle.classList.add(styles["scroll-bar-handle"]);
+            scrollBarHandle.classList.add("scroll-bar-handle");
             scrollBarTrack.appendChild(scrollBarHandle);
         
             interface ScrollStart {
