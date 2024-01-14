@@ -1,6 +1,11 @@
 export function getStyles(){
     return /*css*/`
-    .editor {
+    *, *::before, *::after {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+    }
+    .container {
         overflow-x: hidden;
         overflow-y: auto;
         display: grid;
@@ -11,13 +16,13 @@ export function getStyles(){
         height: 100%;
         font-size: 14px;
     }
-    .editor[data-scroll-type="virtual"] {
+    .container[data-scroll-type="virtual"] {
         overflow: hidden;
     }
-    .editor[data-scroll-type="virtual"] .scroll-view {
+    .container[data-scroll-type="virtual"] .scroll-view {
         display: none;
     }
-    .editor[data-scroll-type="virtual"] .scroll-bar {
+    .container[data-scroll-type="virtual"] .scroll-bar {
         display: grid;
     }
     .data-view {

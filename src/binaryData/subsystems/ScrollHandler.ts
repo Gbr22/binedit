@@ -12,7 +12,7 @@ export const ScrollHandler = defineSubsystem({
         createVirtualScrollBar(this: Editor): void {
             const scrollBar = this.scrollHandler.scrollBar;
             scrollBar.classList.add("scroll-bar");
-            this.element.appendChild(scrollBar);
+            this.innerContainer.appendChild(scrollBar);
         
             const upArrow = document.createElement("button");
             upArrow.classList.add("up-arrow");
@@ -108,14 +108,14 @@ export const ScrollHandler = defineSubsystem({
             return "native";
         },this.desiredState);
     
-        this.element.addEventListener("scroll",()=>{
-            const scrollPercent = this.element.scrollTop / ( this.element.scrollHeight - (this.element.clientHeight / 2) );
+        this.innerContainer.addEventListener("scroll",()=>{
+            const scrollPercent = this.innerContainer.scrollTop / ( this.innerContainer.scrollHeight - (this.innerContainer.clientHeight / 2) );
             this.desiredState.value = this.desiredState.value.with({
                 topRow: Math.ceil(getDataProviderRowCount(this.desiredState.value.dataProvider) * scrollPercent)
             })
         })
     
-        this.element.addEventListener("wheel",(e)=>{
+        this.innerContainer.addEventListener("wheel",(e)=>{
             if (scrollBarType.value == "native"){
                 return;
             }
