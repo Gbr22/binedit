@@ -4,6 +4,7 @@ export class TabData {
     name: string
     dataSource: DataProvider
     scrollPercent: number = 0
+    cursorPosition: number = 0
     
     constructor(name: string, data: DataProvider){
         this.name = name;

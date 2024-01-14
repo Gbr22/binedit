@@ -17,3 +17,10 @@ editor.onScroll(percent=>{
         }
     },1)
 })
+editor.onUpdateCursor(pos=>{
+    const tab = state.activeTab;
+    if (!tab){
+        return;
+    }
+    tab.cursorPosition = pos;
+})
