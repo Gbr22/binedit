@@ -28,7 +28,7 @@
     --menu-foreground-color: #6d6d6d;
 
     --scrollbar-background-color: #ededed;
-    --scrollbar-arrow-background-color: var(--scrollbar-background-color);
+    --scrollbar-button-background-color: var(--scrollbar-background-color);
     --scrollbar-arrow-foreground-color: #7a7a7a;
     --scrollbar-handle-background-color: #b4b4b4;
 
