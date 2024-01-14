@@ -115,6 +115,7 @@ export const ScrollHandler = defineSubsystem({
             this.desiredState.value = this.desiredState.value.with({
                 topRow: Math.ceil(getDataProviderRowCount(this.desiredState.value.dataProvider) * scrollPercent)
             })
+            this.forceUpdateHover();
         })
     
         this.innerContainer.addEventListener("wheel",(e)=>{
@@ -127,6 +128,7 @@ export const ScrollHandler = defineSubsystem({
             this.desiredState.value = this.desiredState.value.with({
                 topRow: this.toValidTopRow(this.desiredState.value.dataProvider,newTopRow)
             });
+            this.forceUpdateHover();
         })
     
         const props = {

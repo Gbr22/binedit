@@ -46,12 +46,7 @@ export const MouseHandler = defineSubsystem({
         this.element.onmouseenter = this.element.onmouseleave = this.element.onmousemove = (e)=>{
             mousePosition.x = e.clientX;
             mousePosition.y = e.clientY;
-            const lastHover = this.currentHover;
-            const newHover = this.getCurrentHover();
-            this.currentHover = newHover;
-            if (JSON.stringify(lastHover) != JSON.stringify(newHover)){
-                this.draw();
-            }
+            this.checkHover();
         }
 
         this.element.onclick = (e)=>{
@@ -79,6 +74,24 @@ export const MouseHandler = defineSubsystem({
         }
     },
     proto: {
+        checkHover(this: Editor){
+            const lastHover = this.currentHover;
+            const newHover = this.getCurrentHover();
+            if (JSON.stringify(lastHover) != JSON.stringify(newHover)){
+                this.setHover(newHover);
+                this.render();
+            }
+        },
+        setHover(this: Editor, hover: Hover){
+            this.currentHover = hover;
+            if (hover.type == "byte" || hover.type == "char"){
+                this.onHoverByte(this.pointToFileIndex(hover.pos));
+            }
+        },
+        forceUpdateHover(this: Editor){
+            const hover = this.getCurrentHover();
+            this.setHover(hover);
+        },
         getCanvasMousePosition(this: Editor){
             const rect = this.canvas.getBoundingClientRect();
             const y = this.mousePosition.y - rect.top;

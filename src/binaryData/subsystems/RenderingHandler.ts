@@ -169,11 +169,14 @@ export const RenderingHandler = defineSubsystem({
         },
         drawCursor(this: Editor, pos: Rect){
             const ctx = this.ctx;
-            ctx.fillStyle = getCssString(this.innerContainer,"--editor-cursor-background-color");
-            ctx.fillRect(pos.x,pos.y,pos.width,pos.height);
             ctx.strokeStyle = getCssString(this.innerContainer,"--editor-cursor-border-color");
             ctx.lineWidth = 1*this.getScale();
             ctx.strokeRect(pos.x,pos.y,pos.width,pos.height);
+        },
+        drawSelection(this: Editor, pos: Rect){
+            const ctx = this.ctx;
+            ctx.fillStyle = getCssString(this.innerContainer,"--editor-cursor-background-color");
+            ctx.fillRect(pos.x,pos.y,pos.width,pos.height);
         },
         drawByteCount(this: Editor, renderIndex: number): void {
             const ctx = this.ctx;
@@ -215,11 +218,16 @@ export const RenderingHandler = defineSubsystem({
             }
         
             const pos = this.getByteRect(renderIndex,byteIndex);
-        
             const index = this.renderPosToFileIndex(renderIndex,byteIndex);
+        
+            if (this.isSelectedIndex(index)){
+                this.drawSelection(pos);
+            }
+
             if (this.cursorPosition == index){
                 this.drawCursor(pos);
             }
+            
 
             if (getCssBoolean(this.element,"--editor-show-wireframe")){
                 ctx.strokeStyle = "red";
@@ -264,6 +272,11 @@ export const RenderingHandler = defineSubsystem({
             const pos = this.getCharRect(renderIndex,byteIndex);
 
             const index = this.renderPosToFileIndex(renderIndex,byteIndex);
+
+            if (this.isSelectedIndex(index)){
+                this.drawSelection(pos);
+            }
+
             if (this.cursorPosition == index){
                 this.drawCursor(pos);
             }
