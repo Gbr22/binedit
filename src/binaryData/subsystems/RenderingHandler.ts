@@ -29,7 +29,7 @@ export const RenderingHandler = defineSubsystem({
         },
         render(this: Editor): void {
             emptyCssCache();
-            this.element.dataset["scrollType"] = `${this.scrollBarType.value}`;
+            this.innerContainer.dataset["scrollType"] = `${this.scrollBarType.value}`;
             if (this.scrollBarType.value == "virtual"){
                 this.element.scrollTop = 0;
             }

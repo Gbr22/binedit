@@ -13,13 +13,28 @@ export const DomHandler = defineSubsystem({
         ctx: CanvasRenderingContext2D
         scrollView: HTMLDivElement
         element: HTMLElement
+        shadowRoot: ShadowRoot
+        shadowContainer: HTMLDivElement
+        innerContainer: HTMLDivElement
     } {
         const element = document.createElement("div");
         element.classList.add("editor");
 
+        const shadowContainer = document.createElement("div");
+        shadowContainer.classList.add("shadow-container");
+        shadowContainer.style.width = "100%";
+        shadowContainer.style.height = "100%";
+        shadowContainer.style.maxWidth = "100%";
+        shadowContainer.style.maxHeight = "100%";
+        const shadowRoot = shadowContainer.attachShadow({ mode: "closed" });
+        element.appendChild(shadowContainer);
+        const innerContainer = document.createElement("div");
+        shadowRoot.appendChild(innerContainer);
+        innerContainer.classList.add("container");
+
         const styleEl = document.createElement("style");
         styleEl.innerHTML = getStyles();
-        element.appendChild(styleEl);
+        shadowRoot.appendChild(styleEl);
 
         const canvasContainer = document.createElement("div");
         const scrollView = document.createElement("div");
@@ -27,10 +42,10 @@ export const DomHandler = defineSubsystem({
         const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     
         scrollView.classList.add("scroll-view");
-        element.appendChild(scrollView);
+        innerContainer.appendChild(scrollView);
     
         canvasContainer.classList.add("canvas-container");
-        element.appendChild(canvasContainer);
+        innerContainer.appendChild(canvasContainer);
     
         canvas.classList.add("canvas");
         canvasContainer.appendChild(canvas);
@@ -41,7 +56,10 @@ export const DomHandler = defineSubsystem({
             canvas,
             ctx,
             scrollView,
-            element
+            element,
+            shadowContainer,
+            shadowRoot,
+            innerContainer
         };
     },
 })
