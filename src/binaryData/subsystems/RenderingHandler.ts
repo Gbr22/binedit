@@ -3,6 +3,7 @@ import { bytesPerRow, rowHeight } from "../constants";
 import { getRowIndex, toHex, type Row, byteToPrintable } from "../row";
 import { emptyCssCache, getCssBoolean, getCssNumber, getCssString } from "@/theme";
 import { defineSubsystem } from "../composition";
+import { isCollision } from "./MouseHandler";
 
 export interface Rect {
     x: number
@@ -11,14 +12,29 @@ export interface Rect {
     height: number
 }
 
+export interface Point {
+    x: number
+    y: number
+}
+
 export const RenderingHandler = defineSubsystem({
     name: "RenderingHandler",
     init(this: Editor) {
+        const bytesPerRow = 16;
+
         return {
+            bytesPerRow,
             rows: new Set<Row>()
         };
     },
     proto: {
+        renderPosToFileIndex(this: Editor, y: number, x: number): number {
+            return this.pointToFileIndex({x,y});
+        },
+        pointToFileIndex(this: Editor, pos: Point): number {
+            const index = (this.intermediateState.value.topRow + pos.y) * bytesPerRow + pos.x;
+            return index;
+        },
         getRenderIndex(this: Editor, startByte: number): number {
             const index = getRowIndex(startByte);
             const renderIndex = index - this.intermediateState.value.topRow;
@@ -79,7 +95,7 @@ export const RenderingHandler = defineSubsystem({
             this.drawByteCount(renderIndex);
         
             for(let byteIndex = 0; byteIndex < bytesPerRow; byteIndex++){
-                const value = this.getByte(renderIndex * bytesPerRow + byteIndex);
+                const value = this.getRenderByte(renderIndex * bytesPerRow + byteIndex);
                 this.drawByte({
                     renderIndex,
                     byteIndex,
@@ -100,7 +116,6 @@ export const RenderingHandler = defineSubsystem({
         },
         getByteCountRect(this: Editor, y: number): Rect {
             const ctx = this.ctx;
-            const scale = window.devicePixelRatio;
         
             const count = this.getByteCountOfRow(0);
             ctx.font = this.getByteCountFont();
@@ -144,12 +159,24 @@ export const RenderingHandler = defineSubsystem({
             return toHex(count).padStart(getCssNumber(this.innerContainer,"--editor-row-number-digit-count"),'0');
         },
         getByteCountFont(this: Editor) {
-            const scale = window.devicePixelRatio;
-            return `${getCssNumber(this.innerContainer,"--editor-font-size") * scale}px ${getCssString(this.innerContainer,"--editor-font-family")}`
+            return `${getCssNumber(this.innerContainer,"--editor-font-size") * this.getScale()}px ${getCssString(this.innerContainer,"--editor-font-family")}`
+        },
+        drawHover(this: Editor, pos: Rect){
+            const ctx = this.ctx;
+            ctx.strokeStyle = getCssString(this.innerContainer,"--editor-select-border-color");
+            ctx.lineWidth = 1*this.getScale();
+            ctx.strokeRect(pos.x,pos.y,pos.width,pos.height);
+        },
+        drawCursor(this: Editor, pos: Rect){
+            const ctx = this.ctx;
+            ctx.fillStyle = getCssString(this.innerContainer,"--editor-cursor-background-color");
+            ctx.fillRect(pos.x,pos.y,pos.width,pos.height);
+            ctx.strokeStyle = getCssString(this.innerContainer,"--editor-cursor-border-color");
+            ctx.lineWidth = 1*this.getScale();
+            ctx.strokeRect(pos.x,pos.y,pos.width,pos.height);
         },
         drawByteCount(this: Editor, renderIndex: number): void {
             const ctx = this.ctx;
-            const scale = window.devicePixelRatio;
         
             const count = this.getByteCountOfRow(renderIndex);
         
@@ -160,7 +187,7 @@ export const RenderingHandler = defineSubsystem({
         
             if (getCssBoolean(this.element,"--editor-show-wireframe")){
                 ctx.strokeStyle = "green";
-                ctx.lineWidth = 1*scale;
+                ctx.lineWidth = 1*this.getScale();
                 ctx.strokeRect(pos.x,pos.y,pos.width,pos.height);
             }
         
@@ -171,11 +198,16 @@ export const RenderingHandler = defineSubsystem({
                 ( pos.x + pos.width/2 ),
                 ( pos.y + pos.height/2 ),
             );
+
+            if (
+                this.currentHover.type == "byte-count"
+                && this.currentHover.y == renderIndex
+            ){
+                this.drawHover(pos);
+            }
         },
         drawByte(this: Editor, props: { renderIndex: number, byteIndex: number, value: number | undefined }): void {
             const ctx = this.ctx;
-            const scale = window.devicePixelRatio;
-        
             const { value, renderIndex, byteIndex } = props;
         
             if (value == undefined){
@@ -184,14 +216,19 @@ export const RenderingHandler = defineSubsystem({
         
             const pos = this.getByteRect(renderIndex,byteIndex);
         
+            const index = this.renderPosToFileIndex(renderIndex,byteIndex);
+            if (this.cursorPosition == index){
+                this.drawCursor(pos);
+            }
+
             if (getCssBoolean(this.element,"--editor-show-wireframe")){
                 ctx.strokeStyle = "red";
-                ctx.lineWidth = 1*scale;
+                ctx.lineWidth = 1*this.getScale();
                 ctx.strokeRect(pos.x,pos.y,pos.width,pos.height);
             }
         
             const text = toHex(value).padStart(2,'0');
-            ctx.font = `${getCssNumber(this.innerContainer,"--editor-font-size") * scale}px ${getCssString(this.innerContainer,"--editor-font-family")}`;
+            ctx.font = `${getCssNumber(this.innerContainer,"--editor-font-size") * this.getScale()}px ${getCssString(this.innerContainer,"--editor-font-family")}`;
             ctx.fillStyle = byteIndex % 2 == 0 ?
                 getCssString(this.innerContainer,"--editor-byte-1-foreground-color") :
                 getCssString(this.innerContainer,"--editor-byte-2-foreground-color")
@@ -203,30 +240,43 @@ export const RenderingHandler = defineSubsystem({
                 ( pos.x + pos.width/2 ),
                 ( pos.y + pos.height/2 ),
             );
+
+            if (
+                (
+                    this.currentHover.type == "byte"
+                    || this.currentHover.type == "char"
+                )
+                && this.currentHover.pos.x == byteIndex
+                && this.currentHover.pos.y == renderIndex
+            ){
+                this.drawHover(pos);
+            }
         },
         drawChar(this: Editor, props: { renderIndex: number, byteIndex: number, value: number | undefined }): void {
             const ctx = this.ctx;
-            const canvas = this.canvas;
-            const scale = window.devicePixelRatio;
         
             const { value, renderIndex, byteIndex } = props;
         
             if (value == undefined){
                 return;
             }
-        
+
             const pos = this.getCharRect(renderIndex,byteIndex);
+
+            const index = this.renderPosToFileIndex(renderIndex,byteIndex);
+            if (this.cursorPosition == index){
+                this.drawCursor(pos);
+            }
         
             if (getCssBoolean(this.element,"--editor-show-wireframe")){
                 ctx.strokeStyle = "blue";
-                ctx.lineWidth = 1*scale;
+                ctx.lineWidth = 1*this.getScale();
                 ctx.strokeRect(pos.x,pos.y,pos.width,pos.height);
             }
         
             const printable = byteToPrintable(value);
             const text = printable.text;
-            ctx.font = `${getCssNumber(this.innerContainer,"--editor-font-size") * scale}px ${getCssString(this.innerContainer,"--editor-font-family")}`;
-            const size = ctx.measureText(text);
+            ctx.font = `${getCssNumber(this.innerContainer,"--editor-font-size") * this.getScale()}px ${getCssString(this.innerContainer,"--editor-font-family")}`;
         
             ctx.fillStyle = getCssString(this.innerContainer,`--editor-char-${printable.type}-color`);
         
@@ -236,6 +286,18 @@ export const RenderingHandler = defineSubsystem({
                 ( pos.x + pos.width/2 ),
                 ( pos.y + pos.height/2 ),
             );
+
+
+            if (
+                (
+                    this.currentHover.type == "byte"
+                    || this.currentHover.type == "char"
+                )
+                && this.currentHover.pos.x == byteIndex
+                && this.currentHover.pos.y == renderIndex
+            ){
+                this.drawHover(pos);
+            }
         }
     }
 });
