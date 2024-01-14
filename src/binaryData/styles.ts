@@ -4,14 +4,22 @@ export function getStyles(){
         padding: 0;
         margin: 0;
         box-sizing: border-box;
+        border: none;
     }
     .container {
+        --editor-show-wireframe: 0;
+        --editor-font-family: monospace;
+        --editor-font-size: 14;
+        --editor-byte-width: 23;
+        --editor-char-width: 11;
+        --editor-row-number-digit-count: 8;
+
         overflow-x: hidden;
         overflow-y: auto;
         display: grid;
         position: relative;
         --row-height: 16px;
-        font-family: monospace;
+        font-family: var(--editor-font-family);
         max-height: 100%;
         height: 100%;
         font-size: 14px;
@@ -22,7 +30,7 @@ export function getStyles(){
     .container[data-scroll-type="virtual"] .scroll-view {
         display: none;
     }
-    .container[data-scroll-type="virtual"] .scroll-bar {
+    .container[data-scroll-type="virtual"] .scrollbar {
         display: grid;
     }
     .data-view {
@@ -38,59 +46,39 @@ export function getStyles(){
         position: absolute;
         pointer-events: none;
     }
-    .scroll-bar {
-        --scroll-bar-width: 16px;
-        --scroll-handle-size: 5vh;
+    .scrollbar {
+        --width: 16px;
+        --scrollbar-width: var(--width);
+        --handle-height: 5vh;
+        --scrollbar-handle-height: var(--handle-height);
         display: none;
         position: absolute;
         height: 100%;
         right: 0;
         top: 0;
-        width: 16px;
-        background-color: var(--scrollbar-background-color);
-        grid-template-rows: var(--scroll-bar-width) 1fr var(--scroll-handle-size) var(--scroll-bar-width);
+        width: var(--scrollbar-width);
+        background-color: black;
+        grid-template-rows: var(--scrollbar-width) 1fr var(--scrollbar-handle-height) var(--scrollbar-width);
         flex-direction: column;
         --scroll-percent: 0;
     }
-    .scroll-bar button {
-        border: none;
-        outline: none;
-    }
-    .up-arrow, .down-arrow {
+    .scrollbar-button {
         width: 100%;
-        display: grid;
-        place-content: center;
-        color: var(--scrollbar-arrow-foreground-color);
-        background-color: var(--scrollbar-arrow-background-color);
-    
-        transition: color 0.3s ease;
-    
+        background-color: #3a3a3a;
         z-index: 1;
     }
-    .up-arrow:hover, .down-arrow:hover {
-        color: var(--intense-foreground-color);
-    }
-    .up-arrow svg, .down-arrow svg {
-        width: 100%;
-    }
-    .scroll-bar-track {
+    .scrollbar-track {
         display: flex;
         flex-direction: column;
         align-items: center;
         transform: translateY(calc(100% * var(--scroll-percent)));
     }
-    .scroll-bar-track-padding {}
-    .scroll-bar-handle {
-        background-color: var(--scrollbar-handle-background-color);
-        width: 12px;
-        height: 5vh;
-        
-        transition: background-color 0.2s ease;
+    .scrollbar-track-padding {}
+    .scrollbar-handle {
+        width: 100%;
+        height: var(--scrollbar-handle-height);
+        background-color: #515151;
     }
-    .scroll-bar-handle:hover, .scroll-bar-handle:active {
-        background-color: color-mix(in srgb, var(--scrollbar-handle-background-color), 8% var(--mixer-foreground));
-    }
-    
     .canvas-container {
         position: sticky;
         top: 0;

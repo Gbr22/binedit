@@ -28,9 +28,12 @@
     --menu-foreground-color: #dedede;
 
     --scrollbar-background-color: #242424;
-    --scrollbar-arrow-background-color: var(--scrollbar-background-color);
+    --scrollbar-button-background-color: var(--scrollbar-background-color);
     --scrollbar-arrow-foreground-color: #959595;
     --scrollbar-handle-background-color: #484848;
 
     --context-menu-border-color: #313131;
+}
+.editor div::part(scrollbar-button)::before {
+    filter: invert(100%);
 }

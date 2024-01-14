@@ -9,7 +9,7 @@ export function getCssString(element: HTMLElement | null, name: string){
     if (cache.has(name)){
         return cache.get(name) || "";
     }
-    let value = getComputedStyle(element).getPropertyValue(name);
+    let value = getComputedStyle(element as unknown as Element).getPropertyValue(name);
     cache.set(name,value);
     return value;
 }

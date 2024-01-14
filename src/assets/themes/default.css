@@ -1,8 +1,44 @@
 .editor {
     --editor-show-wireframe: 0;
-    --editor-font-family: monospace;
+    --editor-font-family: "ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace";
     --editor-font-size: 14;
     --editor-byte-width: 23;
     --editor-char-width: 11;
     --editor-row-number-digit-count: 8;
+}
+.editor div::part(scrollbar) {
+    --width: 16px;
+    --handle-height: 5vh;
+    background-color: var(--scrollbar-background-color);
+}
+.editor div::part(scrollbar-button)::before {
+    background-size: contain;
+    content: '';
+    min-width: 100%;
+    min-height: 100%;
+    display: flex;
+    position: relative;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+}
+.editor div::part(scrollbar-button):hover::before {
+    opacity: 0.9;
+}
+.editor div::part(scrollbar-button) {
+    position: relative;
+    background-color: var(--scrollbar-button-background-color);
+}
+.editor div::part(scrollbar-button up)::before {
+    background-image: url("/icons/chevron-up.svg");
+}
+.editor div::part(scrollbar-button down)::before {
+    background-image: url("/icons/chevron-down.svg");
+}
+.editor div::part(scrollbar-handle) {
+    width: 75%;
+    transition: background-color 0.2s ease;
+    background-color: var(--scrollbar-handle-background-color);
+}
+.editor div::part(scrollbar-handle):hover, .editor div::part(scrollbar-handle):active {
+    background-color: color-mix(in srgb, var(--scrollbar-handle-background-color), 8% var(--mixer-foreground));
 }
