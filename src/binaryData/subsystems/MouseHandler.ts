@@ -1,16 +1,14 @@
 import { Editor } from "../editor";
-import { TrackedVar } from "../reactivity";
 import { defineSubsystem } from "../composition";
-import { boxToRect, Box, type Point, type Rect } from "./RenderingHandler";
+import { Box, type Point } from "./RenderingHandler";
 import { bytesPerRow } from "../constants";
 
-export function isCollision(box: Rect | Box, point: Point): boolean {
-    const rect = box instanceof Box ? boxToRect(box) : box;
+export function isCollision(box: Box, point: Point): boolean {
     return (
-        point.x >= rect.x &&
-        point.x <= (rect.x + rect.width) &&
-        point.y >= rect.y &&
-        point.y <= (rect.y + rect.height)
+        point.x >= box.left &&
+        point.x <= box.right &&
+        point.y >= box.top &&
+        point.y <= box.bottom
     );
 }
 
