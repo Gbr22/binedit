@@ -7,6 +7,12 @@ function canCombine(a: Range, b: Range) {
     return doesOverlap(a,b);
 }
 function doesOverlap(a: Range, b: Range){
+    if (a[0] < b[0] && a[1] < b[0]){
+        return false;
+    }
+    if (a[0] > b[1] && a[1] > b[1]){
+        return false;
+    }
     const ranges = [a,b];
     const min = Math.min(...ranges.map(e=>e[0]));
     const max = Math.max(...ranges.map(e=>e[1]));
