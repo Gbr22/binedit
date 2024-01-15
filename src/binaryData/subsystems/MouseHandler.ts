@@ -1,10 +1,11 @@
 import { Editor } from "../editor";
 import { TrackedVar } from "../reactivity";
 import { defineSubsystem } from "../composition";
-import type { Point, Rect } from "./RenderingHandler";
+import { boxToRect, Box, type Point, type Rect } from "./RenderingHandler";
 import { bytesPerRow } from "../constants";
 
-export function isCollision(rect: Rect, point: Point): boolean {
+export function isCollision(box: Rect | Box, point: Point): boolean {
+    const rect = box instanceof Box ? boxToRect(box) : box;
     return (
         point.x >= rect.x &&
         point.x <= (rect.x + rect.width) &&
@@ -112,8 +113,8 @@ export const MouseHandler = defineSubsystem({
             const pos = this.getScaledCanvasMousePosition();
             for (let y = 0; y < this.viewportRowCount.value; y++){
                 const renderIndex = y;
-                const byteCountRect = this.getByteCountRect(renderIndex);
-                if (isCollision(byteCountRect,pos)){
+                const byteCountRect = this.getByteCountBox(renderIndex);
+                if (isCollision(byteCountRect.borderBox,pos)){
                     return {
                         type: "byte-count",
                         y
@@ -131,7 +132,7 @@ export const MouseHandler = defineSubsystem({
                         }
                     }
                     const charRect = this.getCharRect(renderIndex,x);
-                    if (isCollision(charRect,pos)){
+                    if (isCollision(charRect.borderBox,pos)){
                         return {
                             type: "char",
                             pos: {
