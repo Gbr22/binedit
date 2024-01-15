@@ -103,7 +103,7 @@ export const SelectionHandler = defineSubsystem({
                 this.selectionStartIndex = undefined;
                 this.selectionEndIndex = undefined;
                 compressRanges(this.selections);
-                this.render();
+                this.redraw();
             } else {
                 this.selectionStartIndex = undefined;
                 this.selectionEndIndex = undefined;
@@ -202,7 +202,7 @@ export const SelectionHandler = defineSubsystem({
                 fn(this.cursorPosition);
             })
             requestAnimationFrame(()=>{
-                this.render();
+                this.redraw();
             })
         }
     },

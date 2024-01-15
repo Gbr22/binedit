@@ -8,21 +8,29 @@ export interface Point {
     x: number
     y: number
 }
+type Numbers2 = [number, number];
+export interface Dot extends Numbers2 {
+    length: 2;
+}
 
-export class Dot {
-    x: number
-    y: number
-
+export class Dot extends Array<number> {
     constructor({
         x,
         y
     }: {x: number, y: number}){
-        this.x = x;
-        this.y = y;
+        super(2);
+        this[0] = x;
+        this[1] = y;
     }
 
+    get x(){
+        return this[0];
+    }
+    get y(){
+        return this[1];
+    }
     get arr(): [number, number] {
-        return [this.x,this.y];
+        return this;
     }
 }
 
@@ -31,6 +39,9 @@ export class Box {
     right!: number
     top!: number
     bottom!: number
+    width: number
+    height: number
+    arr: [number, number, number, number]
 
     constructor(props: {
         left: number
@@ -39,27 +50,21 @@ export class Box {
         bottom: number
     }) {
         Object.assign(this,props);
-    }
-    
-    get width(){
-        return this.right - this.left;
-    }
-    get height(){
-        return this.bottom - this.top;
+        this.width = this.right - this.left;
+        this.height = this.bottom - this.top;
+        this.arr = [
+            this.left,
+            this.top,
+            this.width,
+            this.height
+        ];
+        Object.freeze(this);
     }
     get center(){
         return new Dot({
             x: this.left + this.width / 2,
             y: this.top + this.height / 2
         })
-    }
-    get arr(): [number, number, number, number] {
-        return [
-            this.left,
-            this.top,
-            this.width,
-            this.height
-        ]
     }
 }
 
@@ -74,6 +79,10 @@ class BoundingBox {
     marginBottom: number;
     innerWidth: number;
     innerHeight: number;
+
+    inner: Box;
+    outer: Box;
+    border: Box;
 
     constructor(props: {
         outerLeft: number,
@@ -107,6 +116,27 @@ class BoundingBox {
         this.outerTop = outerTop;
         this.innerWidth = innerWidth;
         this.innerHeight = innerHeight;
+
+        this.inner = new Box({
+            left: this.innerLeft,
+            right: this.innerRight,
+            top: this.innerTop,
+            bottom: this.innerBottom
+        });
+        this.border = new Box({
+            left: this.borderLeft,
+            right: this.borderRight,
+            top: this.borderTop,
+            bottom: this.borderBottom
+        });
+        this.outer = new Box({
+            left: this.outerLeft,
+            right: this.outerRight,
+            top: this.outerTop,
+            bottom: this.outerBottom
+        });
+
+        Object.freeze(this);
     }
     
     // outer -> border -> inner
@@ -128,40 +158,29 @@ class BoundingBox {
     get innerBottom() { return this.innerTop + this.innerHeight; }
     get borderBottom() { return this.innerBottom + this.paddingBottom; }
     get outerBottom() { return this.borderBottom + this.marginBottom; }
+}
 
-    get inner(): Box {
-        return new Box({
-            left: this.innerLeft,
-            right: this.innerRight,
-            top: this.innerTop,
-            bottom: this.innerBottom
-        });
-    }
-    get border(): Box {
-        return new Box({
-            left: this.borderLeft,
-            right: this.borderRight,
-            top: this.borderTop,
-            bottom: this.borderBottom
-        });
-    }
-    get outer(): Box {
-        return new Box({
-            left: this.outerLeft,
-            right: this.outerRight,
-            top: this.outerTop,
-            bottom: this.outerBottom
-        });
-    }
+interface Boxes {
+    byteCountContainer?: BoundingBox,
+    bytesCounter?: BoundingBox,
+    charsContainer?: BoundingBox
 }
 
 export const RenderingHandler = defineSubsystem({
     name: "RenderingHandler",
     init(this: Editor) {
         const bytesPerRow = 16;
+        const devicePixelRatio = window.devicePixelRatio;
+        const scale = 1;
+        const unit = devicePixelRatio * scale;
+        const boxes = {} as Boxes;
 
         return {
             bytesPerRow,
+            devicePixelRatio,
+            scale,
+            unit,
+            boxes,
             rows: new Set<Row>()
         };
     },
@@ -181,19 +200,22 @@ export const RenderingHandler = defineSubsystem({
         isRenderIndexInViewport(this: Editor, index: number): boolean {
             return index >= 0 && index < this.viewportRowCount.value;
         },
-        render(this: Editor): void {
+        reflow(this: Editor): void {
             emptyCssCache();
+            this.devicePixelRatio = window.devicePixelRatio;
+            this.unit = devicePixelRatio * this.scale;
             this.innerContainer.dataset["scrollType"] = `${this.scrollBarType.value}`;
             if (this.scrollBarType.value == "virtual"){
                 this.element.scrollTop = 0;
             }
             this.scrollView.style.setProperty('--row-count',this.scrollRowCount.value.toString());
             
-            this.draw();
+            this.boxes = {};
+            this.redraw();
         
             this.renderedState.value = this.intermediateState.value;
         },
-        draw(this: Editor): void {
+        redraw(this: Editor): void {
             const ctx = this.ctx;
             const canvas = this.canvas;
         
@@ -240,13 +262,10 @@ export const RenderingHandler = defineSubsystem({
                 })
             }
         },
-        getScale(this: Editor): number {
-            return window.devicePixelRatio;
-        },
         getRowPosition(this: Editor, y: number){
             return y * rowHeight;
         },
-        getByteCountContainer(this: Editor): BoundingBox {
+        createByteCountContainer(this: Editor): BoundingBox {
             const anyByteCount = this.getAnyByteCountBox();
             
             return new BoundingBox({
@@ -254,9 +273,15 @@ export const RenderingHandler = defineSubsystem({
                 outerTop: 0,
                 innerWidth: anyByteCount.outer.width,
                 innerHeight: this.canvas.height,
-                paddingLeft: 4 * this.getScale(),
-                paddingRight: 4 * this.getScale()
+                paddingLeft: 4 * this.unit,
+                paddingRight: 4 * this.unit
             })
+        },
+        getByteCountContainer(this: Editor): BoundingBox {
+            if (!this.boxes.byteCountContainer){
+                this.boxes.byteCountContainer = this.createByteCountContainer();
+            }
+            return this.boxes.byteCountContainer;
         },
         getAnyByteCountBox(this: Editor){
             const ctx = this.ctx;
@@ -270,9 +295,9 @@ export const RenderingHandler = defineSubsystem({
                 outerLeft: 0,
                 outerTop: 0,
                 innerWidth: textWidth,
-                innerHeight: rowHeight * this.getScale(),
-                paddingLeft: 4 * this.getScale(),
-                paddingRight: 4 * this.getScale()
+                innerHeight: rowHeight * this.unit,
+                paddingLeft: 4 * this.unit,
+                paddingRight: 4 * this.unit
             })
         },
         getByteCountBox(this: Editor, y: number): BoundingBox {
@@ -281,7 +306,7 @@ export const RenderingHandler = defineSubsystem({
         
             return new BoundingBox({
                 outerLeft: container.inner.left,
-                outerTop: container.inner.top + this.getRowPosition(y) * this.getScale(),
+                outerTop: container.inner.top + this.getRowPosition(y) * this.unit,
                 innerWidth: anyByteCount.inner.width,
                 innerHeight: anyByteCount.inner.height,
                 paddingLeft: anyByteCount.paddingLeft,
@@ -296,17 +321,17 @@ export const RenderingHandler = defineSubsystem({
                 outerLeft: count.outer.right,
                 outerTop: 0,
                 innerWidth: anyByte.outer.width * this.bytesPerRow,
-                innerHeight: rowHeight * this.getScale(),
-                paddingLeft: 6 * this.getScale(),
-                paddingRight: 6 * this.getScale(),
+                innerHeight: rowHeight * this.unit,
+                paddingLeft: 6 * this.unit,
+                paddingRight: 6 * this.unit,
             })
         },
         getAnyByteBox(this: Editor): BoundingBox {
             return new BoundingBox({
                 outerLeft: 0,
                 outerTop: 0,
-                innerWidth: getCssNumber(this.innerContainer,"--editor-byte-width") * this.getScale(),
-                innerHeight: rowHeight * this.getScale(),
+                innerWidth: getCssNumber(this.innerContainer,"--editor-byte-width") * this.unit,
+                innerHeight: rowHeight * this.unit,
             })
         },
         getByteRect(this: Editor, y: number,x: number): BoundingBox {
@@ -321,12 +346,12 @@ export const RenderingHandler = defineSubsystem({
             })
         },
         getAnyCharBox(this: Editor): BoundingBox {
-            const charWidth = getCssNumber(this.innerContainer,"--editor-char-width") * this.getScale();
+            const charWidth = getCssNumber(this.innerContainer,"--editor-char-width") * this.unit;
             return new BoundingBox({
                 outerLeft: 0,
                 outerTop: 0,
                 innerWidth: charWidth,
-                innerHeight: rowHeight * this.getScale()
+                innerHeight: rowHeight * this.unit
             })
         },
         getCharsContainer(this: Editor){
@@ -338,8 +363,8 @@ export const RenderingHandler = defineSubsystem({
                 outerTop: 0,
                 innerWidth: anyCharBox.inner.width * this.bytesPerRow,
                 innerHeight: this.canvas.height,
-                paddingLeft: 6 * this.getScale(),
-                paddingRight: 6 * this.getScale(),
+                paddingLeft: 6 * this.unit,
+                paddingRight: 6 * this.unit,
             })
         },
         getCharRect(this: Editor, y: number,x: number): BoundingBox {
@@ -349,7 +374,7 @@ export const RenderingHandler = defineSubsystem({
         
             return new BoundingBox({
                 outerLeft: charsBox.inner.left + anyCharBox.outer.width * x,
-                outerTop: top * this.getScale(),
+                outerTop: top * this.unit,
                 innerWidth: anyCharBox.inner.width,
                 innerHeight: anyCharBox.inner.height
             })
@@ -361,18 +386,18 @@ export const RenderingHandler = defineSubsystem({
             return toHex(count).padStart(getCssNumber(this.innerContainer,"--editor-row-number-digit-count"),'0');
         },
         getByteCountFont(this: Editor) {
-            return `${getCssNumber(this.innerContainer,"--editor-font-size") * this.getScale()}px ${getCssString(this.innerContainer,"--editor-font-family")}`
+            return `${getCssNumber(this.innerContainer,"--editor-font-size") * this.unit}px ${getCssString(this.innerContainer,"--editor-font-family")}`
         },
         drawHover(this: Editor, box: Box){
             const ctx = this.ctx;
             ctx.strokeStyle = getCssString(this.innerContainer,"--editor-select-border-color");
-            ctx.lineWidth = 1*this.getScale();
+            ctx.lineWidth = 1*this.unit;
             ctx.strokeRect(...box.arr);
         },
         drawCursor(this: Editor, box: Box){
             const ctx = this.ctx;
             ctx.strokeStyle = getCssString(this.innerContainer,"--editor-cursor-border-color");
-            ctx.lineWidth = 1*this.getScale();
+            ctx.lineWidth = 1*this.unit;
             ctx.strokeRect(...box.arr);
         },
         drawSelection(this: Editor, box: Box){
@@ -392,7 +417,7 @@ export const RenderingHandler = defineSubsystem({
         
             if (getCssBoolean(this.element,"--editor-show-wireframe")){
                 ctx.strokeStyle = "green";
-                ctx.lineWidth = 1*this.getScale();
+                ctx.lineWidth = 1*this.unit;
                 ctx.strokeRect(...pos.inner.arr);
             }
         
@@ -430,12 +455,12 @@ export const RenderingHandler = defineSubsystem({
 
             if (getCssBoolean(this.element,"--editor-show-wireframe")){
                 ctx.strokeStyle = "red";
-                ctx.lineWidth = 1*this.getScale();
+                ctx.lineWidth = 1*this.unit;
                 ctx.strokeRect(...pos.border.arr);
             }
         
             const text = toHex(value).padStart(2,'0');
-            ctx.font = `${getCssNumber(this.innerContainer,"--editor-font-size") * this.getScale()}px ${getCssString(this.innerContainer,"--editor-font-family")}`;
+            ctx.font = `${getCssNumber(this.innerContainer,"--editor-font-size") * this.unit}px ${getCssString(this.innerContainer,"--editor-font-family")}`;
             ctx.fillStyle = byteIndex % 2 == 0 ?
                 getCssString(this.innerContainer,"--editor-byte-1-foreground-color") :
                 getCssString(this.innerContainer,"--editor-byte-2-foreground-color")
@@ -479,13 +504,13 @@ export const RenderingHandler = defineSubsystem({
         
             if (getCssBoolean(this.element,"--editor-show-wireframe")){
                 ctx.strokeStyle = "blue";
-                ctx.lineWidth = 1*this.getScale();
+                ctx.lineWidth = 1*this.unit;
                 ctx.strokeRect(...pos.border.arr);
             }
         
             const printable = byteToPrintable(value);
             const text = printable.text;
-            ctx.font = `${getCssNumber(this.innerContainer,"--editor-font-size") * this.getScale()}px ${getCssString(this.innerContainer,"--editor-font-family")}`;
+            ctx.font = `${getCssNumber(this.innerContainer,"--editor-font-size") * this.unit}px ${getCssString(this.innerContainer,"--editor-font-family")}`;
         
             ctx.fillStyle = getCssString(this.innerContainer,`--editor-char-${printable.type}-color`);
         
