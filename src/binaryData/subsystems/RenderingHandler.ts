@@ -80,6 +80,18 @@ export const RenderingHandler = defineSubsystem({
                 ctx.fillStyle = getCssString(this.innerContainer,"--editor-row-number-background-color");
                 ctx.fillRect(...r);
             }
+            {
+                const rectStart = this.getCharRect(0,0);
+                const rectEnd = this.getCharRect(0,this.bytesPerRow-1);
+                const r: [number, number, number, number] = [
+                    rectStart.x,
+                    -10,
+                    (rectEnd.x + rectEnd.width) - rectStart.x,
+                    canvas.height + 20
+                ]
+                ctx.strokeStyle = getCssString(this.innerContainer,"--editor-border-color");
+                ctx.strokeRect(...r);
+            }
         
             for(let renderIndex = 0; renderIndex < this.viewportRowCount.value; renderIndex++){
                 this.drawRow(renderIndex);
