@@ -74,7 +74,7 @@ export const UpdateHandler = defineSubsystem({
         })
         this.dataToRender.subscribe(()=>{
             requestAnimationFrame(()=>{
-                this.render();
+                this.reflow();
             })
         })
         renderedState.subscribe(()=>{
@@ -82,7 +82,7 @@ export const UpdateHandler = defineSubsystem({
             this.intermediateState.value = this.desiredState.value;
         })
         this.viewportRowCount.subscribe(()=>{
-            this.render();
+            this.reflow();
         })
 
         return {

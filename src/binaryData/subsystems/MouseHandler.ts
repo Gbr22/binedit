@@ -78,7 +78,7 @@ export const MouseHandler = defineSubsystem({
             const newHover = this.getCurrentHover();
             if (JSON.stringify(lastHover) != JSON.stringify(newHover)){
                 this.setHover(newHover);
-                this.render();
+                this.redraw();
             }
         },
         setHover(this: Editor, hover: Hover){
@@ -101,8 +101,8 @@ export const MouseHandler = defineSubsystem({
         },
         getScaledCanvasMousePosition(this: Editor){
             const pos = this.getCanvasMousePosition();
-            const x = pos.x * this.getScale();
-            const y = pos.y * this.getScale();
+            const x = pos.x * this.unit;
+            const y = pos.y * this.unit;
             return {
                 x,y
             }
