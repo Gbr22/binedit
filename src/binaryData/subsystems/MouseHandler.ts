@@ -114,7 +114,7 @@ export const MouseHandler = defineSubsystem({
             for (let y = 0; y < this.viewportRowCount.value; y++){
                 const renderIndex = y;
                 const byteCountRect = this.getByteCountBox(renderIndex);
-                if (isCollision(byteCountRect.borderBox,pos)){
+                if (isCollision(byteCountRect.border,pos)){
                     return {
                         type: "byte-count",
                         y
@@ -132,7 +132,7 @@ export const MouseHandler = defineSubsystem({
                         }
                     }
                     const charRect = this.getCharRect(renderIndex,x);
-                    if (isCollision(charRect.borderBox,pos)){
+                    if (isCollision(charRect.border,pos)){
                         return {
                             type: "char",
                             pos: {
