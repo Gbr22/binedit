@@ -122,7 +122,7 @@ export const MouseHandler = defineSubsystem({
                 }
                 for (let x = 0; x < bytesPerRow; x++){
                     const byteRect = this.getByteRect(renderIndex,x);
-                    if (isCollision(byteRect,pos)){
+                    if (isCollision(byteRect.border,pos)){
                         return {
                             type: "byte",
                             pos: {
