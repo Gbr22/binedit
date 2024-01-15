@@ -24,3 +24,10 @@ editor.onUpdateCursor(pos=>{
     }
     tab.cursorPosition = pos;
 })
+editor.onUpdateSelections(selections=>{
+    const tab = state.activeTab;
+    if (!tab){
+        return;
+    }
+    tab.selections = selections;
+})

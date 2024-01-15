@@ -1,10 +1,12 @@
 import { BlobProvider, createDataProvider, type DataProvider } from "./binaryData/dataProvider";
+import type { Selections } from "./binaryData/subsystems/SelectionHandler";
 
 export class TabData {
     name: string
     dataSource: DataProvider
     scrollPercent: number = 0
     cursorPosition: number = 0
+    selections: Selections = []
     
     constructor(name: string, data: DataProvider){
         this.name = name;
