@@ -4,16 +4,26 @@ import { getRowIndex, toHex, type Row, byteToPrintable } from "../row";
 import { emptyCssCache, getCssBoolean, getCssNumber, getCssString } from "@/theme";
 import { defineSubsystem } from "../composition";
 
-export interface Point {
-    x: number
+interface DotInterface {
+    x: number,
     y: number
-}
-type Numbers2 = [number, number];
-export interface Dot extends Numbers2 {
-    length: 2;
+    arr: [number, number]
 }
 
-export class Dot extends Array<number> {
+export type Dot = [number, number] & DotInterface;
+
+export function Dot({
+    x,
+    y
+}: {x: number, y: number}): Dot {
+    const arr: Dot = new DotClass({x,y}) as Dot;
+    return arr;
+}
+
+interface DotClass {
+    length: 2;
+}
+class DotClass extends Array<number> implements DotInterface {
     constructor({
         x,
         y
@@ -21,6 +31,7 @@ export class Dot extends Array<number> {
         super(2);
         this[0] = x;
         this[1] = y;
+        Object.freeze(this);
     }
 
     get x(){
@@ -30,7 +41,7 @@ export class Dot extends Array<number> {
         return this[1];
     }
     get arr(): [number, number] {
-        return this;
+        return this as any as [number, number];
     }
 }
 
@@ -41,7 +52,7 @@ export class Box {
     bottom!: number
     width: number
     height: number
-    arr: [number, number, number, number]
+    arr: readonly [number, number, number, number]
 
     constructor(props: {
         left: number
@@ -52,16 +63,16 @@ export class Box {
         Object.assign(this,props);
         this.width = this.right - this.left;
         this.height = this.bottom - this.top;
-        this.arr = [
+        this.arr = Object.freeze([
             this.left,
             this.top,
             this.width,
             this.height
-        ];
+        ]);
         Object.freeze(this);
     }
     get center(){
-        return new Dot({
+        return Dot({
             x: this.left + this.width / 2,
             y: this.top + this.height / 2
         })
@@ -160,11 +171,7 @@ class BoundingBox {
     get outerBottom() { return this.borderBottom + this.marginBottom; }
 }
 
-interface Boxes {
-    byteCountContainer?: BoundingBox,
-    bytesCounter?: BoundingBox,
-    charsContainer?: BoundingBox
-}
+type BoxCaches = Map<string,Map<unknown,BoundingBox>>;
 
 export const RenderingHandler = defineSubsystem({
     name: "RenderingHandler",
@@ -173,14 +180,14 @@ export const RenderingHandler = defineSubsystem({
         const devicePixelRatio = window.devicePixelRatio;
         const scale = 1;
         const unit = devicePixelRatio * scale;
-        const boxes = {} as Boxes;
+        const boxCaches: BoxCaches = new Map();
 
         return {
             bytesPerRow,
             devicePixelRatio,
             scale,
             unit,
-            boxes,
+            boxCaches,
             rows: new Set<Row>()
         };
     },
@@ -188,7 +195,7 @@ export const RenderingHandler = defineSubsystem({
         renderPosToFileIndex(this: Editor, y: number, x: number): number {
             return this.pointToFileIndex({x,y});
         },
-        pointToFileIndex(this: Editor, pos: Point): number {
+        pointToFileIndex(this: Editor, pos: {x: number, y: number}): number {
             const index = (this.intermediateState.value.topRow + pos.y) * bytesPerRow + pos.x;
             return index;
         },
@@ -210,7 +217,7 @@ export const RenderingHandler = defineSubsystem({
             }
             this.scrollView.style.setProperty('--row-count',this.scrollRowCount.value.toString());
             
-            this.boxes = {};
+            this.boxCaches.clear();
             this.redraw();
         
             this.renderedState.value = this.intermediateState.value;
@@ -277,13 +284,11 @@ export const RenderingHandler = defineSubsystem({
                 paddingRight: 4 * this.unit
             })
         },
+        
         getByteCountContainer(this: Editor): BoundingBox {
-            if (!this.boxes.byteCountContainer){
-                this.boxes.byteCountContainer = this.createByteCountContainer();
-            }
-            return this.boxes.byteCountContainer;
+            return this.getCachedBox("single","byteCountContainer",this.createByteCountContainer.bind(this))
         },
-        getAnyByteCountBox(this: Editor){
+        createAnyByteCountBox(this: Editor){
             const ctx = this.ctx;
         
             const count = this.getByteCountOfRow(this.viewportRowCount.value);
@@ -300,7 +305,10 @@ export const RenderingHandler = defineSubsystem({
                 paddingRight: 4 * this.unit
             })
         },
-        getByteCountBox(this: Editor, y: number): BoundingBox {
+        getAnyByteCountBox(this: Editor){
+            return this.getCachedBox("single","anyByteCount",this.createAnyByteCountBox.bind(this));
+        },
+        createByteCountBox(this: Editor, y: number){
             const container = this.getByteCountContainer();
             const anyByteCount = this.getAnyByteCountBox();
         
@@ -313,7 +321,10 @@ export const RenderingHandler = defineSubsystem({
                 paddingRight: anyByteCount.paddingRight,
             })
         },
-        getBytesContainer(this: Editor){
+        getByteCountBox(this: Editor, y: number): BoundingBox {
+            return this.getCachedBox("byteCount",y,this.createByteCountBox.bind(this,y));
+        },
+        createBytesContainer(this: Editor) {
             const count = this.getByteCountContainer();
             const anyByte = this.getAnyByteBox();
 
@@ -326,7 +337,23 @@ export const RenderingHandler = defineSubsystem({
                 paddingRight: 6 * this.unit,
             })
         },
-        getAnyByteBox(this: Editor): BoundingBox {
+        getCachedBox(this: Editor, cacheId: string, key: unknown, create: ()=>BoundingBox): BoundingBox {
+            let map = this.boxCaches.get(cacheId);
+            if (!map){
+                map = new Map();
+                this.boxCaches.set(cacheId,map);
+            }
+            let item = map.get(key);
+            if (!item) {
+                item = create();
+                map.set(key,item);
+            }
+            return item;
+        },
+        getBytesContainer(this: Editor){
+            return this.getCachedBox("single","bytesContainer",this.createBytesContainer.bind(this));
+        },
+        createAnyByteBox(this: Editor): BoundingBox {
             return new BoundingBox({
                 outerLeft: 0,
                 outerTop: 0,
@@ -334,7 +361,13 @@ export const RenderingHandler = defineSubsystem({
                 innerHeight: rowHeight * this.unit,
             })
         },
-        getByteRect(this: Editor, y: number,x: number): BoundingBox {
+        getAnyByteBox(this: Editor): BoundingBox {
+            return this.getCachedBox("single","anyByteBox",this.createAnyByteBox.bind(this));
+        },
+        getByteBoxId(this: Editor, y: number,x: number){
+            return y * this.bytesPerRow + x;
+        },
+        createByteBox(this: Editor, y: number,x: number){
             const bytesContainer = this.getBytesContainer();
             const anyByte = this.getAnyByteBox();
 
@@ -345,7 +378,11 @@ export const RenderingHandler = defineSubsystem({
                 innerHeight: anyByte.inner.height,
             })
         },
-        getAnyCharBox(this: Editor): BoundingBox {
+        getByteBox(this: Editor, y: number,x: number): BoundingBox {
+            const id = this.getByteBoxId(y,x);
+            return this.getCachedBox("bytes",id,this.createByteBox.bind(this,y,x));
+        },
+        createAnyCharBox(this: Editor){
             const charWidth = getCssNumber(this.innerContainer,"--editor-char-width") * this.unit;
             return new BoundingBox({
                 outerLeft: 0,
@@ -354,7 +391,10 @@ export const RenderingHandler = defineSubsystem({
                 innerHeight: rowHeight * this.unit
             })
         },
-        getCharsContainer(this: Editor){
+        getAnyCharBox(this: Editor): BoundingBox {
+            return this.getCachedBox("single","anyCharBox",this.createAnyCharBox.bind(this));
+        },
+        createCharsContainer(this: Editor) {
             const pos = this.getBytesContainer();
             const anyCharBox = this.getAnyCharBox();
         
@@ -367,7 +407,10 @@ export const RenderingHandler = defineSubsystem({
                 paddingRight: 6 * this.unit,
             })
         },
-        getCharRect(this: Editor, y: number,x: number): BoundingBox {
+        getCharsContainer(this: Editor){
+            return this.getCachedBox("single","charsContainer",this.createCharsContainer.bind(this));
+        },
+        createCharBox(this: Editor, y: number,x: number){
             const top = this.getRowPosition(y);
             const charsBox = this.getCharsContainer();
             const anyCharBox = this.getAnyCharBox();
@@ -378,6 +421,10 @@ export const RenderingHandler = defineSubsystem({
                 innerWidth: anyCharBox.inner.width,
                 innerHeight: anyCharBox.inner.height
             })
+        },
+        getCharBox(this: Editor, y: number,x: number): BoundingBox {
+            const id = y * this.bytesPerRow + x;
+            return this.getCachedBox("chars",id,this.createCharBox.bind(this,y,x));
         },
         getByteCountOfRow(this: Editor, renderIndex: number){
             return renderIndex + this.intermediateState.value.topRow;
@@ -441,7 +488,7 @@ export const RenderingHandler = defineSubsystem({
                 return;
             }
         
-            const pos = this.getByteRect(renderIndex,byteIndex);
+            const pos = this.getByteBox(renderIndex,byteIndex);
             const index = this.renderPosToFileIndex(renderIndex,byteIndex);
         
             if (this.isSelectedIndex(index)){
@@ -490,7 +537,7 @@ export const RenderingHandler = defineSubsystem({
                 return;
             }
 
-            const pos = this.getCharRect(renderIndex,byteIndex);
+            const pos = this.getCharBox(renderIndex,byteIndex);
 
             const index = this.renderPosToFileIndex(renderIndex,byteIndex);
 

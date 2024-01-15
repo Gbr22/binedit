@@ -116,7 +116,7 @@ export const ScrollHandler = defineSubsystem({
                 topRow: Math.ceil(getDataProviderRowCount(this.desiredState.value.dataProvider) * scrollPercent)
             })
             this.forceUpdateHover();
-        })
+        },{passive: true})
     
         this.innerContainer.addEventListener("wheel",(e)=>{
             if (scrollBarType.value == "native"){
@@ -129,7 +129,7 @@ export const ScrollHandler = defineSubsystem({
                 topRow: this.toValidTopRow(this.desiredState.value.dataProvider,newTopRow)
             });
             this.forceUpdateHover();
-        })
+        },{passive: true});
     
         const props = {
             scrollHandler,
