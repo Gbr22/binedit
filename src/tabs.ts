@@ -5,11 +5,12 @@ import { editor, state } from "./state";
 export function switchTab(tab: TabData | undefined){
     state.activeTab = tab;
     if (tab){
+        editor.cursorPosition = tab.cursorPosition;
+        editor.selections = tab.selections;
         editor.setState({
             dataProvider: tab.dataSource,
-            scrollPercent: tab.scrollPercent
+            scrollPercent: tab.scrollPercent,
         });
-        editor.cursorPosition = tab.cursorPosition;
     } else {
         editor.setState({
             dataProvider: new BlobProvider(new Blob([])),

@@ -69,18 +69,22 @@ function fixRangeOrder(range: Range): Range {
     return [min, max];
 }
 
+export type Selections = Range[];
+
 export const SelectionHandler = defineSubsystem({
     name: "SelectionHandler",
     init(this: Editor) {
         const cursorPosition = 0;
         const onUpdateCursorListeners = [] as ((cursorPosition: number)=>void)[];
+        const onUpdateSelectionListeners = [] as ((selections: Selections)=>void)[];
         const selectionStartIndex = undefined as number | undefined;
         const selectionEndIndex = undefined as number | undefined;
-        const selections = [] as Range[];
+        const selections = [] as Selections;
 
         return {
             cursorPosition,
             onUpdateCursorListeners,
+            onUpdateSelectionListeners,
             selectionStartIndex,
             selectionEndIndex,
             selections,
@@ -89,6 +93,9 @@ export const SelectionHandler = defineSubsystem({
     proto: {
         onUpdateCursor(this: Editor, fn: (cursorPosition: number)=>void) {
             this.onUpdateCursorListeners.push(fn);
+        },
+        onUpdateSelections(this: Editor, fn: (selection: Selections)=>void) {
+            this.onUpdateSelectionListeners.push(fn);
         },
         onClickByte(this: Editor, index: number, e: MouseEvent) {
             // noop
@@ -110,6 +117,9 @@ export const SelectionHandler = defineSubsystem({
                 this.selectionEndIndex = undefined;
                 compressRanges(this.selections);
                 this.redraw();
+                for (let fn of this.onUpdateSelectionListeners) {
+                    fn(this.selections);
+                }
             } else {
                 this.selectionStartIndex = undefined;
                 this.selectionEndIndex = undefined;
