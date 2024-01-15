@@ -1,7 +1,12 @@
 import { Editor } from "../editor";
 import { defineSubsystem } from "../composition";
-import { Box, type Point } from "./RenderingHandler";
+import { Box } from "./RenderingHandler";
 import { bytesPerRow } from "../constants";
+
+export interface Point {
+    x: number
+    y: number
+}
 
 export function isCollision(box: Box, point: Point): boolean {
     return (
@@ -119,7 +124,7 @@ export const MouseHandler = defineSubsystem({
                     }
                 }
                 for (let x = 0; x < bytesPerRow; x++){
-                    const byteRect = this.getByteRect(renderIndex,x);
+                    const byteRect = this.getByteBox(renderIndex,x);
                     if (isCollision(byteRect.border,pos)){
                         return {
                             type: "byte",
@@ -129,7 +134,7 @@ export const MouseHandler = defineSubsystem({
                             }
                         }
                     }
-                    const charRect = this.getCharRect(renderIndex,x);
+                    const charRect = this.getCharBox(renderIndex,x);
                     if (isCollision(charRect.border,pos)){
                         return {
                             type: "char",
