@@ -4,13 +4,6 @@ import { getRowIndex, toHex, type Row, byteToPrintable } from "../row";
 import { emptyCssCache, getCssBoolean, getCssNumber, getCssString } from "@/theme";
 import { defineSubsystem } from "../composition";
 
-export interface Rect {
-    x: number
-    y: number
-    width: number
-    height: number
-}
-
 export interface Point {
     x: number
     y: number
@@ -159,15 +152,6 @@ class BoundingBox {
             top: this.outerTop,
             bottom: this.outerBottom
         });
-    }
-}
-
-export function boxToRect(box: Box): Rect {
-    return {
-        x: box.left,
-        y: box.top,
-        width: box.width,
-        height: box.height
     }
 }
 
@@ -379,23 +363,22 @@ export const RenderingHandler = defineSubsystem({
         getByteCountFont(this: Editor) {
             return `${getCssNumber(this.innerContainer,"--editor-font-size") * this.getScale()}px ${getCssString(this.innerContainer,"--editor-font-family")}`
         },
-        drawHover(this: Editor, pos: Rect | Box){
-            const rect = pos instanceof Box ? boxToRect(pos) : pos;
+        drawHover(this: Editor, box: Box){
             const ctx = this.ctx;
             ctx.strokeStyle = getCssString(this.innerContainer,"--editor-select-border-color");
             ctx.lineWidth = 1*this.getScale();
-            ctx.strokeRect(rect.x,rect.y,rect.width,rect.height);
+            ctx.strokeRect(...box.arr);
         },
-        drawCursor(this: Editor, pos: Rect){
+        drawCursor(this: Editor, box: Box){
             const ctx = this.ctx;
             ctx.strokeStyle = getCssString(this.innerContainer,"--editor-cursor-border-color");
             ctx.lineWidth = 1*this.getScale();
-            ctx.strokeRect(pos.x,pos.y,pos.width,pos.height);
+            ctx.strokeRect(...box.arr);
         },
-        drawSelection(this: Editor, pos: Rect){
+        drawSelection(this: Editor, box: Box){
             const ctx = this.ctx;
             ctx.fillStyle = getCssString(this.innerContainer,"--editor-cursor-background-color");
-            ctx.fillRect(pos.x,pos.y,pos.width,pos.height);
+            ctx.fillRect(...box.arr);
         },
         drawByteCount(this: Editor, renderIndex: number): void {
             const ctx = this.ctx;
@@ -437,11 +420,11 @@ export const RenderingHandler = defineSubsystem({
             const index = this.renderPosToFileIndex(renderIndex,byteIndex);
         
             if (this.isSelectedIndex(index)){
-                this.drawSelection(boxToRect(pos.border));
+                this.drawSelection(pos.border);
             }
 
             if (this.cursorPosition == index){
-                this.drawCursor(boxToRect(pos.border));
+                this.drawCursor(pos.border);
             }
             
 
@@ -487,11 +470,11 @@ export const RenderingHandler = defineSubsystem({
             const index = this.renderPosToFileIndex(renderIndex,byteIndex);
 
             if (this.isSelectedIndex(index)){
-                this.drawSelection(boxToRect(pos.border));
+                this.drawSelection(pos.border);
             }
 
             if (this.cursorPosition == index){
-                this.drawCursor(boxToRect(pos.border));
+                this.drawCursor(pos.border);
             }
         
             if (getCssBoolean(this.element,"--editor-show-wireframe")){
@@ -518,7 +501,7 @@ export const RenderingHandler = defineSubsystem({
                 && this.currentHover.pos.x == byteIndex
                 && this.currentHover.pos.y == renderIndex
             ){
-                this.drawHover(boxToRect(pos.border));
+                this.drawHover(pos.border);
             }
         }
     }
