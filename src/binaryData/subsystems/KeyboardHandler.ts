@@ -23,25 +23,27 @@ export const KeyboardHandler = defineSubsystem({
             }
             const diff = dir.y * this.bytesPerRow + dir.x;
             if (diff != 0){
-                if (this.isSelecting() && !e.shiftKey){
-                    this.endSelection();
+                if (this.selectionHandler.isSelecting() && !e.shiftKey){
+                    this.selectionHandler.endSelection();
+                    this.redraw();
                 } else {
                     if (e.shiftKey){
-                        if (!this.isSelecting()){
-                            this.startSelection("keyboard",this.cursorPosition,true);
-                            this.onSelectOverByte("keyboard",this.cursorPosition + diff);
+                        if (!this.selectionHandler.isSelecting()){
+                            this.selectionHandler.startSelection("keyboard",this.selectionHandler.cursorPosition,true);
+                            this.selectionHandler.onSelectOverByte("keyboard",this.selectionHandler.cursorPosition + diff);
                         } else {
-                            this.onSelectOverByte("keyboard",this.cursorPosition + diff);
+                            this.selectionHandler.onSelectOverByte("keyboard",this.selectionHandler.cursorPosition + diff);
                         }
+                        this.redraw();
                     }
                 }
                 
-                this.setCursor(this.cursorPosition + diff);
+                this.selectionHandler.setCursor(this.selectionHandler.cursorPosition + diff);
                 this.redraw();
                 e.preventDefault();
             }
             if (e.code == "Escape"){
-                this.clearSelections();
+                this.selectionHandler.clearSelections();
                 e.preventDefault();
             }
         }

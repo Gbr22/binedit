@@ -5,8 +5,8 @@ import { editor, state } from "./state";
 export function switchTab(tab: TabData | undefined){
     state.activeTab = tab;
     if (tab){
-        editor.cursorPosition = tab.cursorPosition;
-        editor.selections = tab.selections;
+        editor.selectionHandler.cursorPosition = tab.cursorPosition;
+        editor.selectionHandler.selections = tab.selections;
         editor.setState({
             dataProvider: tab.dataSource,
             positionInFile: tab.positionInFile,
@@ -17,7 +17,7 @@ export function switchTab(tab: TabData | undefined){
             dataProvider: new BlobProvider(new Blob([])),
             positionInFile: 0
         });
-        editor.cursorPosition = 0;
+        editor.selectionHandler.cursorPosition = 0;
     }
 }
 export function closeTab(file: TabData){
