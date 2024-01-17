@@ -71,6 +71,8 @@ function fixRangeOrder(range: Range): Range {
 
 export type Selections = Range[];
 
+export type SelectionSource = "mouse" | "keyboard";
+
 export const SelectionHandler = defineSubsystem({
     name: "SelectionHandler",
     init(this: Editor) {
@@ -80,6 +82,7 @@ export const SelectionHandler = defineSubsystem({
         const selectionStartIndex = undefined as number | undefined;
         const selectionEndIndex = undefined as number | undefined;
         const selections = [] as Selections;
+        const selectionSource = undefined as SelectionSource | undefined;
 
         return {
             cursorPosition,
@@ -88,29 +91,41 @@ export const SelectionHandler = defineSubsystem({
             selectionStartIndex,
             selectionEndIndex,
             selections,
+            selectionSource
         }
     },
     proto: {
+        clearDraftSelection(this: Editor){
+            this.selectionStartIndex = undefined;
+            this.selectionEndIndex = undefined;
+        },
+        clearSelections(this: Editor){
+            this.selections = [];
+            this.clearDraftSelection();
+        },
         onUpdateCursor(this: Editor, fn: (cursorPosition: number)=>void) {
             this.onUpdateCursorListeners.push(fn);
         },
         onUpdateSelections(this: Editor, fn: (selection: Selections)=>void) {
             this.onUpdateSelectionListeners.push(fn);
         },
-        onClickByte(this: Editor, index: number, e: MouseEvent) {
-            // noop
+        isSelecting(this: Editor){
+            return this.selectionStartIndex != undefined;
         },
-        onMouseDownByte(this: Editor, index: number, e: MouseEvent) {
+        startSelection(this: Editor, selectionSource: SelectionSource, index: number, includeFirst: boolean){
+            if (this.isSelecting()){
+                this.endSelection();
+            }
+            
+            this.selectionSource = selectionSource;
             this.selectionStartIndex = index;
             this.selectionEndIndex = undefined;
-            if (e.ctrlKey){
+            if (includeFirst){
                 this.selectionEndIndex = index;
             }
-            this.setCursor(index);
         },
-        onMouseUpByte(this: Editor, index: number, e: MouseEvent) {
+        endSelection(this: Editor){
             const range = this.getSelectionRange();
-            this.setCursor(index);
             if (range){
                 this.selections = (this.getCombinedSelection());
                 this.selectionStartIndex = undefined;
@@ -125,16 +140,15 @@ export const SelectionHandler = defineSubsystem({
                 this.selectionEndIndex = undefined;
             }
         },
-        onCancelSelection(this: Editor){
-            this.selectionStartIndex = undefined;
-            this.selectionEndIndex = undefined;
+        cancelSelection(this: Editor){
+            this.clearDraftSelection();
             this.redraw();
         },
-        onHoverByte(this: Editor, index: number) {
-            this.selectionEndIndex = index;
-            if (this.selectionStartIndex){
-                this.setCursor(index);
+        onSelectOverByte(this: Editor, selectionSource: SelectionSource, index: number){
+            if (this.selectionSource != selectionSource){
+                return;
             }
+            this.selectionEndIndex = index;
         },
         getCombinedSelection(this: Editor): Range[] {
             const range = this.getSelectionRange();
@@ -221,9 +235,6 @@ export const SelectionHandler = defineSubsystem({
             }
             this.onUpdateCursorListeners.forEach(fn=>{
                 fn(this.cursorPosition);
-            })
-            requestAnimationFrame(()=>{
-                this.redraw();
             })
         }
     },
