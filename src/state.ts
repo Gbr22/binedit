@@ -17,14 +17,14 @@ editor.onScroll(percent=>{
         }
     },1)
 })
-editor.selectionHandler.onUpdateCursor(pos=>{
+editor.selection.onUpdateCursor(pos=>{
     const tab = state.activeTab;
     if (!tab){
         return;
     }
     tab.cursorPosition = pos;
 })
-editor.selectionHandler.onUpdateSelections(selections=>{
+editor.selection.onUpdateRanges(selections=>{
     const tab = state.activeTab;
     if (!tab){
         return;
