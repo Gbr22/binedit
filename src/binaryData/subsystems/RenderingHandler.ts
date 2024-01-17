@@ -491,11 +491,11 @@ export const RenderingHandler = defineSubsystem({
             const pos = this.getByteBox(renderIndex,byteIndex);
             const index = this.renderPosToFileIndex(renderIndex,byteIndex);
         
-            if (this.selectionHandler.isSelectedIndex(index)){
+            if (this.selection.isSelectedIndex(index)){
                 this.drawSelection(pos.border);
             }
 
-            if (this.selectionHandler.cursorPosition == index){
+            if (this.selection.cursorPosition == index){
                 this.drawCursor(pos.border);
             }
             
@@ -541,11 +541,11 @@ export const RenderingHandler = defineSubsystem({
 
             const index = this.renderPosToFileIndex(renderIndex,byteIndex);
 
-            if (this.selectionHandler.isSelectedIndex(index)){
+            if (this.selection.isSelectedIndex(index)){
                 this.drawSelection(pos.border);
             }
 
-            if (this.selectionHandler.cursorPosition == index){
+            if (this.selection.cursorPosition == index){
                 this.drawCursor(pos.border);
             }
         

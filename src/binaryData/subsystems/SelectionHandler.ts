@@ -76,82 +76,79 @@ export type SelectionSource = "mouse" | "keyboard";
 export class SelectionHandler extends Subclass<Editor> {
     cursorPosition = 0;
     onUpdateCursorListeners: ((cursorPosition: number)=>void)[] = [];
-    onUpdateSelectionListeners: ((selections: Selections)=>void)[] = [];
-    selectionStartIndex: number | undefined = undefined;
-    selectionEndIndex: number | undefined = undefined;
-    selections: Selections = [];
-    selectionSource: SelectionSource | undefined = undefined;
+    onUpdateSelectionRangesListeners: ((ranges: Selections)=>void)[] = [];
+    startIndex: number | undefined = undefined;
+    endIndex: number | undefined = undefined;
+    ranges: Selections = [];
+    source: SelectionSource | undefined = undefined;
 
-    clearDraftSelection(){
-        this.selectionStartIndex = undefined;
-        this.selectionEndIndex = undefined;
-    }
-    clearSelections(){
-        this.selections = [];
-        this.clearDraftSelection();
+    clearRanges(){
+        this.ranges = [];
+        this.cancelRange();
     }
     onUpdateCursor(fn: (cursorPosition: number)=>void) {
         this.onUpdateCursorListeners.push(fn);
     }
-    onUpdateSelections(fn: (selection: Selections)=>void) {
-        this.onUpdateSelectionListeners.push(fn);
+    onUpdateRanges(fn: (selection: Selections)=>void) {
+        this.onUpdateSelectionRangesListeners.push(fn);
     }
     isSelecting(){
-        return this.selectionStartIndex != undefined;
+        return this.startIndex != undefined;
     }
-    startSelection(selectionSource: SelectionSource, index: number, includeFirst: boolean){
+    startRange(selectionSource: SelectionSource, index: number, includeFirst: boolean){
         if (this.isSelecting()){
-            this.endSelection();
+            this.endRange();
         }
         
-        this.selectionSource = selectionSource;
-        this.selectionStartIndex = index;
-        this.selectionEndIndex = undefined;
+        this.source = selectionSource;
+        this.startIndex = index;
+        this.endIndex = undefined;
         if (includeFirst){
-            this.selectionEndIndex = index;
+            this.endIndex = index;
         }
     }
-    endSelection(){
-        const range = this.getSelectionRange();
+    endRange(){
+        const range = this.getRange();
         if (range){
-            this.selections = (this.getCombinedSelection());
-            this.selectionStartIndex = undefined;
-            this.selectionEndIndex = undefined;
-            compressRanges(this.selections);
-            for (let fn of this.onUpdateSelectionListeners) {
-                fn(this.selections);
+            this.ranges = (this.getCombinedSelection());
+            this.startIndex = undefined;
+            this.endIndex = undefined;
+            compressRanges(this.ranges);
+            for (let fn of this.onUpdateSelectionRangesListeners) {
+                fn(this.ranges);
             }
         } else {
-            this.selectionStartIndex = undefined;
-            this.selectionEndIndex = undefined;
+            this.startIndex = undefined;
+            this.endIndex = undefined;
         }
     }
-    cancelSelection(){
-        this.clearDraftSelection();
+    cancelRange(){
+        this.startIndex = undefined;
+        this.endIndex = undefined;
     }
-    onSelectOverByte(selectionSource: SelectionSource, index: number){
-        if (this.selectionSource != selectionSource){
+    hoverOverByte(selectionSource: SelectionSource, index: number){
+        if (this.source != selectionSource){
             return;
         }
-        this.selectionEndIndex = index;
+        this.endIndex = index;
     }
     getCombinedSelection(): Range[] {
-        const range = this.getSelectionRange();
-        const start = this.selectionStartIndex;
-        const end = this.selectionEndIndex;
+        const range = this.getRange();
+        const start = this.startIndex;
+        const end = this.endIndex;
         if (!range || start == undefined || end == undefined){
-            return this.selections;
+            return this.ranges;
         }
-        if (this.selections.length == 0){
+        if (this.ranges.length == 0){
             return [range];
         }
-        const isStartInSelection = isInAnyRange(start,this.selections);
-        const isEndInSelection = isInAnyRange(end,this.selections);
+        const isStartInSelection = isInAnyRange(start,this.ranges);
+        const isEndInSelection = isInAnyRange(end,this.ranges);
         if (!isStartInSelection && !isEndInSelection){
-            return [...this.selections,range];
+            return [...this.ranges,range];
         }
         if (!isStartInSelection && isEndInSelection){
-            return this.selections.map(selection=>{
+            return this.ranges.map(selection=>{
                 if (!isInAnyRange(end,[selection])){
                     return selection;
                 }
@@ -163,7 +160,7 @@ export class SelectionHandler extends Subclass<Editor> {
         }
 
         const newArr: Range[] = [];
-        for (let selection of this.selections){
+        for (let selection of this.ranges){
             const isMinInSelection = isInAnyRange(range[0],[selection]);
             const isMaxInSelection = isInAnyRange(range[1],[selection]);
 
@@ -187,9 +184,9 @@ export class SelectionHandler extends Subclass<Editor> {
         
         return newArr;
     }
-    getSelectionRange(): Range | undefined {
-        const start = this.selectionStartIndex;
-        const end = this.selectionEndIndex;
+    getRange(): Range | undefined {
+        const start = this.startIndex;
+        const end = this.endIndex;
         if (start == undefined || end == undefined){
             return undefined;
         }

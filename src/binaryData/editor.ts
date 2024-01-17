@@ -17,7 +17,7 @@ const EditorProps = defineSubsystem({
     proto: {},
     init(this: Editor) {
         return {
-            selectionHandler: new SelectionHandler(this)
+            selection: new SelectionHandler(this)
         }
     },
 });
