@@ -6,20 +6,30 @@ import { ScrollHandler } from "./subsystems/ScrollHandler";
 import { RenderingHandler } from "./subsystems/RenderingHandler";
 import { UpdateHandler } from "./subsystems/UpdateHandler";
 import { MouseHandler } from "./subsystems/MouseHandler";
-import { SelectionHandler } from "./subsystems/SelectionHandler";
 import { KeyboardHandler } from "./subsystems/KeyboardHandler";
 import { DisposeHandler } from "./subsystems/DisposeHandler";
 
-import { type CombinedSubsystems, Subsystems } from "./composition";
+import { type CombinedSubsystems, Subsystems, defineSubsystem } from "./composition";
+import { SelectionHandler } from "./subsystems/SelectionHandler";
+
+const EditorProps = defineSubsystem({
+    name: "EditorProps",
+    proto: {},
+    init(this: Editor) {
+        return {
+            selectionHandler: new SelectionHandler(this)
+        }
+    },
+});
 
 const subsystems = new Subsystems(
+    EditorProps,
     DisposeHandler,
     RenderingHandler,
     DataHandler,
     DomHandler,
     SizeHandler,
     EventHandler,
-    SelectionHandler,
     UpdateHandler,
     ScrollHandler,
     MouseHandler,

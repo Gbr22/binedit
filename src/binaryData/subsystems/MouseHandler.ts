@@ -64,20 +64,22 @@ export const MouseHandler = defineSubsystem({
             const hover = this.currentHover;
             if (hover.type == "byte" || hover.type == "char"){
                 const index = this.pointToFileIndex(hover.pos);
-                this.startSelection("mouse",index,e.ctrlKey);
-                this.setCursor(index);
+                this.selectionHandler.startSelection("mouse",index,e.ctrlKey);
+                this.selectionHandler.setCursor(index);
                 this.redraw();
             }
         }
         canvas.addEventListener("mouseleave",(e: MouseEvent)=>{
-            this.cancelSelection();
+            this.selectionHandler.cancelSelection();
+            this.redraw();
         },{passive: true})
 
         const onMouseUp = (e: MouseEvent)=>{
             if (e.button != 0){
                 return;
             }
-            this.endSelection();
+            this.selectionHandler.endSelection();
+            this.redraw();
         };
 
         window.addEventListener("mouseup",onMouseUp,{passive: true});
@@ -105,7 +107,7 @@ export const MouseHandler = defineSubsystem({
         setHover(this: Editor, hover: Hover){
             this.currentHover = hover;
             if (hover.type == "byte" || hover.type == "char"){
-                this.onSelectOverByte("mouse",this.pointToFileIndex(hover.pos));
+                this.selectionHandler.onSelectOverByte("mouse",this.pointToFileIndex(hover.pos));
             }
         },
         forceUpdateHover(this: Editor){
