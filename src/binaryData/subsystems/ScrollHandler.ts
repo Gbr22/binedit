@@ -35,6 +35,7 @@ export const ScrollHandler = defineSubsystem({
         
             const scrollBarHandle = document.createElement("button");
             scrollBarHandle.classList.add("scrollbar-handle");
+            scrollBarHandle.tabIndex = -1;
             scrollBarHandleContainer.appendChild(scrollBarHandle);
             (scrollBarHandle as any).part = "scrollbar-handle";
         
@@ -70,9 +71,10 @@ export const ScrollHandler = defineSubsystem({
             })
         
             const step = (dir: 1 | -1)=>{
-                let newPosition = this.desiredState.value.positionInFile + dir * this.bytesPerRow;
+                const newPosition = this.desiredState.value.positionInFile + dir * this.bytesPerRow;
+                const boundPos = this.getDocumentBoundIndex(newPosition,this.desiredState.value.dataProvider.size);
                 this.desiredState.value = this.desiredState.value.with({
-                    positionInFile: this.toValidTopRow(this.desiredState.value.dataProvider, newPosition)
+                    positionInFile: boundPos
                 });
             }
         
@@ -82,7 +84,7 @@ export const ScrollHandler = defineSubsystem({
             downButton.onclick = ()=>{
                 step(1);
             }
-        
+
             this.desiredState.subscribe(()=>{
                 const { positionInFile, dataProvider } = this.desiredState.value;
                 const ratio = positionInFile / dataProvider.size;

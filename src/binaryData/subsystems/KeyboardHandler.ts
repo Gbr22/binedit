@@ -23,7 +23,25 @@ export const KeyboardHandler = defineSubsystem({
             }
             const diff = dir.y * this.bytesPerRow + dir.x;
             if (diff != 0){
+                if (this.isSelecting() && !e.shiftKey){
+                    this.endSelection();
+                } else {
+                    if (e.shiftKey){
+                        if (!this.isSelecting()){
+                            this.startSelection("keyboard",this.cursorPosition,true);
+                            this.onSelectOverByte("keyboard",this.cursorPosition + diff);
+                        } else {
+                            this.onSelectOverByte("keyboard",this.cursorPosition + diff);
+                        }
+                    }
+                }
+                
                 this.setCursor(this.cursorPosition + diff);
+                this.redraw();
+                e.preventDefault();
+            }
+            if (e.code == "Escape"){
+                this.clearSelections();
                 e.preventDefault();
             }
         }
