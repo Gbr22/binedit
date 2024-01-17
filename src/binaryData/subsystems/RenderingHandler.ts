@@ -196,13 +196,8 @@ export const RenderingHandler = defineSubsystem({
             return this.pointToFileIndex({x,y});
         },
         pointToFileIndex(this: Editor, pos: {x: number, y: number}): number {
-            const index = (this.intermediateState.value.topRow + pos.y) * bytesPerRow + pos.x;
+            const index = pos.y * bytesPerRow + pos.x + this.intermediateState.value.positionInFile;
             return index;
-        },
-        getRenderIndex(this: Editor, startByte: number): number {
-            const index = getRowIndex(startByte);
-            const renderIndex = index - this.intermediateState.value.topRow;
-            return renderIndex;
         },
         isRenderIndexInViewport(this: Editor, index: number): boolean {
             return index >= 0 && index < this.viewportRowCount.value;
@@ -212,10 +207,15 @@ export const RenderingHandler = defineSubsystem({
             this.devicePixelRatio = window.devicePixelRatio;
             this.unit = devicePixelRatio * this.scale;
             this.innerContainer.dataset["scrollType"] = `${this.scrollBarType.value}`;
-            if (this.scrollBarType.value == "virtual"){
-                this.element.scrollTop = 0;
-            }
+            
             this.scrollView.style.setProperty('--row-count',this.scrollRowCount.value.toString());
+            
+            const didChangeFile = this.renderedState.value.dataProvider != this.intermediateState.value.dataProvider;
+            if (didChangeFile && this.scrollBarType.value == "native"){
+                this.changeNativeScrollerPosition(this.intermediateState.value.positionInFile, this.intermediateState.value.dataProvider.size);
+            } else if (this.scrollBarType.value == "virtual") {
+                this.innerContainer.scrollTop = 0;
+            }
             
             this.boxCaches.clear();
             this.redraw();
@@ -427,7 +427,7 @@ export const RenderingHandler = defineSubsystem({
             return this.getCachedBox("chars",id,this.createCharBox.bind(this,y,x));
         },
         getByteCountOfRow(this: Editor, renderIndex: number){
-            return renderIndex + this.intermediateState.value.topRow;
+            return renderIndex * this.bytesPerRow + this.intermediateState.value.positionInFile;
         },
         getPaddedByteCount(this: Editor, count: number){
             return toHex(count).padStart(getCssNumber(this.innerContainer,"--editor-row-number-digit-count"),'0');

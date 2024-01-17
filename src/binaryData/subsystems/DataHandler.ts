@@ -17,8 +17,8 @@ export const DataHandler = defineSubsystem({
             return await dataProvider.readAsync(startByte,length);
         },
         getRenderBytes(this: Editor, startByte: number): Uint8Array {
-            const index = startByte - this.intermediateState.value.topRow * bytesPerRow;
-            const buffer = this.dataToRender.value.slice(index, index + bytesPerRow);
+            const index = startByte - this.intermediateState.value.positionInFile;
+            const buffer = this.dataToRender.value.slice(index, index + this.bytesPerRow);
             return new Uint8Array(buffer);
         },
         getRenderByte(this: Editor, i: number): number | undefined {

@@ -13,7 +13,7 @@ editor.onScroll(percent=>{
     const tab = state.activeTab;
     setTimeout(()=>{
         if (tab){
-            tab.scrollPercent = percent;
+            tab.positionInFile = percent;
         }
     },1)
 })
