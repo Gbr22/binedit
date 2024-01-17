@@ -7,11 +7,13 @@ import { RenderingHandler } from "./subsystems/RenderingHandler";
 import { UpdateHandler } from "./subsystems/UpdateHandler";
 import { MouseHandler } from "./subsystems/MouseHandler";
 import { SelectionHandler } from "./subsystems/SelectionHandler";
+import { KeyboardHandler } from "./subsystems/KeyboardHandler";
+import { DisposeHandler } from "./subsystems/DisposeHandler";
 
 import { type CombinedSubsystems, Subsystems } from "./composition";
-import { KeyboardHandler } from "./subsystems/KeyboardHandler";
 
 const subsystems = new Subsystems(
+    DisposeHandler,
     RenderingHandler,
     DataHandler,
     DomHandler,
