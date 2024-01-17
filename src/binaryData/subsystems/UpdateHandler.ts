@@ -32,7 +32,7 @@ function deduplicatePromise<T>(key: string, fn: ()=>Promise<T>, afterfn: ()=>unk
 }
 
 export interface State {
-    topRow: number
+    positionInFile: number
     dataProvider: DataProvider
     width: number
     height: number
@@ -40,7 +40,7 @@ export interface State {
 
 function createDefaultState(): Struct<State> {
     return struct({
-        topRow: 0,
+        positionInFile: 0,
         dataProvider: new BlobProvider(new Blob([])),
         width: 0,
         height: 0,
@@ -69,7 +69,7 @@ export const UpdateHandler = defineSubsystem({
             this.intermediateState.lock();
             this.dataToRender.value = await this.getRenderPage(
                 this.intermediateState.value.dataProvider,
-                this.intermediateState.value.topRow * bytesPerRow
+                this.intermediateState.value.positionInFile
             );
         })
         this.dataToRender.subscribe(()=>{

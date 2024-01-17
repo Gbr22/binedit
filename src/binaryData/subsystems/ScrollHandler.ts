@@ -40,7 +40,7 @@ export const ScrollHandler = defineSubsystem({
         
             interface ScrollStart {
                 y: number
-                scrollPercent: number
+                scrollRatio: number
             }
         
             let scrollStart: ScrollStart | null = null;
@@ -48,7 +48,7 @@ export const ScrollHandler = defineSubsystem({
             scrollBarHandle.addEventListener("mousedown",(e)=>{
                 scrollStart = {
                     y: e.clientY,
-                    scrollPercent
+                    scrollRatio: scrollPercent
                 };
             })
             window.addEventListener("mousemove",(e)=>{
@@ -57,10 +57,12 @@ export const ScrollHandler = defineSubsystem({
                 }
                 const diff = e.clientY - scrollStart.y;
                 const height = scrollBarHandleContainer.clientHeight;
-                const percent = diff/height + scrollStart.scrollPercent;
-                const scrollPercent = Math.max(0,Math.min(percent,1));
+                const ratio = diff/height + scrollStart.scrollRatio;
+                const boundRatio = Math.max(0,Math.min(ratio,1));
+                const documentSize = this.desiredState.value.dataProvider.size;
+                const index = this.getDocumentBoundIndex(this.getIndexFromRatio(boundRatio, documentSize), documentSize);
                 this.desiredState.value = this.desiredState.value.with({
-                    topRow: this.toValidTopRow(this.desiredState.value.dataProvider ,Math.ceil(getDataProviderRowCount(this.desiredState.value.dataProvider) * scrollPercent))
+                    positionInFile: index
                 });
             })
             window.addEventListener("mouseup",()=>{
@@ -68,9 +70,9 @@ export const ScrollHandler = defineSubsystem({
             })
         
             const step = (dir: 1 | -1)=>{
-                let newTopRow = this.desiredState.value.topRow + dir;
+                let newPosition = this.desiredState.value.positionInFile + dir * this.bytesPerRow;
                 this.desiredState.value = this.desiredState.value.with({
-                    topRow: this.toValidTopRow(this.desiredState.value.dataProvider, newTopRow)
+                    positionInFile: this.toValidTopRow(this.desiredState.value.dataProvider, newPosition)
                 });
             }
         
@@ -82,12 +84,47 @@ export const ScrollHandler = defineSubsystem({
             }
         
             this.desiredState.subscribe(()=>{
-                const { topRow, dataProvider } = this.desiredState.value;
-                const percent = dataProvider ? ( (topRow * bytesPerRow) / dataProvider.size ) : 0;
-                scrollPercent = Math.max(0,Math.min(percent,1));
+                const { positionInFile, dataProvider } = this.desiredState.value;
+                const ratio = positionInFile / dataProvider.size;
+                scrollPercent = Math.max(0,Math.min(ratio,1));
+                const index = this.getIndexFromRatio(scrollPercent, this.desiredState.value.dataProvider.size);
+                const alignedIndex = this.getRowAlignedIndex(index);
                 scrollBar.style.setProperty("--scroll-percent",scrollPercent.toString());
             })
-        }
+        },
+        getScrollTopFromIndex(this: Editor, index: number, documentSize: number){
+            const aligned = this.getDocumentBoundIndex(index, documentSize);
+            const ratio = this.getRatioFromIndex(aligned, documentSize);
+            return ratio * this.innerContainer.scrollHeight;
+        },
+        getRatioFromIndex(this: Editor, index: number, documentSize: number){
+            return index / documentSize;
+        },
+        getIndexFromRatio(this: Editor, ratio: number, documentSize: number){
+            return Math.round(ratio * documentSize);
+        },
+        getRowAlignedIndex(this: Editor, index: number){
+            const rowNumber = Math.floor(index / this.bytesPerRow);
+            const newIndex = rowNumber * this.bytesPerRow;
+            return newIndex;
+        },
+        getDocumentBoundIndex(this: Editor, index: number, documentSize: number){
+            const aligned = this.getRowAlignedIndex(index);
+            const min = 0;
+            const minBound = Math.max(min,aligned);
+            const max = this.getRowAlignedIndex(documentSize) - this.getRowAlignedIndex( ( (this.viewportRowCount.value+2) * this.bytesPerRow ) / 2 );
+            const maxBound = Math.min(minBound,max);
+            
+            return maxBound;
+        },
+        changeNativeScrollerPosition(this: Editor, index: number, documentSize: number){
+            const top = this.getScrollTopFromIndex(index, documentSize);
+            
+            this.innerContainer.scrollTo({
+                top: top,
+                behavior: "instant"
+            })
+        },
     },
     init(this: Editor): {
         scrollRowCount: DerivedVar<number>;
@@ -111,9 +148,13 @@ export const ScrollHandler = defineSubsystem({
         },this.desiredState);
     
         this.innerContainer.addEventListener("scroll",()=>{
-            const scrollPercent = this.innerContainer.scrollTop / ( this.innerContainer.scrollHeight - (this.innerContainer.clientHeight / 2) );
+            if (this.scrollBarType.value != "native"){
+                return;
+            }
+            const ratio = this.innerContainer.scrollTop / ( this.innerContainer.scrollHeight - (this.innerContainer.clientHeight / 2) );
+            const index = this.getIndexFromRatio(ratio, this.desiredState.value.dataProvider.size);
             this.desiredState.value = this.desiredState.value.with({
-                topRow: Math.ceil(getDataProviderRowCount(this.desiredState.value.dataProvider) * scrollPercent)
+                positionInFile: this.getDocumentBoundIndex(index,this.desiredState.value.dataProvider.size)
             })
             this.forceUpdateHover();
         },{passive: true})
@@ -124,9 +165,10 @@ export const ScrollHandler = defineSubsystem({
             }
             const delta = e.deltaY;
             const deltaRow = Math.round(delta / rowHeight);
-            let newTopRow = this.desiredState.value.topRow + deltaRow;
+            const newIndex = this.desiredState.value.positionInFile + deltaRow * this.bytesPerRow;
+            const boundIndex = this.getDocumentBoundIndex(newIndex,this.desiredState.value.dataProvider.size);
             this.desiredState.value = this.desiredState.value.with({
-                topRow: this.toValidTopRow(this.desiredState.value.dataProvider,newTopRow)
+                positionInFile: boundIndex
             });
             this.forceUpdateHover();
         },{passive: true});
