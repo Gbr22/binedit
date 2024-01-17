@@ -125,6 +125,11 @@ export const SelectionHandler = defineSubsystem({
                 this.selectionEndIndex = undefined;
             }
         },
+        onCancelSelection(this: Editor){
+            this.selectionStartIndex = undefined;
+            this.selectionEndIndex = undefined;
+            this.redraw();
+        },
         onHoverByte(this: Editor, index: number) {
             this.selectionEndIndex = index;
             if (this.selectionStartIndex){

@@ -47,30 +47,55 @@ export const MouseHandler = defineSubsystem({
             type: "none"
         }
 
-        this.element.onmouseenter = this.element.onmouseleave = this.element.onmousemove = (e)=>{
+        const onMouseMove = (e: MouseEvent)=>{
             mousePosition.x = e.clientX;
             mousePosition.y = e.clientY;
             this.checkHover();
         }
 
-        this.element.onclick = (e)=>{
+        window.addEventListener("mousemove",onMouseMove, {passive: true});
+
+        const canvas = this.canvas;
+
+        canvas.addEventListener("click",(e)=>{
+            if (e.button != 0){
+                return;
+            }
             const hover = this.currentHover;
             if (hover.type == "byte" || hover.type == "char"){
                 this.onClickByte(this.pointToFileIndex(hover.pos),e);
             }
-        }
-        this.element.onmousedown = (e)=>{
+        },{passive: true})
+        canvas.onmousedown = (e)=>{
+            if (e.button != 0){
+                return;
+            }
             const hover = this.currentHover;
             if (hover.type == "byte" || hover.type == "char"){
                 this.onMouseDownByte(this.pointToFileIndex(hover.pos),e);
             }
         }
-        this.element.onmouseup = (e)=>{
+        canvas.addEventListener("mouseleave",(e: MouseEvent)=>{
+            this.onCancelSelection();
+        },{passive: true})
+
+        const onMouseUp = (e: MouseEvent)=>{
+            if (e.button != 0){
+                return;
+            }
             const hover = this.currentHover;
             if (hover.type == "byte" || hover.type == "char"){
                 this.onMouseUpByte(this.pointToFileIndex(hover.pos),e);
             }
-        }
+        };
+
+        window.addEventListener("mouseup",onMouseUp,{passive: true});
+
+        const onDispose = this.onDispose.bind(this);
+        onDispose(()=>{
+            window.removeEventListener("mouseup",onMouseUp);
+            window.removeEventListener("mousemove",onMouseMove);
+        });
 
         return {
             mousePosition,
