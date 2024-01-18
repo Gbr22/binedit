@@ -12,7 +12,7 @@ export const DataHandler = defineSubsystem({
     name: "DataHandler",
     proto: {
         async getRenderPage(this: Editor, dataProvider: DataProvider, startByte: number): Promise<Uint8Array> {
-            const length = this.viewportRowCount.value * bytesPerRow;
+            const length = this.size.viewportRowCount * bytesPerRow;
            
             return await dataProvider.readAsync(startByte,length);
         },

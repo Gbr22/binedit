@@ -73,7 +73,7 @@ export type Selections = Range[];
 
 export type SelectionSource = "mouse" | "keyboard";
 
-export class SelectionHandler extends Subclass<Editor> {
+export class SelectionManager extends Subclass<Editor> {
     cursorPosition = 0;
     onUpdateCursorListeners: ((cursorPosition: number)=>void)[] = [];
     onUpdateSelectionRangesListeners: ((ranges: Selections)=>void)[] = [];

@@ -132,7 +132,7 @@ export const MouseHandler = defineSubsystem({
         },
         getCurrentHover(this: Editor): Hover {
             const pos = this.getScaledCanvasMousePosition();
-            for (let y = 0; y < this.viewportRowCount.value; y++){
+            for (let y = 0; y < this.size.viewportRowCount; y++){
                 const renderIndex = y;
                 const byteCountRect = this.getByteCountBox(renderIndex);
                 if (isCollision(byteCountRect.border,pos)){

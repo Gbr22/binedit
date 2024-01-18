@@ -114,7 +114,7 @@ export const ScrollHandler = defineSubsystem({
             const aligned = this.getRowAlignedIndex(index);
             const min = 0;
             const minBound = Math.max(min,aligned);
-            const max = this.getRowAlignedIndex(documentSize) - this.getRowAlignedIndex( ( (this.viewportRowCount.value+2) * this.bytesPerRow ) / 2 );
+            const max = this.getRowAlignedIndex(documentSize) - this.getRowAlignedIndex( ( (this.size.viewportRowCount+2) * this.bytesPerRow ) / 2 );
             const maxBound = Math.min(minBound,max);
             
             return maxBound;

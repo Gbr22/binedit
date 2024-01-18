@@ -81,9 +81,6 @@ export const UpdateHandler = defineSubsystem({
             this.intermediateState.unlock();
             this.intermediateState.value = this.desiredState.value;
         })
-        this.viewportRowCount.subscribe(()=>{
-            this.reflow();
-        })
 
         return {
             desiredState,
