@@ -6,7 +6,7 @@ export class SizeManager extends Subclass<Editor> {
     viewportRowCount = 0;
     resize(){
         const rect = this.$.dom.element.getBoundingClientRect();
-        this.viewportRowCount = Math.floor(rect.height / rowHeight);
+        this.viewportRowCount = Math.floor(rect.height / rowHeight) + 1;
         this.$.desiredState.value = this.$.desiredState.value.with({
             width: Math.round(rect.width * window.devicePixelRatio),
             height: Math.round(rect.height * window.devicePixelRatio)
