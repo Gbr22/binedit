@@ -158,7 +158,7 @@ export const ScrollHandler = defineSubsystem({
             this.desiredState.value = this.desiredState.value.with({
                 positionInFile: this.getDocumentBoundIndex(index,this.desiredState.value.dataProvider.size)
             })
-            this.forceUpdateHover();
+            this.gesture.mouse.forceUpdateHover();
         },{passive: true})
     
         this.dom.innerContainer.addEventListener("wheel",(e)=>{
@@ -172,7 +172,7 @@ export const ScrollHandler = defineSubsystem({
             this.desiredState.value = this.desiredState.value.with({
                 positionInFile: boundIndex
             });
-            this.forceUpdateHover();
+            this.gesture.mouse.forceUpdateHover();
         },{passive: true});
     
         const props = {

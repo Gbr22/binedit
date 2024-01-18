@@ -474,8 +474,8 @@ export const RenderingHandler = defineSubsystem({
             ctx.fillText(text,...pos.inner.center.arr);
 
             if (
-                this.currentHover.type == "byte-count"
-                && this.currentHover.y == renderIndex
+                this.gesture.mouse.currentHover.type == "byte-count"
+                && this.gesture.mouse.currentHover.y == renderIndex
             ){
                 this.drawHover(pos.border);
             }
@@ -519,11 +519,11 @@ export const RenderingHandler = defineSubsystem({
 
             if (
                 (
-                    this.currentHover.type == "byte"
-                    || this.currentHover.type == "char"
+                    this.gesture.mouse.currentHover.type == "byte"
+                    || this.gesture.mouse.currentHover.type == "char"
                 )
-                && this.currentHover.pos.x == byteIndex
-                && this.currentHover.pos.y == renderIndex
+                && this.gesture.mouse.currentHover.pos.x == byteIndex
+                && this.gesture.mouse.currentHover.pos.y == renderIndex
             ){
                 this.drawHover(pos.border);
             }
@@ -567,11 +567,11 @@ export const RenderingHandler = defineSubsystem({
 
             if (
                 (
-                    this.currentHover.type == "byte"
-                    || this.currentHover.type == "char"
+                    this.gesture.mouse.currentHover.type == "byte"
+                    || this.gesture.mouse.currentHover.type == "char"
                 )
-                && this.currentHover.pos.x == byteIndex
-                && this.currentHover.pos.y == renderIndex
+                && this.gesture.mouse.currentHover.pos.x == byteIndex
+                && this.gesture.mouse.currentHover.pos.y == renderIndex
             ){
                 this.drawHover(pos.border);
             }
