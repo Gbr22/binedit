@@ -55,7 +55,7 @@ export const MouseHandler = defineSubsystem({
 
         window.addEventListener("mousemove",onMouseMove, {passive: true});
 
-        const canvas = this.canvas;
+        const canvas = this.dom.canvas;
 
         canvas.onmousedown = (e)=>{
             if (e.button != 0){
@@ -115,7 +115,7 @@ export const MouseHandler = defineSubsystem({
             this.setHover(hover);
         },
         getCanvasMousePosition(this: Editor){
-            const rect = this.canvas.getBoundingClientRect();
+            const rect = this.dom.canvas.getBoundingClientRect();
             const y = this.mousePosition.y - rect.top;
             const x = this.mousePosition.x - rect.left;
             return {

@@ -1,56 +1,42 @@
 import { Editor } from "../editor";
-import { TrackedVar } from "../reactivity";
-import { defineSubsystem } from "../composition";
 import { getStyles } from "../styles";
+import { Subclass } from "../subclass";
 
-export const DomHandler = defineSubsystem({
-    name: "DomHandler",
-    proto: {},
-    init(this: Editor): {
-        domRowCount: TrackedVar<number>
-        canvasContainer: HTMLDivElement
-        canvas: HTMLCanvasElement
-        ctx: CanvasRenderingContext2D
-        scrollView: HTMLDivElement
-        element: HTMLDivElement
-        shadowRoot: ShadowRoot
-        innerContainer: HTMLDivElement
-    } {
-        const element = document.createElement("div");
-        const shadowRoot = element.attachShadow({ mode: "closed" });
-        const innerContainer = document.createElement("div");
-        shadowRoot.appendChild(innerContainer);
-        innerContainer.classList.add("container");
-        (innerContainer as any).part = "container";
-        innerContainer.tabIndex = 0;
+function assert<T>(value: T, message?: string): NonNullable<T> {
+    if (value === undefined || value === null){
+        throw new Error(`Assert failed: ${message ?? "No message"}`);
+    }
+    return value;
+}
+
+export class DomManager extends Subclass<Editor> {
+    element = document.createElement("div");
+    canvasContainer = document.createElement("div");
+    canvas = document.createElement("canvas");
+    ctx = assert(this.canvas.getContext("2d"),"Failed to get canvas context (2d)");
+    scrollView = document.createElement("div");
+    shadowRoot = this.element.attachShadow({mode: "closed"});
+    innerContainer = document.createElement("div");
+
+    constructor(parent: Editor){
+        super(parent);
+        this.shadowRoot.appendChild(this.innerContainer);
+        this.innerContainer.classList.add("container");
+        (this.innerContainer as any).part = "container";
+        this.innerContainer.tabIndex = 0;
 
         const styleSheet = new CSSStyleSheet();
         styleSheet.replaceSync(getStyles());
-        shadowRoot.adoptedStyleSheets.push(styleSheet);
+        this.shadowRoot.adoptedStyleSheets.push(styleSheet);
 
-        const canvasContainer = document.createElement("div");
-        const scrollView = document.createElement("div");
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     
-        scrollView.classList.add("scroll-view");
-        innerContainer.appendChild(scrollView);
+        this.scrollView.classList.add("scroll-view");
+        this.innerContainer.appendChild(this.scrollView);
     
-        canvasContainer.classList.add("canvas-container");
-        innerContainer.appendChild(canvasContainer);
+        this.canvasContainer.classList.add("canvas-container");
+        this.innerContainer.appendChild(this.canvasContainer);
     
-        canvas.classList.add("canvas");
-        canvasContainer.appendChild(canvas);
-
-        return {
-            domRowCount: new TrackedVar(0),
-            canvasContainer,
-            canvas,
-            ctx,
-            scrollView,
-            element: element,
-            shadowRoot,
-            innerContainer
-        };
-    },
-})
+        this.canvas.classList.add("canvas");
+        this.canvasContainer.appendChild(this.canvas);
+    }
+}

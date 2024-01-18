@@ -5,7 +5,7 @@ import { Subclass } from "../subclass";
 export class SizeManager extends Subclass<Editor> {
     viewportRowCount = 0;
     resize(){
-        const rect = this.$.element.getBoundingClientRect();
+        const rect = this.$.dom.element.getBoundingClientRect();
         this.viewportRowCount = Math.floor(rect.height / rowHeight);
         this.$.desiredState.value = this.$.desiredState.value.with({
             width: Math.round(rect.width * window.devicePixelRatio),
@@ -13,11 +13,12 @@ export class SizeManager extends Subclass<Editor> {
         })
         this.$.reflow();
     }
-    [Subclass.init](){
+    constructor(parent: Editor){
+        super(parent);
         const resizeObserver = new ResizeObserver((entries) => {
             this.resize();
         });
 
-        resizeObserver.observe(this.$.element);
+        resizeObserver.observe(this.$.dom.element);
     }
 }

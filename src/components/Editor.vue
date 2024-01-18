@@ -9,7 +9,7 @@ import { onMounted, ref } from 'vue';
 const container = ref<HTMLElement>();
 onMounted(()=>{
     if (container.value){
-        container.value.appendChild(editor.element);
+        container.value.appendChild(editor.dom.element);
     }
 })
 </script>

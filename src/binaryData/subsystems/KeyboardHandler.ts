@@ -4,7 +4,7 @@ import { defineSubsystem } from "../composition";
 export const KeyboardHandler = defineSubsystem({
     name: "KeyboardHandler",
     init(this: Editor) {
-        this.innerContainer.onkeydown = (e)=>{
+        this.dom.innerContainer.onkeydown = (e)=>{
             const dir = {
                 x: 0,
                 y: 0,
