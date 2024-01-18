@@ -200,7 +200,7 @@ export const RenderingHandler = defineSubsystem({
             return index;
         },
         isRenderIndexInViewport(this: Editor, index: number): boolean {
-            return index >= 0 && index < this.viewportRowCount.value;
+            return index >= 0 && index < this.size.viewportRowCount;
         },
         reflow(this: Editor): void {
             emptyCssCache();
@@ -248,7 +248,7 @@ export const RenderingHandler = defineSubsystem({
                 ctx.fillRect(...box.border.arr);
             }
         
-            for(let renderIndex = 0; renderIndex < this.viewportRowCount.value; renderIndex++){
+            for(let renderIndex = 0; renderIndex < this.size.viewportRowCount; renderIndex++){
                 this.drawRow(renderIndex);
             }
         },
@@ -291,7 +291,7 @@ export const RenderingHandler = defineSubsystem({
         createAnyByteCountBox(this: Editor){
             const ctx = this.ctx;
         
-            const count = this.getByteCountOfRow(this.viewportRowCount.value);
+            const count = this.getByteCountOfRow(this.size.viewportRowCount);
             ctx.font = this.getByteCountFont();
             const text = this.getPaddedByteCount(count);
             const size = ctx.measureText(text);

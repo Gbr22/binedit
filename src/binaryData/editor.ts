@@ -1,5 +1,5 @@
 import { DataHandler } from "./subsystems/DataHandler";
-import { SizeHandler } from "./subsystems/SizeHandler";
+import { SizeManager } from "./subsystems/SizeManager";
 import { DomHandler } from "./subsystems/DomHandler";
 import { EventHandler } from "./subsystems/EventHandler";
 import { ScrollHandler } from "./subsystems/ScrollHandler";
@@ -10,25 +10,25 @@ import { KeyboardHandler } from "./subsystems/KeyboardHandler";
 import { DisposeHandler } from "./subsystems/DisposeHandler";
 
 import { type CombinedSubsystems, Subsystems, defineSubsystem } from "./composition";
-import { SelectionHandler } from "./subsystems/SelectionHandler";
+import { SelectionManager } from "./subsystems/SelectionManager";
 
-const EditorProps = defineSubsystem({
+const Managers = defineSubsystem({
     name: "EditorProps",
     proto: {},
     init(this: Editor) {
         return {
-            selection: new SelectionHandler(this)
+            selection: new SelectionManager(this),
+            size: new SizeManager(this)
         }
     },
 });
 
 const subsystems = new Subsystems(
-    EditorProps,
+    Managers,
     DisposeHandler,
     RenderingHandler,
     DataHandler,
     DomHandler,
-    SizeHandler,
     EventHandler,
     UpdateHandler,
     ScrollHandler,
