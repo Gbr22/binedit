@@ -11,7 +11,7 @@ export const ScrollHandler = defineSubsystem({
             const scrollBar = this.scrollHandler.scrollBar;
             scrollBar.classList.add("scrollbar");
             (scrollBar as any).part = "scrollbar";
-            this.innerContainer.appendChild(scrollBar);
+            this.dom.innerContainer.appendChild(scrollBar);
         
             const upButton = document.createElement("button");
             upButton.classList.add("scrollbar-button");
@@ -97,7 +97,7 @@ export const ScrollHandler = defineSubsystem({
         getScrollTopFromIndex(this: Editor, index: number, documentSize: number){
             const aligned = this.getDocumentBoundIndex(index, documentSize);
             const ratio = this.getRatioFromIndex(aligned, documentSize);
-            return ratio * this.innerContainer.scrollHeight;
+            return ratio * this.dom.innerContainer.scrollHeight;
         },
         getRatioFromIndex(this: Editor, index: number, documentSize: number){
             return index / documentSize;
@@ -122,7 +122,7 @@ export const ScrollHandler = defineSubsystem({
         changeNativeScrollerPosition(this: Editor, index: number, documentSize: number){
             const top = this.getScrollTopFromIndex(index, documentSize);
             
-            this.innerContainer.scrollTo({
+            this.dom.innerContainer.scrollTo({
                 top: top,
                 behavior: "instant"
             })
@@ -149,11 +149,11 @@ export const ScrollHandler = defineSubsystem({
             return "native";
         },this.desiredState);
     
-        this.innerContainer.addEventListener("scroll",()=>{
+        this.dom.innerContainer.addEventListener("scroll",()=>{
             if (this.scrollBarType.value != "native"){
                 return;
             }
-            const ratio = this.innerContainer.scrollTop / ( this.innerContainer.scrollHeight - (this.innerContainer.clientHeight / 2) );
+            const ratio = this.dom.innerContainer.scrollTop / ( this.dom.innerContainer.scrollHeight - (this.dom.innerContainer.clientHeight / 2) );
             const index = this.getIndexFromRatio(ratio, this.desiredState.value.dataProvider.size);
             this.desiredState.value = this.desiredState.value.with({
                 positionInFile: this.getDocumentBoundIndex(index,this.desiredState.value.dataProvider.size)
@@ -161,7 +161,7 @@ export const ScrollHandler = defineSubsystem({
             this.forceUpdateHover();
         },{passive: true})
     
-        this.innerContainer.addEventListener("wheel",(e)=>{
+        this.dom.innerContainer.addEventListener("wheel",(e)=>{
             if (scrollBarType.value == "native"){
                 return;
             }
