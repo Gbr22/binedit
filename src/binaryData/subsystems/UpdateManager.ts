@@ -43,7 +43,7 @@ export class UpdateManager {
         })
         this.editor.data.dataToRender.subscribe(()=>{
             requestAnimationFrame(()=>{
-                this.editor.renderer.reflow();
+                this.editor.rendering.reflow();
             })
         })
         this.renderedState.subscribe(()=>{

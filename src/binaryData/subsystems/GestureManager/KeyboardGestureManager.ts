@@ -26,11 +26,11 @@ export class KeyboardGestureManager {
             if (e.code == "ArrowRight"){
                 dir.x = 1;
             }
-            const diff = dir.y * this.editor.renderer.bytesPerRow + dir.x;
+            const diff = dir.y * this.editor.rendering.layout.bytesPerRow + dir.x;
             if (diff != 0){
                 if (this.editor.selection.isSelecting() && !e.shiftKey){
                     this.editor.selection.endRange();
-                    this.editor.renderer.redraw();
+                    this.editor.rendering.redraw();
                 } else {
                     if (e.shiftKey){
                         if (!this.editor.selection.isSelecting()){
@@ -39,17 +39,17 @@ export class KeyboardGestureManager {
                         } else {
                             this.editor.selection.hoverOverByte("keyboard",this.editor.selection.cursorPosition + diff);
                         }
-                        this.editor.renderer.redraw();
+                        this.editor.rendering.redraw();
                     }
                 }
                 
                 this.editor.selection.setCursor(this.editor.selection.cursorPosition + diff);
-                this.editor.renderer.redraw();
+                this.editor.rendering.redraw();
                 e.preventDefault();
             }
             if (e.code == "Escape"){
                 this.editor.selection.clearRanges();
-                this.editor.renderer.redraw();
+                this.editor.rendering.redraw();
                 e.preventDefault();
             }
         }

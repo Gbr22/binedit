@@ -20,7 +20,7 @@ export class DataManager {
     }
     getRenderBytes(startByte: number): Uint8Array {
         const index = startByte - this.editor.update.intermediateState.value.positionInFile;
-        const buffer = this.dataToRender.value.slice(index, index + this.editor.renderer.bytesPerRow);
+        const buffer = this.dataToRender.value.slice(index, index + this.editor.rendering.layout.bytesPerRow);
         return new Uint8Array(buffer);
     }
     getRenderByte(i: number): number | undefined {
