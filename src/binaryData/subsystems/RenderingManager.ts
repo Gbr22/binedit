@@ -84,7 +84,7 @@ export class RenderingManager {
         this.drawByteCount(renderIndex);
     
         for(let byteIndex = 0; byteIndex < bytesPerRow; byteIndex++){
-            const value = this.editor.getRenderByte(renderIndex * bytesPerRow + byteIndex);
+            const value = this.editor.data.getRenderByte(renderIndex * bytesPerRow + byteIndex);
             this.drawByte({
                 renderIndex,
                 byteIndex,
