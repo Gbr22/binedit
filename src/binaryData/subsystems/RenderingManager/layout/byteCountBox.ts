@@ -5,7 +5,7 @@ export function anyByteCountBox(layout: Layout) {
     return new CachedBoundingBox(()=>{
         const ctx = layout.ctx;
         const count = layout.getByteCountDigitCount();
-        ctx.font = layout.styles.getByteCountFont();
+        ctx.font = layout.styles.byteCount.font;
         const text = layout.getPaddedByteCount(count);
         const size = ctx.measureText(text);
         const textWidth = size.width;

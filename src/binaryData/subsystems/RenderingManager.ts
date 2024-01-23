@@ -1,5 +1,4 @@
 import { Editor } from "../editor";
-import { emptyCssCache } from "@/theme";
 import { Layout } from "./RenderingManager/layout";
 import { Styles } from "./RenderingManager/styles";
 import { Renderer } from "./RenderingManager/renderer";
@@ -21,14 +20,39 @@ export class RenderingManager {
     constructor(editor: Editor) {
         this.editor = editor;
 
-        const { sizes, styles, layout, renderer } = this.createRenderer();
+        const { sizes, styles, layout, renderer } = this.createRendererSync({
+            state: this.createStateSync({
+                dataToRender: new Uint8Array()
+            })
+        });
         this.sizes = sizes;
         this.styles = styles;
         this.layout = layout;
         this.renderer = renderer;
     }
-
-    createRenderer(){
+    createStateSync({dataToRender}: {dataToRender: Uint8Array}){
+        return new State({
+            positionInFile: this.editor.update.intermediateState.value.positionInFile,
+            currentHover: this.editor.gesture.mouse.currentHover,
+            pendingSelectionRanges: this.editor.selection.pendingRanges,
+            selectionRanges: this.editor.selection.ranges,
+            cursorPosition: this.editor.selection.cursorPosition,
+            dataToRender: dataToRender,
+            dataProvider: this.editor.update.intermediateState.value.dataProvider
+        })
+    }
+    async createStateAsync(){
+        const dataToRender = await this.editor.data.getRenderPage(
+            this.editor.update.intermediateState.value.dataProvider,
+            this.editor.update.intermediateState.value.positionInFile
+        )
+        return this.createStateSync({dataToRender});
+    }
+    async createRendererAsync(){
+        const state = await this.createStateAsync();
+        return this.createRendererSync({state});
+    }
+    createRendererSync({ state }: { state: State }){
         const sizes = new Sizes({
             devicePixelRatio: this.devicePixelRatio,
             scale: this.scale
@@ -39,23 +63,18 @@ export class RenderingManager {
         })
         const layout = new Layout({
             width: this.editor.update.intermediateState.value.width,
-            height: this.editor.update.intermediateState.value.width,
+            height: this.editor.update.intermediateState.value.height,
             styles: styles,
             sizes: sizes,
             ctx: this.editor.dom.ctx,
             canvas: this.editor.dom.canvas,
             dataProvider: this.editor.update.intermediateState.value.dataProvider,
         })
-        const state = new State({
-            positionInFile: this.editor.update.intermediateState.value.positionInFile,
-            currentHover: this.editor.gesture.mouse.currentHover
-        });
         const renderer = new Renderer({
             layout,
             styles,
             ctx: this.editor.dom.ctx,
             canvas: this.editor.dom.canvas,
-            editor: this.editor,
             state
         });
         return {
@@ -66,8 +85,7 @@ export class RenderingManager {
         }
     }
     
-    reflow(): void {
-        emptyCssCache();
+    async reflow() {
         this.devicePixelRatio = window.devicePixelRatio;
         this.editor.dom.innerContainer.dataset["scrollType"] = `${this.editor.scroll.scrollBarType.value}`;
         
@@ -80,25 +98,24 @@ export class RenderingManager {
             this.editor.dom.innerContainer.scrollTop = 0;
         }
         
-        const result = this.createRenderer();
+        const result = await this.createRendererAsync();
         Object.assign(this,result);
+        this.renderer.canvas.width = this.layout.width;
+        this.renderer.canvas.height = this.layout.height;
+        this.renderer.canvas.style.setProperty("--device-pixel-ratio",String(this.devicePixelRatio));
 
         this.renderer.draw();
     
         this.editor.update.renderedState.value = this.editor.update.intermediateState.value;
     }
-    redraw(){
-        const state = new State({
-            positionInFile: this.editor.update.intermediateState.value.positionInFile,
-            currentHover: this.editor.gesture.mouse.currentHover
-        });
+    async redraw(){
+        const state = await this.createStateAsync();
         const renderer = new Renderer({
             ctx: this.editor.dom.ctx,
             canvas: this.editor.dom.canvas,
             state,
             styles: this.styles,
             layout: this.layout,
-            editor: this.editor
         })
         this.renderer = renderer;
         this.renderer.draw();

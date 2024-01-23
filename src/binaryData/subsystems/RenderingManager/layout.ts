@@ -45,7 +45,7 @@ export class Layout {
         return this.dataProvider.size-1;
     }
     getByteCountDigitCount(){
-        const min = this.styles.minRowNumberDigitCount;
+        const min = this.styles.byteCount.minDigitCount;
         const end = toHex(this.documentEndIndex()).length;
         return Math.max(min,end);
     }

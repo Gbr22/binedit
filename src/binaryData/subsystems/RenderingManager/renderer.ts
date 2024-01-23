@@ -1,15 +1,13 @@
-import { getCssBoolean, getCssNumber, getCssString } from "@/theme";
 import type { Layout } from "./layout";
 import type { State } from "./state";
 import type { Styles } from "./styles";
-import type { Editor } from "@/binaryData/editor";
 import { Box } from "./box";
 import { byteToPrintable, toHex } from "@/binaryData/row";
+import { isSelectedIndex } from "../SelectionManager";
 
 interface RendererDependecies {
     ctx: CanvasRenderingContext2D
     canvas: HTMLCanvasElement
-    editor: Editor
     styles: Styles
     layout: Layout
     state: State
@@ -30,7 +28,6 @@ export class Renderer {
     canvas: HTMLCanvasElement;
     width: number;
     height: number;
-    editor: Editor;
 
     constructor(deps: RendererDependecies) {
         this.styles = deps.styles;
@@ -40,7 +37,6 @@ export class Renderer {
         this.ctx = deps.ctx;
         this.width = deps.layout.width;
         this.height = deps.layout.height;
-        this.editor = deps.editor;
     }
     renderPosToFileIndex(y: number, x: number): number {
         return this.pointToFileIndex({x,y});
@@ -56,37 +52,36 @@ export class Renderer {
         const ctx = this.ctx;
         const canvas = this.canvas;
     
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
-        this.canvas.style.setProperty("--device-pixel-ratio",window.devicePixelRatio.toString())
-    
-        ctx.fillStyle = getCssString(this.editor.dom.innerContainer,"--editor-background-color");
+        ctx.fillStyle = this.styles.editor.backgroundColor;
         ctx.fillRect(0,0,canvas.width,canvas.height);
     
         {
             const box = this.layout.byteCountContainer.value;
-            ctx.strokeStyle = getCssString(this.editor.dom.innerContainer,"--editor-border-color");
+            ctx.strokeStyle = this.styles.byteCountContainer.borderColor;
             ctx.strokeRect(...box.border.arr);
-            ctx.fillStyle = getCssString(this.editor.dom.innerContainer,"--editor-row-number-background-color");
+            ctx.fillStyle = this.styles.byteCountContainer.backgroundColor;
             ctx.fillRect(...box.border.arr);
         }
         {
             const box = this.layout.charsContainer.value;
-            ctx.strokeStyle = getCssString(this.editor.dom.innerContainer,"--editor-border-color");
+            ctx.strokeStyle = this.styles.charsContainer.borderColor;
             ctx.strokeRect(...box.border.arr);
-            ctx.fillStyle = getCssString(this.editor.dom.innerContainer,"--editor-background-color");
+            ctx.fillStyle = this.styles.charsContainer.backgroundColor;
             ctx.fillRect(...box.border.arr);
         }
     
-        for(let renderIndex = 0; renderIndex < this.editor.size.viewportRowCount; renderIndex++){
+        for(let renderIndex = 0; renderIndex < this.viewportRowCount; renderIndex++){
             this.drawRow(renderIndex);
         }
+    }
+    getRenderByteFromIndex(index: number){
+        return this.state.dataToRender[index];
     }
     drawRow(renderIndex: number): void {
         this.drawByteCount(renderIndex);
     
         for(let byteIndex = 0; byteIndex < this.bytesPerRow; byteIndex++){
-            const value = this.editor.data.getRenderByte(renderIndex * this.bytesPerRow + byteIndex);
+            const value = this.getRenderByteFromIndex(renderIndex * this.bytesPerRow + byteIndex);
             this.drawByte({
                 renderIndex,
                 byteIndex,
@@ -100,23 +95,23 @@ export class Renderer {
         }
     }
     getByteCountOfRow(renderIndex: number){
-        return renderIndex * this.bytesPerRow + this.editor.update.intermediateState.value.positionInFile;
+        return renderIndex * this.bytesPerRow + this.positionInFile;
     }
     drawHover(box: Box){
         const ctx = this.ctx;
-        ctx.strokeStyle = getCssString(this.editor.dom.innerContainer,"--editor-select-border-color");
-        ctx.lineWidth = 1*this.unit;
+        ctx.strokeStyle = this.styles.hover.borderColor;
+        ctx.lineWidth = this.styles.hover.borderWidth*this.unit;
         ctx.strokeRect(...box.arr);
     }
     drawCursor(box: Box){
         const ctx = this.ctx;
-        ctx.strokeStyle = getCssString(this.editor.dom.innerContainer,"--editor-cursor-border-color");
-        ctx.lineWidth = 1*this.unit;
+        ctx.strokeStyle = this.styles.cursor.borderColor;
+        ctx.lineWidth = this.styles.cursor.borderWidth*this.unit;
         ctx.strokeRect(...box.arr);
     }
     drawSelection(box: Box){
         const ctx = this.ctx;
-        ctx.fillStyle = getCssString(this.editor.dom.innerContainer,"--editor-cursor-background-color");
+        ctx.fillStyle = this.styles.selection.backgroundColor;
         ctx.fillRect(...box.arr);
     }
     drawByteCount(renderIndex: number): void {
@@ -125,24 +120,24 @@ export class Renderer {
         const count = this.getByteCountOfRow(renderIndex);
     
         const text = this.layout.getPaddedByteCount(count);
-        ctx.font = this.styles.getByteCountFont();
+        ctx.font = this.styles.byteCount.font;
         
         const pos = this.layout.byteCountBox.get(renderIndex);
     
-        if (getCssBoolean(this.editor.dom.element,"--editor-show-wireframe")){
+        if (this.styles.showWireframe){
             ctx.strokeStyle = "green";
             ctx.lineWidth = 1*this.unit;
             ctx.strokeRect(...pos.inner.arr);
         }
     
-        ctx.fillStyle = getCssString(this.editor.dom.innerContainer,"--editor-row-number-foreground-color");
+        ctx.fillStyle = this.styles.byteCount.color;
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
         ctx.fillText(text,...pos.inner.center.arr);
 
         if (
-            this.editor.gesture.mouse.currentHover.type == "byte-count"
-            && this.editor.gesture.mouse.currentHover.y == renderIndex
+            this.state.currentHover.type == "byte-count"
+            && this.state.currentHover.y == renderIndex
         ){
             this.drawHover(pos.border);
         }
@@ -158,26 +153,26 @@ export class Renderer {
         const pos = this.layout.byteBox.get(renderIndex,byteIndex);
         const index = this.renderPosToFileIndex(renderIndex,byteIndex);
     
-        if (this.editor.selection.isSelectedIndex(index)){
+        if (isSelectedIndex(index,this.state.pendingSelectionRanges)){
             this.drawSelection(pos.border);
         }
 
-        if (this.editor.selection.cursorPosition == index){
+        if (this.state.cursorPosition == index){
             this.drawCursor(pos.border);
         }
         
 
-        if (getCssBoolean(this.editor.dom.element,"--editor-show-wireframe")){
+        if (this.styles.showWireframe){
             ctx.strokeStyle = "red";
             ctx.lineWidth = 1*this.unit;
             ctx.strokeRect(...pos.border.arr);
         }
     
         const text = toHex(value).padStart(2,'0');
-        ctx.font = `${getCssNumber(this.editor.dom.innerContainer,"--editor-font-size") * this.unit}px ${getCssString(this.editor.dom.innerContainer,"--editor-font-family")}`;
+        ctx.font = this.styles.byte.font;
         ctx.fillStyle = byteIndex % 2 == 0 ?
-            getCssString(this.editor.dom.innerContainer,"--editor-byte-1-foreground-color") :
-            getCssString(this.editor.dom.innerContainer,"--editor-byte-2-foreground-color")
+            this.styles.byteEven.color :
+            this.styles.byteOdd.color
         ;
     
         ctx.textBaseline = "middle";
@@ -186,11 +181,11 @@ export class Renderer {
 
         if (
             (
-                this.editor.gesture.mouse.currentHover.type == "byte"
-                || this.editor.gesture.mouse.currentHover.type == "char"
+                this.state.currentHover.type == "byte"
+                || this.state.currentHover.type == "char"
             )
-            && this.editor.gesture.mouse.currentHover.pos.x == byteIndex
-            && this.editor.gesture.mouse.currentHover.pos.y == renderIndex
+            && this.state.currentHover.pos.x == byteIndex
+            && this.state.currentHover.pos.y == renderIndex
         ){
             this.drawHover(pos.border);
         }
@@ -208,15 +203,15 @@ export class Renderer {
 
         const index = this.renderPosToFileIndex(renderIndex,byteIndex);
 
-        if (this.editor.selection.isSelectedIndex(index)){
+        if (isSelectedIndex(index,this.state.pendingSelectionRanges)){
             this.drawSelection(pos.border);
         }
 
-        if (this.editor.selection.cursorPosition == index){
+        if (this.state.cursorPosition == index){
             this.drawCursor(pos.border);
         }
     
-        if (getCssBoolean(this.editor.dom.element,"--editor-show-wireframe")){
+        if (this.styles.showWireframe){
             ctx.strokeStyle = "blue";
             ctx.lineWidth = 1*this.unit;
             ctx.strokeRect(...pos.border.arr);
@@ -224,9 +219,9 @@ export class Renderer {
     
         const printable = byteToPrintable(value);
         const text = printable.text;
-        ctx.font = `${getCssNumber(this.editor.dom.innerContainer,"--editor-font-size") * this.unit}px ${getCssString(this.editor.dom.innerContainer,"--editor-font-family")}`;
+        ctx.font = this.styles.char.font;
     
-        ctx.fillStyle = getCssString(this.editor.dom.innerContainer,`--editor-char-${printable.type}-color`);
+        ctx.fillStyle = this.styles.charType[printable.type].color || this.styles.charType["other"].color;
     
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
@@ -234,11 +229,11 @@ export class Renderer {
 
         if (
             (
-                this.editor.gesture.mouse.currentHover.type == "byte"
-                || this.editor.gesture.mouse.currentHover.type == "char"
+                this.state.currentHover.type == "byte"
+                || this.state.currentHover.type == "char"
             )
-            && this.editor.gesture.mouse.currentHover.pos.x == byteIndex
-            && this.editor.gesture.mouse.currentHover.pos.y == renderIndex
+            && this.state.currentHover.pos.x == byteIndex
+            && this.state.currentHover.pos.y == renderIndex
         ){
             this.drawHover(pos.border);
         }
