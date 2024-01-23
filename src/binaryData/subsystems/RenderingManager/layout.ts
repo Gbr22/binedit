@@ -3,14 +3,11 @@ import type { Sizes } from "./sizes";
 import { toHex } from "@/binaryData/row";
 import type { DataProvider } from "@/binaryData/dataProvider";
 import { byteCountContainer } from "./layout/byteCountContainer";
-import { anyByteCountBox } from "./layout/anyByteCountBox";
-import { byteCountBox } from "./layout/byteCountBox";
+import { anyByteCountBox, byteCountBox } from "./layout/byteCountBox";
 import { bytesContainer } from "./layout/bytesContainer";
-import { anyByteBox } from "./layout/anyByteBox";
-import { byteBox } from "./layout/byteBox";
-import { anyCharBox } from "./layout/anyCharBox";
+import { anyByteBox, byteBox } from "./layout/byteBox";
 import { charsContainer } from "./layout/charsContainer";
-import { charBox } from "./layout/charBox";
+import { anyCharBox, charBox } from "./layout/charBox";
 
 interface LayoutDependencies {
     width: number

@@ -1,5 +1,17 @@
-import { BoundingBox, CachedBoundingBoxes } from "../box";
+import { BoundingBox, CachedBoundingBox, CachedBoundingBoxes } from "../box";
 import type { Layout } from "../layout";
+
+export function anyCharBox(layout: Layout){
+    return new CachedBoundingBox(()=>{
+        const charWidth = layout.styles.editorCharWidth * layout.unit;
+        return new BoundingBox({
+            outerLeft: 0,
+            outerTop: 0,
+            innerWidth: charWidth,
+            innerHeight: layout.rowHeight * layout.unit
+        })
+    })
+}
 
 export function charBox(layout: Layout){
     return new CachedBoundingBoxes((y: number, x: number)=>{
