@@ -1,6 +1,5 @@
 import { Editor } from "../editor";
 import { getStyles } from "../styles";
-import { Subclass } from "../subclass";
 
 function assert<T>(value: T, message?: string): NonNullable<T> {
     if (value === undefined || value === null){
@@ -9,7 +8,7 @@ function assert<T>(value: T, message?: string): NonNullable<T> {
     return value;
 }
 
-export class DomManager extends Subclass<Editor> {
+export class DomManager {
     element = document.createElement("div");
     canvasContainer = document.createElement("div");
     canvas = document.createElement("canvas");
@@ -18,8 +17,10 @@ export class DomManager extends Subclass<Editor> {
     shadowRoot = this.element.attachShadow({mode: "closed"});
     innerContainer = document.createElement("div");
 
-    constructor(parent: Editor){
-        super(parent);
+    editor: Editor;
+
+    constructor(editor: Editor){
+        this.editor = editor;
         this.shadowRoot.appendChild(this.innerContainer);
         this.innerContainer.classList.add("container");
         (this.innerContainer as any).part = "container";
