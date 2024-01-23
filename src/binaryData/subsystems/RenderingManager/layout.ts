@@ -1,5 +1,5 @@
 import type { Styles } from "./styles";
-import { BoundingBox, CachedBoundingBox } from "./box";
+import { BoundingBox, CachedBoundingBox, CachedBoundingBoxes } from "./box";
 import type { Sizes } from "./sizes";
 import { toHex } from "@/binaryData/row";
 import type { DataProvider } from "@/binaryData/dataProvider";
@@ -14,18 +14,15 @@ interface LayoutDependencies {
     dataProvider: DataProvider
 }
 
-type BoxCaches = Map<string,Map<unknown,BoundingBox>>;
-
 export class Layout {
     sizes: Sizes;
     styles: Styles;
-    bytesPerRow = 16;
+    bytesPerRow: number = 16;
+    rowHeight: number = 16;
     viewportRowCount: number;
     unit: number;
     width: number;
     height: number;
-    rowHeight: number = 16;
-    boxCaches: BoxCaches = new Map();
     ctx: CanvasRenderingContext2D;
     dataProvider: DataProvider;
 
@@ -81,7 +78,7 @@ export class Layout {
             paddingRight: 4 * this.unit
         })
     })
-    createByteCountBox(y: number){
+    byteCountBox = new CachedBoundingBoxes((y: number)=>{
         const container = this.byteCountContainer.value;
         const anyByteCount = this.anyByteCountBox.value;
     
@@ -93,10 +90,7 @@ export class Layout {
             paddingLeft: anyByteCount.paddingLeft,
             paddingRight: anyByteCount.paddingRight,
         })
-    }
-    getByteCountBox(y: number): BoundingBox {
-        return this.getCachedBox("byteCount",y,this.createByteCountBox.bind(this,y));
-    }
+    },Number)
     bytesContainer = new CachedBoundingBox(()=>{
         const count = this.byteCountContainer.value;
         const anyByte = this.anyByteBox.value;
@@ -110,19 +104,6 @@ export class Layout {
             paddingRight: 6 * this.unit,
         })
     })
-    getCachedBox(cacheId: string, key: unknown, create: ()=>BoundingBox): BoundingBox {
-        let map = this.boxCaches.get(cacheId);
-        if (!map){
-            map = new Map();
-            this.boxCaches.set(cacheId,map);
-        }
-        let item = map.get(key);
-        if (!item) {
-            item = create();
-            map.set(key,item);
-        }
-        return item;
-    }
     anyByteBox = new CachedBoundingBox(()=>{
         return new BoundingBox({
             outerLeft: 0,
@@ -131,10 +112,10 @@ export class Layout {
             innerHeight: this.rowHeight * this.unit,
         })
     })
-    getByteBoxId(y: number,x: number){
+    yxToScalar(y: number, x: number){
         return y * this.bytesPerRow + x;
     }
-    createByteBox(y: number,x: number){
+    byteBox = new CachedBoundingBoxes((y: number, x: number)=>{
         const bytesContainer = this.bytesContainer.value;
         const anyByte = this.anyByteBox.value;
 
@@ -144,11 +125,7 @@ export class Layout {
             innerWidth: anyByte.inner.width,
             innerHeight: anyByte.inner.height,
         })
-    }
-    getByteBox(y: number,x: number): BoundingBox {
-        const id = this.getByteBoxId(y,x);
-        return this.getCachedBox("bytes",id,this.createByteBox.bind(this,y,x));
-    }
+    },this.yxToScalar.bind(this))
     anyCharBox = new CachedBoundingBox(()=>{
         const charWidth = this.styles.editorCharWidth * this.unit;
         return new BoundingBox({
@@ -171,7 +148,7 @@ export class Layout {
             paddingRight: 6 * this.unit,
         })
     })
-    createCharBox(y: number,x: number){
+    charBox = new CachedBoundingBoxes((y: number, x: number)=>{
         const top = this.getRowPosition(y);
         const charsBox = this.charsContainer.value;
         const anyCharBox = this.anyCharBox.value;
@@ -182,9 +159,5 @@ export class Layout {
             innerWidth: anyCharBox.inner.width,
             innerHeight: anyCharBox.inner.height
         })
-    }
-    getCharBox(y: number,x: number): BoundingBox {
-        const id = y * this.bytesPerRow + x;
-        return this.getCachedBox("chars",id,this.createCharBox.bind(this,y,x));
-    }
+    },this.yxToScalar.bind(this))
 }
