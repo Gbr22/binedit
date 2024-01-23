@@ -1,6 +1,6 @@
 import { SizeManager } from "./subsystems/SizeManager";
 import { DomManager } from "./subsystems/DomManager";
-import { EventHandler } from "./subsystems/EventHandler";
+import { EventManager } from "./subsystems/EventManager";
 import { ScrollHandler } from "./subsystems/ScrollHandler";
 import { RenderingManager } from "./subsystems/RenderingManager";
 import { GestureManager } from "./subsystems/GestureManager";
@@ -12,7 +12,6 @@ import { type CombinedSubsystems, Subsystems } from "./composition";
 import { dispose, type Disposable, disposeChildren } from "./dispose";
 
 const subsystems = new Subsystems(
-    EventHandler,
     ScrollHandler,
 );
 
@@ -23,6 +22,7 @@ export interface Editor extends EditorSubsystems {}
 export class Editor implements Disposable {
     data = new DataManager(this);
     update = new UpdateManager(this);
+    event = new EventManager(this);
     selection = new SelectionManager(this);
     dom = new DomManager(this);
     size = new SizeManager(this);
