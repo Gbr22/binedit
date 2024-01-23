@@ -78,7 +78,8 @@ export class SelectionManager {
     onUpdateSelectionRangesListeners: ((ranges: Selections)=>void)[] = [];
     startIndex: number | undefined = undefined;
     endIndex: number | undefined = undefined;
-    ranges: Selections = [];
+    ranges: Range[] = [];
+    pendingRanges: Range[] = [];
     source: SelectionSource | undefined = undefined;
     editor: Editor;
     
@@ -110,11 +111,12 @@ export class SelectionManager {
         if (includeFirst){
             this.endIndex = index;
         }
+        this.pendingRanges = this.#getCombinedRanges();
     }
     endRange(){
         const range = this.getRange();
         if (range){
-            this.ranges = (this.getCombinedSelection());
+            this.ranges = (this.#getCombinedRanges());
             this.startIndex = undefined;
             this.endIndex = undefined;
             compressRanges(this.ranges);
@@ -125,18 +127,21 @@ export class SelectionManager {
             this.startIndex = undefined;
             this.endIndex = undefined;
         }
+        this.pendingRanges = this.#getCombinedRanges();
     }
     cancelRange(){
         this.startIndex = undefined;
         this.endIndex = undefined;
+        this.pendingRanges = this.#getCombinedRanges();
     }
     hoverOverByte(selectionSource: SelectionSource, index: number){
         if (this.source != selectionSource){
             return;
         }
         this.endIndex = index;
+        this.pendingRanges = this.#getCombinedRanges();
     }
-    getCombinedSelection(): Range[] {
+    #getCombinedRanges(): Range[] {
         const range = this.getRange();
         const start = this.startIndex;
         const end = this.endIndex;
@@ -201,7 +206,7 @@ export class SelectionManager {
         return [min,max];
     }
     isSelectedIndex(index: number){
-        return isInAnyRange(index,this.getCombinedSelection());
+        return isInAnyRange(index,this.pendingRanges);
     }
     setCursor(index: number, clampToBounds?: true) {
         let clampedIndex = index;
