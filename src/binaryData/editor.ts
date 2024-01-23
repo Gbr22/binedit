@@ -19,7 +19,7 @@ export class Editor implements Disposable {
     scroll = new ScrollManager(this);
     size = new SizeManager(this);
     gesture = new GestureManager(this);
-    renderer = new RenderingManager(this);
+    rendering = new RenderingManager(this);
 
     constructor(){
 

@@ -44,7 +44,7 @@ export class ScrollManager {
             }
             const delta = e.deltaY;
             const deltaRow = Math.round(delta / rowHeight);
-            const newIndex = this.editor.update.desiredState.value.positionInFile + deltaRow * this.editor.renderer.bytesPerRow;
+            const newIndex = this.editor.update.desiredState.value.positionInFile + deltaRow * this.editor.rendering.layout.bytesPerRow;
             const boundIndex = this.getDocumentBoundIndex(newIndex,this.editor.update.desiredState.value.dataProvider.size);
             this.editor.update.desiredState.value = this.editor.update.desiredState.value.with({
                 positionInFile: boundIndex
@@ -119,7 +119,7 @@ export class ScrollManager {
         })
     
         const step = (dir: 1 | -1)=>{
-            const newPosition = this.editor.update.desiredState.value.positionInFile + dir * this.editor.renderer.bytesPerRow;
+            const newPosition = this.editor.update.desiredState.value.positionInFile + dir * this.editor.rendering.layout.bytesPerRow;
             const boundPos = this.getDocumentBoundIndex(newPosition,this.editor.update.desiredState.value.dataProvider.size);
             this.editor.update.desiredState.value = this.editor.update.desiredState.value.with({
                 positionInFile: boundPos
@@ -154,15 +154,15 @@ export class ScrollManager {
         return Math.round(ratio * documentSize);
     }
     getRowAlignedIndex(index: number){
-        const rowNumber = Math.floor(index / this.editor.renderer.bytesPerRow);
-        const newIndex = rowNumber * this.editor.renderer.bytesPerRow;
+        const rowNumber = Math.floor(index / this.editor.rendering.layout.bytesPerRow);
+        const newIndex = rowNumber * this.editor.rendering.layout.bytesPerRow;
         return newIndex;
     }
     getDocumentBoundIndex(index: number, documentSize: number){
         const aligned = this.getRowAlignedIndex(index);
         const min = 0;
         const minBound = Math.max(min,aligned);
-        const max = this.getRowAlignedIndex(documentSize) - this.getRowAlignedIndex( ( (this.editor.size.viewportRowCount+2) * this.editor.renderer.bytesPerRow ) / 2 );
+        const max = this.getRowAlignedIndex(documentSize) - this.getRowAlignedIndex( ( (this.editor.size.viewportRowCount+2) * this.editor.rendering.layout.bytesPerRow ) / 2 );
         const maxBound = Math.min(minBound,max);
         
         return maxBound;

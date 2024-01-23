@@ -4,7 +4,7 @@
     --editor-font-size: 14;
     --editor-byte-width: 23;
     --editor-char-width: 11;
-    --editor-row-number-digit-count: 8;
+    --editor-row-number-digit-count: 4;
 }
 .editor div::part(container) {
     border: 1px solid transparent;
