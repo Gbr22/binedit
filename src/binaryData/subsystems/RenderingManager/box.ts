@@ -179,3 +179,22 @@ export class CachedBoundingBox {
         this.create = create;
     }
 }
+
+export class CachedBoundingBoxes<Args extends any[]> {
+    create: (...args: Args)=>BoundingBox
+    #values = new Map<any,BoundingBox>()
+    getKey: (...args: Args)=>any
+    constructor(create: (...args: Args)=>BoundingBox, getKey: (...args: Args)=>any) {
+        this.create = create;
+        this.getKey = getKey;
+    }
+    get(...args: Args): BoundingBox {
+        const key = this.getKey(...args);
+        let value = this.#values.get(key);
+        if (!value){
+            value = this.create(...args);
+            this.#values.set(key,value);
+        }
+        return value;
+    }
+}

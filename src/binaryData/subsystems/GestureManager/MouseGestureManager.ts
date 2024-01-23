@@ -144,7 +144,7 @@ export class MouseGestureManager implements Disposable {
         const pos = this.getScaledCanvasMousePosition();
         for (let y = 0; y < this.editor.size.viewportRowCount; y++){
             const renderIndex = y;
-            const byteCountRect = this.editor.rendering.layout.getByteCountBox(renderIndex);
+            const byteCountRect = this.editor.rendering.layout.byteCountBox.get(renderIndex);
             if (isCollision(byteCountRect.border,pos)){
                 return {
                     type: "byte-count",
@@ -152,7 +152,7 @@ export class MouseGestureManager implements Disposable {
                 }
             }
             for (let x = 0; x < bytesPerRow; x++){
-                const byteRect = this.editor.rendering.layout.getByteBox(renderIndex,x);
+                const byteRect = this.editor.rendering.layout.byteBox.get(renderIndex,x);
                 if (isCollision(byteRect.border,pos)){
                     return {
                         type: "byte",
@@ -162,7 +162,7 @@ export class MouseGestureManager implements Disposable {
                         }
                     }
                 }
-                const charRect = this.editor.rendering.layout.getCharBox(renderIndex,x);
+                const charRect = this.editor.rendering.layout.charBox.get(renderIndex,x);
                 if (isCollision(charRect.border,pos)){
                     return {
                         type: "char",

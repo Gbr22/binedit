@@ -21,7 +21,6 @@ export class Renderer {
     state: State;
 
     get unit() { return this.layout.unit }
-    get boxCaches() { return this.layout.boxCaches }
     get bytesPerRow() { return this.layout.bytesPerRow }
     get viewportRowCount() { return this.layout.viewportRowCount }
     get positionInFile() { return this.state.positionInFile }
@@ -128,7 +127,7 @@ export class Renderer {
         const text = this.layout.getPaddedByteCount(count);
         ctx.font = this.styles.getByteCountFont();
         
-        const pos = this.layout.getByteCountBox(renderIndex);
+        const pos = this.layout.byteCountBox.get(renderIndex);
     
         if (getCssBoolean(this.editor.dom.element,"--editor-show-wireframe")){
             ctx.strokeStyle = "green";
@@ -156,7 +155,7 @@ export class Renderer {
             return;
         }
     
-        const pos = this.layout.getByteBox(renderIndex,byteIndex);
+        const pos = this.layout.byteBox.get(renderIndex,byteIndex);
         const index = this.renderPosToFileIndex(renderIndex,byteIndex);
     
         if (this.editor.selection.isSelectedIndex(index)){
@@ -205,7 +204,7 @@ export class Renderer {
             return;
         }
 
-        const pos = this.layout.getCharBox(renderIndex,byteIndex);
+        const pos = this.layout.charBox.get(renderIndex,byteIndex);
 
         const index = this.renderPosToFileIndex(renderIndex,byteIndex);
 
