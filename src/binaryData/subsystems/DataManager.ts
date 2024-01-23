@@ -19,7 +19,7 @@ export class DataManager {
         return await dataProvider.readAsync(startByte,length);
     }
     getRenderBytes(startByte: number): Uint8Array {
-        const index = startByte - this.editor.intermediateState.value.positionInFile;
+        const index = startByte - this.editor.update.intermediateState.value.positionInFile;
         const buffer = this.dataToRender.value.slice(index, index + this.editor.renderer.bytesPerRow);
         return new Uint8Array(buffer);
     }
@@ -27,7 +27,7 @@ export class DataManager {
         return this.dataToRender.value[i];
     }
     async getByte(index: number): Promise<number | undefined> {
-        const dataProvider = this.editor.intermediateState.value.dataProvider;
+        const dataProvider = this.editor.update.intermediateState.value.dataProvider;
         const arr = await dataProvider.readAsync(index,1);
         if (arr.length == 0){
             return undefined;

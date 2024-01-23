@@ -208,8 +208,8 @@ export class SelectionManager {
         if (clampedIndex < 0){
             clampedIndex = 0;
         }
-        if (clampedIndex >= this.editor.intermediateState.value.dataProvider.size) {
-            clampedIndex = this.editor.intermediateState.value.dataProvider.size - 1;
+        if (clampedIndex >= this.editor.update.intermediateState.value.dataProvider.size) {
+            clampedIndex = this.editor.update.intermediateState.value.dataProvider.size - 1;
         }
         if (clampedIndex != index && !clampToBounds) {
             return;

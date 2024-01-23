@@ -60,9 +60,9 @@ export const ScrollHandler = defineSubsystem({
                 const height = scrollBarHandleContainer.clientHeight;
                 const ratio = diff/height + scrollStart.scrollRatio;
                 const boundRatio = Math.max(0,Math.min(ratio,1));
-                const documentSize = this.desiredState.value.dataProvider.size;
+                const documentSize = this.update.desiredState.value.dataProvider.size;
                 const index = this.getDocumentBoundIndex(this.getIndexFromRatio(boundRatio, documentSize), documentSize);
-                this.desiredState.value = this.desiredState.value.with({
+                this.update.desiredState.value = this.update.desiredState.value.with({
                     positionInFile: index
                 });
             })
@@ -71,9 +71,9 @@ export const ScrollHandler = defineSubsystem({
             })
         
             const step = (dir: 1 | -1)=>{
-                const newPosition = this.desiredState.value.positionInFile + dir * this.renderer.bytesPerRow;
-                const boundPos = this.getDocumentBoundIndex(newPosition,this.desiredState.value.dataProvider.size);
-                this.desiredState.value = this.desiredState.value.with({
+                const newPosition = this.update.desiredState.value.positionInFile + dir * this.renderer.bytesPerRow;
+                const boundPos = this.getDocumentBoundIndex(newPosition,this.update.desiredState.value.dataProvider.size);
+                this.update.desiredState.value = this.update.desiredState.value.with({
                     positionInFile: boundPos
                 });
             }
@@ -85,11 +85,11 @@ export const ScrollHandler = defineSubsystem({
                 step(1);
             }
 
-            this.desiredState.subscribe(()=>{
-                const { positionInFile, dataProvider } = this.desiredState.value;
+            this.update.desiredState.subscribe(()=>{
+                const { positionInFile, dataProvider } = this.update.desiredState.value;
                 const ratio = positionInFile / dataProvider.size;
                 scrollPercent = Math.max(0,Math.min(ratio,1));
-                const index = this.getIndexFromRatio(scrollPercent, this.desiredState.value.dataProvider.size);
+                const index = this.getIndexFromRatio(scrollPercent, this.update.desiredState.value.dataProvider.size);
                 const alignedIndex = this.getRowAlignedIndex(index);
                 scrollBar.style.setProperty("--scroll-percent",scrollPercent.toString());
             })
@@ -139,24 +139,24 @@ export const ScrollHandler = defineSubsystem({
             scrollBar: document.createElement("div")
         }
         const scrollRowCount = new DerivedVar(()=>{
-            return Math.min(10000, getDataProviderRowCount(this.desiredState.value.dataProvider));
-        },this.desiredState)
+            return Math.min(10000, getDataProviderRowCount(this.update.desiredState.value.dataProvider));
+        },this.update.desiredState)
     
         const scrollBarType = new DerivedVar(()=>{
-            if (getDataProviderRowCount(this.desiredState.value.dataProvider) > 10000){
+            if (getDataProviderRowCount(this.update.desiredState.value.dataProvider) > 10000){
                 return "virtual";
             }
             return "native";
-        },this.desiredState);
+        },this.update.desiredState);
     
         this.dom.innerContainer.addEventListener("scroll",()=>{
             if (this.scrollBarType.value != "native"){
                 return;
             }
             const ratio = this.dom.innerContainer.scrollTop / ( this.dom.innerContainer.scrollHeight - (this.dom.innerContainer.clientHeight / 2) );
-            const index = this.getIndexFromRatio(ratio, this.desiredState.value.dataProvider.size);
-            this.desiredState.value = this.desiredState.value.with({
-                positionInFile: this.getDocumentBoundIndex(index,this.desiredState.value.dataProvider.size)
+            const index = this.getIndexFromRatio(ratio, this.update.desiredState.value.dataProvider.size);
+            this.update.desiredState.value = this.update.desiredState.value.with({
+                positionInFile: this.getDocumentBoundIndex(index,this.update.desiredState.value.dataProvider.size)
             })
             this.gesture.mouse.forceUpdateHover();
         },{passive: true})
@@ -167,9 +167,9 @@ export const ScrollHandler = defineSubsystem({
             }
             const delta = e.deltaY;
             const deltaRow = Math.round(delta / rowHeight);
-            const newIndex = this.desiredState.value.positionInFile + deltaRow * this.renderer.bytesPerRow;
-            const boundIndex = this.getDocumentBoundIndex(newIndex,this.desiredState.value.dataProvider.size);
-            this.desiredState.value = this.desiredState.value.with({
+            const newIndex = this.update.desiredState.value.positionInFile + deltaRow * this.renderer.bytesPerRow;
+            const boundIndex = this.getDocumentBoundIndex(newIndex,this.update.desiredState.value.dataProvider.size);
+            this.update.desiredState.value = this.update.desiredState.value.with({
                 positionInFile: boundIndex
             });
             this.gesture.mouse.forceUpdateHover();
