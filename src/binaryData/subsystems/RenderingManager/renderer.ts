@@ -65,14 +65,14 @@ export class Renderer {
         ctx.fillRect(0,0,canvas.width,canvas.height);
     
         {
-            const box = this.layout.getByteCountContainer();
+            const box = this.layout.byteCountContainer.value;
             ctx.strokeStyle = getCssString(this.editor.dom.innerContainer,"--editor-border-color");
             ctx.strokeRect(...box.border.arr);
             ctx.fillStyle = getCssString(this.editor.dom.innerContainer,"--editor-row-number-background-color");
             ctx.fillRect(...box.border.arr);
         }
         {
-            const box = this.layout.getCharsContainer();
+            const box = this.layout.charsContainer.value;
             ctx.strokeStyle = getCssString(this.editor.dom.innerContainer,"--editor-border-color");
             ctx.strokeRect(...box.border.arr);
             ctx.fillStyle = getCssString(this.editor.dom.innerContainer,"--editor-background-color");
