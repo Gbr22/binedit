@@ -6,7 +6,6 @@ import { ScrollHandler } from "./subsystems/ScrollHandler";
 import { RenderingManager } from "./subsystems/RenderingManager";
 import { GestureManager } from "./subsystems/GestureManager";
 import { UpdateHandler } from "./subsystems/UpdateHandler";
-import { KeyboardHandler } from "./subsystems/KeyboardHandler";
 
 import { type CombinedSubsystems, Subsystems } from "./composition";
 import { SelectionManager } from "./subsystems/SelectionManager";
@@ -17,7 +16,6 @@ const subsystems = new Subsystems(
     EventHandler,
     UpdateHandler,
     ScrollHandler,
-    KeyboardHandler
 );
 
 type EditorSubsystems = CombinedSubsystems<typeof subsystems>;
