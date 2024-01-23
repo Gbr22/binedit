@@ -7,13 +7,13 @@ export function switchTab(tab: TabData | undefined){
     if (tab){
         editor.selection.cursorPosition = tab.cursorPosition;
         editor.selection.ranges = tab.selections;
-        editor.setState({
+        editor.event.setState({
             dataProvider: tab.dataSource,
             positionInFile: tab.positionInFile,
         });
         
     } else {
-        editor.setState({
+        editor.event.setState({
             dataProvider: new BlobProvider(new Blob([])),
             positionInFile: 0
         });

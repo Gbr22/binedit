@@ -9,7 +9,7 @@ export const state = reactive({
     activeTab: undefined as TabData | undefined,
 })
 
-editor.onScroll(percent=>{
+editor.event.onScroll(percent=>{
     const tab = state.activeTab;
     setTimeout(()=>{
         if (tab){
