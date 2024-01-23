@@ -1,8 +1,8 @@
 import { Editor } from "../../editor";
 import type { GestureManager } from "../GestureManager";
-import { Box } from "../RenderingHandler";
 import { bytesPerRow } from "../../constants";
 import { dispose, type Disposable } from "@/binaryData/dispose";
+import type { Box } from "../RenderingManager/box";
 
 export interface Point {
     x: number
@@ -64,10 +64,10 @@ export class MouseGestureManager implements Disposable {
         }
         const hover = this.currentHover;
         if (hover.type == "byte" || hover.type == "char"){
-            const index = this.editor.pointToFileIndex(hover.pos);
+            const index = this.editor.renderer.pointToFileIndex(hover.pos);
             this.editor.selection.startRange("mouse",index,e.ctrlKey);
             this.editor.selection.setCursor(index);
-            this.editor.redraw();
+            this.editor.renderer.redraw();
         }
     }
 
@@ -76,7 +76,7 @@ export class MouseGestureManager implements Disposable {
             return;
         }
         this.editor.selection.endRange();
-        this.editor.redraw();
+        this.editor.renderer.redraw();
     }
 
     registerEventHandlers(){
@@ -101,7 +101,7 @@ export class MouseGestureManager implements Disposable {
         canvas.onmousedown = this.onMouseDown;
         canvas.addEventListener("mouseleave",(e: MouseEvent)=>{
             this.editor.selection.cancelRange();
-            this.editor.redraw();
+            this.editor.renderer.redraw();
         },{passive: true})
 
         this.registerEventHandlers();
@@ -112,13 +112,13 @@ export class MouseGestureManager implements Disposable {
         const newHover = this.getCurrentHover();
         if (JSON.stringify(lastHover) != JSON.stringify(newHover)){
             this.setHover(newHover);
-            this.editor.redraw();
+            this.editor.renderer.redraw();
         }
     }
     setHover(hover: Hover){
         this.currentHover = hover;
         if (hover.type == "byte" || hover.type == "char"){
-            this.editor.selection.hoverOverByte("mouse",this.editor.pointToFileIndex(hover.pos));
+            this.editor.selection.hoverOverByte("mouse",this.editor.renderer.pointToFileIndex(hover.pos));
         }
     }
     forceUpdateHover(){
@@ -135,8 +135,8 @@ export class MouseGestureManager implements Disposable {
     }
     getScaledCanvasMousePosition(){
         const pos = this.getCanvasMousePosition();
-        const x = pos.x * this.editor.unit;
-        const y = pos.y * this.editor.unit;
+        const x = pos.x * this.editor.renderer.unit;
+        const y = pos.y * this.editor.renderer.unit;
         return {
             x,y
         }
@@ -145,7 +145,7 @@ export class MouseGestureManager implements Disposable {
         const pos = this.getScaledCanvasMousePosition();
         for (let y = 0; y < this.editor.size.viewportRowCount; y++){
             const renderIndex = y;
-            const byteCountRect = this.editor.getByteCountBox(renderIndex);
+            const byteCountRect = this.editor.renderer.getByteCountBox(renderIndex);
             if (isCollision(byteCountRect.border,pos)){
                 return {
                     type: "byte-count",
@@ -153,7 +153,7 @@ export class MouseGestureManager implements Disposable {
                 }
             }
             for (let x = 0; x < bytesPerRow; x++){
-                const byteRect = this.editor.getByteBox(renderIndex,x);
+                const byteRect = this.editor.renderer.getByteBox(renderIndex,x);
                 if (isCollision(byteRect.border,pos)){
                     return {
                         type: "byte",
@@ -163,7 +163,7 @@ export class MouseGestureManager implements Disposable {
                         }
                     }
                 }
-                const charRect = this.editor.getCharBox(renderIndex,x);
+                const charRect = this.editor.renderer.getCharBox(renderIndex,x);
                 if (isCollision(charRect.border,pos)){
                     return {
                         type: "char",

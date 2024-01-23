@@ -21,11 +21,11 @@ export const KeyboardHandler = defineSubsystem({
             if (e.code == "ArrowRight"){
                 dir.x = 1;
             }
-            const diff = dir.y * this.bytesPerRow + dir.x;
+            const diff = dir.y * this.renderer.bytesPerRow + dir.x;
             if (diff != 0){
                 if (this.selection.isSelecting() && !e.shiftKey){
                     this.selection.endRange();
-                    this.redraw();
+                    this.renderer.redraw();
                 } else {
                     if (e.shiftKey){
                         if (!this.selection.isSelecting()){
@@ -34,16 +34,17 @@ export const KeyboardHandler = defineSubsystem({
                         } else {
                             this.selection.hoverOverByte("keyboard",this.selection.cursorPosition + diff);
                         }
-                        this.redraw();
+                        this.renderer.redraw();
                     }
                 }
                 
                 this.selection.setCursor(this.selection.cursorPosition + diff);
-                this.redraw();
+                this.renderer.redraw();
                 e.preventDefault();
             }
             if (e.code == "Escape"){
                 this.selection.clearRanges();
+                this.renderer.redraw();
                 e.preventDefault();
             }
         }

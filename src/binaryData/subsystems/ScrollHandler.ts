@@ -71,7 +71,7 @@ export const ScrollHandler = defineSubsystem({
             })
         
             const step = (dir: 1 | -1)=>{
-                const newPosition = this.desiredState.value.positionInFile + dir * this.bytesPerRow;
+                const newPosition = this.desiredState.value.positionInFile + dir * this.renderer.bytesPerRow;
                 const boundPos = this.getDocumentBoundIndex(newPosition,this.desiredState.value.dataProvider.size);
                 this.desiredState.value = this.desiredState.value.with({
                     positionInFile: boundPos
@@ -106,15 +106,15 @@ export const ScrollHandler = defineSubsystem({
             return Math.round(ratio * documentSize);
         },
         getRowAlignedIndex(this: Editor, index: number){
-            const rowNumber = Math.floor(index / this.bytesPerRow);
-            const newIndex = rowNumber * this.bytesPerRow;
+            const rowNumber = Math.floor(index / this.renderer.bytesPerRow);
+            const newIndex = rowNumber * this.renderer.bytesPerRow;
             return newIndex;
         },
         getDocumentBoundIndex(this: Editor, index: number, documentSize: number){
             const aligned = this.getRowAlignedIndex(index);
             const min = 0;
             const minBound = Math.max(min,aligned);
-            const max = this.getRowAlignedIndex(documentSize) - this.getRowAlignedIndex( ( (this.size.viewportRowCount+2) * this.bytesPerRow ) / 2 );
+            const max = this.getRowAlignedIndex(documentSize) - this.getRowAlignedIndex( ( (this.size.viewportRowCount+2) * this.renderer.bytesPerRow ) / 2 );
             const maxBound = Math.min(minBound,max);
             
             return maxBound;
@@ -167,7 +167,7 @@ export const ScrollHandler = defineSubsystem({
             }
             const delta = e.deltaY;
             const deltaRow = Math.round(delta / rowHeight);
-            const newIndex = this.desiredState.value.positionInFile + deltaRow * this.bytesPerRow;
+            const newIndex = this.desiredState.value.positionInFile + deltaRow * this.renderer.bytesPerRow;
             const boundIndex = this.getDocumentBoundIndex(newIndex,this.desiredState.value.dataProvider.size);
             this.desiredState.value = this.desiredState.value.with({
                 positionInFile: boundIndex
