@@ -1,8 +1,7 @@
 import { Editor } from "../editor";
 import { bytesPerRow, rowHeight } from "../constants";
-import { getRowIndex, toHex, type Row, byteToPrintable } from "../row";
+import { toHex, type Row, byteToPrintable } from "../row";
 import { emptyCssCache, getCssBoolean, getCssNumber, getCssString } from "@/theme";
-import { defineSubsystem } from "../composition";
 import { BoundingBox, Box } from "./RenderingManager/box";
 
 type BoxCaches = Map<string,Map<unknown,BoundingBox>>;
@@ -34,14 +33,14 @@ export class RenderingManager {
         emptyCssCache();
         this.devicePixelRatio = window.devicePixelRatio;
         this.unit = devicePixelRatio * this.scale;
-        this.editor.dom.innerContainer.dataset["scrollType"] = `${this.editor.scrollBarType.value}`;
+        this.editor.dom.innerContainer.dataset["scrollType"] = `${this.editor.scroll.scrollBarType.value}`;
         
-        this.editor.dom.scrollView.style.setProperty('--row-count',this.editor.scrollRowCount.value.toString());
+        this.editor.dom.scrollView.style.setProperty('--row-count',this.editor.scroll.scrollRowCount.value.toString());
         
         const didChangeFile = this.editor.update.renderedState.value.dataProvider != this.editor.update.intermediateState.value.dataProvider;
-        if (didChangeFile && this.editor.scrollBarType.value == "native"){
-            this.editor.changeNativeScrollerPosition(this.editor.update.intermediateState.value.positionInFile, this.editor.update.intermediateState.value.dataProvider.size);
-        } else if (this.editor.scrollBarType.value == "virtual") {
+        if (didChangeFile && this.editor.scroll.scrollBarType.value == "native"){
+            this.editor.scroll.changeNativeScrollerPosition(this.editor.update.intermediateState.value.positionInFile, this.editor.update.intermediateState.value.dataProvider.size);
+        } else if (this.editor.scroll.scrollBarType.value == "virtual") {
             this.editor.dom.innerContainer.scrollTop = 0;
         }
         
