@@ -6,7 +6,7 @@ export function anyByteBox(layout: Layout){
         return new BoundingBox({
             outerLeft: 0,
             outerTop: 0,
-            innerWidth: layout.styles.editorByteWidth * layout.unit,
+            innerWidth: layout.styles.byte.width * layout.unit,
             innerHeight: layout.rowHeight * layout.unit,
         })
     })

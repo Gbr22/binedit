@@ -16,8 +16,8 @@
   
     --editor-background-color: #1F1F1F;
     --editor-border-color: #404040;
-    --editor-byte-1-foreground-color: #c8c8c8;
-    --editor-byte-2-foreground-color: #a3a3a3;
+    --editor-byte-1-foreground-color: #a3a3a3;
+    --editor-byte-2-foreground-color: #c8c8c8;
     --editor-select-border-color: #ffffff;
     --editor-cursor-border-color: #2cffea;
     --editor-cursor-background-color: rgb(0, 68, 102);

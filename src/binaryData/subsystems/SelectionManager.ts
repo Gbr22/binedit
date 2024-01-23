@@ -72,6 +72,10 @@ export type Selections = Range[];
 
 export type SelectionSource = "mouse" | "keyboard";
 
+export function isSelectedIndex(index: number, ranges: Range[]){
+    return isInAnyRange(index,ranges);
+}
+
 export class SelectionManager {
     cursorPosition = 0;
     onUpdateCursorListeners: ((cursorPosition: number)=>void)[] = [];
@@ -206,7 +210,7 @@ export class SelectionManager {
         return [min,max];
     }
     isSelectedIndex(index: number){
-        return isInAnyRange(index,this.pendingRanges);
+        return isSelectedIndex(index,this.pendingRanges)
     }
     setCursor(index: number, clampToBounds?: true) {
         let clampedIndex = index;
