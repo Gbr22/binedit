@@ -3,7 +3,7 @@ import { SizeManager } from "./subsystems/SizeManager";
 import { DomManager } from "./subsystems/DomHandler";
 import { EventHandler } from "./subsystems/EventHandler";
 import { ScrollHandler } from "./subsystems/ScrollHandler";
-import { RenderingHandler } from "./subsystems/RenderingHandler";
+import { RenderingManager } from "./subsystems/RenderingManager";
 import { UpdateHandler } from "./subsystems/UpdateHandler";
 import { KeyboardHandler } from "./subsystems/KeyboardHandler";
 import { DisposeHandler } from "./subsystems/DisposeHandler";
@@ -15,7 +15,6 @@ import { GestureManager } from "./subsystems/GestureManager";
 
 const subsystems = new Subsystems(
     DisposeHandler,
-    RenderingHandler,
     DataHandler,
     EventHandler,
     UpdateHandler,
@@ -32,6 +31,7 @@ export class Editor implements Disposable {
     dom = new DomManager(this);
     size = new SizeManager(this);
     gesture = new GestureManager(this);
+    renderer = new RenderingManager(this);
 
     constructor(){
         subsystems.init(this);

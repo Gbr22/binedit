@@ -74,7 +74,7 @@ export const UpdateHandler = defineSubsystem({
         })
         this.dataToRender.subscribe(()=>{
             requestAnimationFrame(()=>{
-                this.reflow();
+                this.renderer.reflow();
             })
         })
         renderedState.subscribe(()=>{

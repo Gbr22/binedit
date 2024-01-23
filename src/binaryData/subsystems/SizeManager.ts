@@ -11,7 +11,7 @@ export class SizeManager extends Subclass<Editor> {
             width: Math.round(rect.width * window.devicePixelRatio),
             height: Math.round(rect.height * window.devicePixelRatio)
         })
-        this.$.reflow();
+        this.$.renderer.reflow();
     }
     constructor(parent: Editor){
         super(parent);
