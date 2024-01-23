@@ -4,17 +4,15 @@ import { DomManager } from "./subsystems/DomHandler";
 import { EventHandler } from "./subsystems/EventHandler";
 import { ScrollHandler } from "./subsystems/ScrollHandler";
 import { RenderingManager } from "./subsystems/RenderingManager";
+import { GestureManager } from "./subsystems/GestureManager";
 import { UpdateHandler } from "./subsystems/UpdateHandler";
 import { KeyboardHandler } from "./subsystems/KeyboardHandler";
-import { DisposeHandler } from "./subsystems/DisposeHandler";
 
 import { type CombinedSubsystems, Subsystems } from "./composition";
 import { SelectionManager } from "./subsystems/SelectionManager";
 import { dispose, type Disposable, disposeChildren } from "./dispose";
-import { GestureManager } from "./subsystems/GestureManager";
 
 const subsystems = new Subsystems(
-    DisposeHandler,
     DataHandler,
     EventHandler,
     UpdateHandler,
