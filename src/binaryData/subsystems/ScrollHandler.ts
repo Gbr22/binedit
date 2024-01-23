@@ -1,7 +1,7 @@
 import { Editor } from "../editor";
 import { bytesPerRow, rowHeight } from "../constants";
 import { DerivedVar } from "../reactivity";
-import { getDataProviderRowCount } from "./DataHandler";
+import { getDataProviderRowCount } from "./DataManager";
 import { defineSubsystem } from "../composition";
 
 export const ScrollHandler = defineSubsystem({

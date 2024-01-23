@@ -67,12 +67,12 @@ export const UpdateHandler = defineSubsystem({
                 return;
             }
             this.intermediateState.lock();
-            this.dataToRender.value = await this.getRenderPage(
+            this.data.dataToRender.value = await this.data.getRenderPage(
                 this.intermediateState.value.dataProvider,
                 this.intermediateState.value.positionInFile
             );
         })
-        this.dataToRender.subscribe(()=>{
+        this.data.dataToRender.subscribe(()=>{
             requestAnimationFrame(()=>{
                 this.renderer.reflow();
             })
