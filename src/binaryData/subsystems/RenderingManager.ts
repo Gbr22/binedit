@@ -24,7 +24,7 @@ export class RenderingManager {
         return this.pointToFileIndex({x,y});
     }
     pointToFileIndex(pos: {x: number, y: number}): number {
-        const index = pos.y * bytesPerRow + pos.x + this.editor.intermediateState.value.positionInFile;
+        const index = pos.y * bytesPerRow + pos.x + this.editor.update.intermediateState.value.positionInFile;
         return index;
     }
     isRenderIndexInViewport(index: number): boolean {
@@ -38,9 +38,9 @@ export class RenderingManager {
         
         this.editor.dom.scrollView.style.setProperty('--row-count',this.editor.scrollRowCount.value.toString());
         
-        const didChangeFile = this.editor.renderedState.value.dataProvider != this.editor.intermediateState.value.dataProvider;
+        const didChangeFile = this.editor.update.renderedState.value.dataProvider != this.editor.update.intermediateState.value.dataProvider;
         if (didChangeFile && this.editor.scrollBarType.value == "native"){
-            this.editor.changeNativeScrollerPosition(this.editor.intermediateState.value.positionInFile, this.editor.intermediateState.value.dataProvider.size);
+            this.editor.changeNativeScrollerPosition(this.editor.update.intermediateState.value.positionInFile, this.editor.update.intermediateState.value.dataProvider.size);
         } else if (this.editor.scrollBarType.value == "virtual") {
             this.editor.dom.innerContainer.scrollTop = 0;
         }
@@ -48,14 +48,14 @@ export class RenderingManager {
         this.boxCaches.clear();
         this.redraw();
     
-        this.editor.renderedState.value = this.editor.intermediateState.value;
+        this.editor.update.renderedState.value = this.editor.update.intermediateState.value;
     }
     redraw(): void {
         const ctx = this.editor.dom.ctx;
         const canvas = this.editor.dom.canvas;
     
-        this.editor.dom.canvas.width = this.editor.intermediateState.value.width;
-        this.editor.dom.canvas.height = this.editor.intermediateState.value.height;
+        this.editor.dom.canvas.width = this.editor.update.intermediateState.value.width;
+        this.editor.dom.canvas.height = this.editor.update.intermediateState.value.height;
         this.editor.dom.canvas.style.setProperty("--device-pixel-ratio",window.devicePixelRatio.toString())
     
         ctx.fillStyle = getCssString(this.editor.dom.innerContainer,"--editor-background-color");
@@ -255,7 +255,7 @@ export class RenderingManager {
         return this.getCachedBox("chars",id,this.createCharBox.bind(this,y,x));
     }
     getByteCountOfRow(renderIndex: number){
-        return renderIndex * this.bytesPerRow + this.editor.intermediateState.value.positionInFile;
+        return renderIndex * this.bytesPerRow + this.editor.update.intermediateState.value.positionInFile;
     }
     getPaddedByteCount(count: number){
         return toHex(count).padStart(getCssNumber(this.editor.dom.innerContainer,"--editor-row-number-digit-count"),'0');
