@@ -1,8 +1,6 @@
 import type { Styles } from "./styles";
-import { BoundingBox } from "./box";
-import { getCssNumber } from "@/theme";
+import { BoundingBox, CachedBoundingBox } from "./box";
 import type { Sizes } from "./sizes";
-import type { Editor } from "@/binaryData/editor";
 import { toHex } from "@/binaryData/row";
 import type { DataProvider } from "@/binaryData/dataProvider";
 
@@ -55,10 +53,19 @@ export class Layout {
     getRowPosition(y: number){
         return y * this.rowHeight;
     }
-    getByteCountContainer(): BoundingBox {
-        return this.getCachedBox("single","byteCountContainer",this.createByteCountContainer.bind(this))
-    }
-    createAnyByteCountBox(){
+    byteCountContainer = new CachedBoundingBox(()=>{
+        const anyByteCount = this.anyByteCountBox.value;
+        
+        return new BoundingBox({
+            outerLeft: 0,
+            outerTop: 0,
+            innerWidth: anyByteCount.outer.width,
+            innerHeight: this.height,
+            paddingLeft: 4 * this.unit,
+            paddingRight: 4 * this.unit
+        })
+    })
+    anyByteCountBox = new CachedBoundingBox(()=>{
         const ctx = this.ctx;
         const count = this.getByteCountDigitCount();
         ctx.font = this.styles.getByteCountFont();
@@ -73,13 +80,10 @@ export class Layout {
             paddingLeft: 4 * this.unit,
             paddingRight: 4 * this.unit
         })
-    }
-    getAnyByteCountBox(){
-        return this.getCachedBox("single","anyByteCount",this.createAnyByteCountBox.bind(this));
-    }
+    })
     createByteCountBox(y: number){
-        const container = this.getByteCountContainer();
-        const anyByteCount = this.getAnyByteCountBox();
+        const container = this.byteCountContainer.value;
+        const anyByteCount = this.anyByteCountBox.value;
     
         return new BoundingBox({
             outerLeft: container.inner.left,
@@ -93,9 +97,9 @@ export class Layout {
     getByteCountBox(y: number): BoundingBox {
         return this.getCachedBox("byteCount",y,this.createByteCountBox.bind(this,y));
     }
-    createBytesContainer() {
-        const count = this.getByteCountContainer();
-        const anyByte = this.getAnyByteBox();
+    bytesContainer = new CachedBoundingBox(()=>{
+        const count = this.byteCountContainer.value;
+        const anyByte = this.anyByteBox.value;
 
         return new BoundingBox({
             outerLeft: count.outer.right,
@@ -105,7 +109,7 @@ export class Layout {
             paddingLeft: 6 * this.unit,
             paddingRight: 6 * this.unit,
         })
-    }
+    })
     getCachedBox(cacheId: string, key: unknown, create: ()=>BoundingBox): BoundingBox {
         let map = this.boxCaches.get(cacheId);
         if (!map){
@@ -119,26 +123,20 @@ export class Layout {
         }
         return item;
     }
-    getBytesContainer(){
-        return this.getCachedBox("single","bytesContainer",this.createBytesContainer.bind(this));
-    }
-    createAnyByteBox(): BoundingBox {
+    anyByteBox = new CachedBoundingBox(()=>{
         return new BoundingBox({
             outerLeft: 0,
             outerTop: 0,
             innerWidth: this.styles.editorByteWidth * this.unit,
             innerHeight: this.rowHeight * this.unit,
         })
-    }
-    getAnyByteBox(): BoundingBox {
-        return this.getCachedBox("single","anyByteBox",this.createAnyByteBox.bind(this));
-    }
+    })
     getByteBoxId(y: number,x: number){
         return y * this.bytesPerRow + x;
     }
     createByteBox(y: number,x: number){
-        const bytesContainer = this.getBytesContainer();
-        const anyByte = this.getAnyByteBox();
+        const bytesContainer = this.bytesContainer.value;
+        const anyByte = this.anyByteBox.value;
 
         return new BoundingBox({
             outerLeft: bytesContainer.inner.left + x * anyByte.outer.width,
@@ -151,7 +149,7 @@ export class Layout {
         const id = this.getByteBoxId(y,x);
         return this.getCachedBox("bytes",id,this.createByteBox.bind(this,y,x));
     }
-    createAnyCharBox(){
+    anyCharBox = new CachedBoundingBox(()=>{
         const charWidth = this.styles.editorCharWidth * this.unit;
         return new BoundingBox({
             outerLeft: 0,
@@ -159,13 +157,10 @@ export class Layout {
             innerWidth: charWidth,
             innerHeight: this.rowHeight * this.unit
         })
-    }
-    getAnyCharBox(): BoundingBox {
-        return this.getCachedBox("single","anyCharBox",this.createAnyCharBox.bind(this));
-    }
-    createCharsContainer() {
-        const pos = this.getBytesContainer();
-        const anyCharBox = this.getAnyCharBox();
+    })
+    charsContainer = new CachedBoundingBox(()=>{
+        const pos = this.bytesContainer.value;
+        const anyCharBox = this.anyCharBox.value;
     
         return new BoundingBox({
             outerLeft: pos.outer.right,
@@ -175,14 +170,11 @@ export class Layout {
             paddingLeft: 6 * this.unit,
             paddingRight: 6 * this.unit,
         })
-    }
-    getCharsContainer(){
-        return this.getCachedBox("single","charsContainer",this.createCharsContainer.bind(this));
-    }
+    })
     createCharBox(y: number,x: number){
         const top = this.getRowPosition(y);
-        const charsBox = this.getCharsContainer();
-        const anyCharBox = this.getAnyCharBox();
+        const charsBox = this.charsContainer.value;
+        const anyCharBox = this.anyCharBox.value;
     
         return new BoundingBox({
             outerLeft: charsBox.inner.left + anyCharBox.outer.width * x,
@@ -194,17 +186,5 @@ export class Layout {
     getCharBox(y: number,x: number): BoundingBox {
         const id = y * this.bytesPerRow + x;
         return this.getCachedBox("chars",id,this.createCharBox.bind(this,y,x));
-    }
-    createByteCountContainer(): BoundingBox {
-        const anyByteCount = this.getAnyByteCountBox();
-        
-        return new BoundingBox({
-            outerLeft: 0,
-            outerTop: 0,
-            innerWidth: anyByteCount.outer.width,
-            innerHeight: this.height,
-            paddingLeft: 4 * this.unit,
-            paddingRight: 4 * this.unit
-        })
     }
 }

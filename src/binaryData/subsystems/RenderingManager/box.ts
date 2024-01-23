@@ -164,3 +164,18 @@ export class BoundingBox {
     get borderBottom() { return this.innerBottom + this.paddingBottom; }
     get outerBottom() { return this.borderBottom + this.marginBottom; }
 }
+
+export class CachedBoundingBox {
+    create: ()=>BoundingBox
+    #value: BoundingBox | undefined
+    get value() {
+        if (this.#value == undefined){
+            this.#value = this.create();
+        }
+        return this.#value;
+    }
+
+    constructor(create: ()=>BoundingBox){
+        this.create = create;
+    }
+}

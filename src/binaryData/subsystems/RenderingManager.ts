@@ -1,8 +1,5 @@
 import { Editor } from "../editor";
-import { bytesPerRow, rowHeight } from "../constants";
-import { toHex, type Row, byteToPrintable } from "../row";
-import { emptyCssCache, getCssBoolean, getCssNumber, getCssString } from "@/theme";
-import { BoundingBox, Box } from "./RenderingManager/box";
+import { emptyCssCache } from "@/theme";
 import { Layout } from "./RenderingManager/layout";
 import { Styles } from "./RenderingManager/styles";
 import { Renderer } from "./RenderingManager/renderer";
