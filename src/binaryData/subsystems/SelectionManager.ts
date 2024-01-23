@@ -1,5 +1,4 @@
 import { Editor } from "../editor";
-import { Subclass } from "../subclass";
 
 export type Range = [number, number];
 
@@ -73,7 +72,7 @@ export type Selections = Range[];
 
 export type SelectionSource = "mouse" | "keyboard";
 
-export class SelectionManager extends Subclass<Editor> {
+export class SelectionManager {
     cursorPosition = 0;
     onUpdateCursorListeners: ((cursorPosition: number)=>void)[] = [];
     onUpdateSelectionRangesListeners: ((ranges: Selections)=>void)[] = [];
@@ -81,6 +80,11 @@ export class SelectionManager extends Subclass<Editor> {
     endIndex: number | undefined = undefined;
     ranges: Selections = [];
     source: SelectionSource | undefined = undefined;
+    editor: Editor;
+    
+    constructor(editor: Editor){
+        this.editor = editor;
+    }
 
     clearRanges(){
         this.ranges = [];
@@ -204,8 +208,8 @@ export class SelectionManager extends Subclass<Editor> {
         if (clampedIndex < 0){
             clampedIndex = 0;
         }
-        if (clampedIndex >= this.$.intermediateState.value.dataProvider.size) {
-            clampedIndex = this.$.intermediateState.value.dataProvider.size - 1;
+        if (clampedIndex >= this.editor.intermediateState.value.dataProvider.size) {
+            clampedIndex = this.editor.intermediateState.value.dataProvider.size - 1;
         }
         if (clampedIndex != index && !clampToBounds) {
             return;
