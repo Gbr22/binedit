@@ -9,11 +9,11 @@ export const state = reactive({
     activeTab: undefined as TabData | undefined,
 })
 
-editor.event.onScroll(percent=>{
+editor.scroll.onScroll(positionInFile=>{
     const tab = state.activeTab;
     setTimeout(()=>{
         if (tab){
-            tab.positionInFile = percent;
+            tab.positionInFile = positionInFile;
         }
     },1)
 })

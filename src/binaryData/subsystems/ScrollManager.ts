@@ -6,60 +6,90 @@ import { getDataProviderRowCount } from "./DataManager";
 export class ScrollManager {
     editor: Editor
 
-    scrollRowCount: DerivedVar<number>;
-    scrollBarType: DerivedVar<"virtual" | "native">;
-    scrollHandler: {
-        scrollBar: HTMLDivElement
-    } = {
-        scrollBar: document.createElement("div")
+    virtualScrollbar = document.createElement("div");
+    nativeScrollerRowLimit = 10000;
+    positionInFile: number;
+
+    onScrollHandlers: ((positionInFile: number)=>void)[] = [];
+    onScroll(fn: (positionInFile: number)=>void): void {
+        this.onScrollHandlers.push(fn);
+    }
+    triggerScrollHandlers(positionInFile: number){
+        for (const fn of this.onScrollHandlers){
+            fn(positionInFile);
+        }
+    }
+
+    get scrollRowCount(){
+        return Math.min(this.nativeScrollerRowLimit, getDataProviderRowCount(this.editor.data.provider));
+    }
+    get scrollbarType(){
+        if (getDataProviderRowCount(this.editor.data.provider) > this.nativeScrollerRowLimit){
+            return "virtual";
+        }
+        return "native";
     }
 
     constructor(editor: Editor){
         this.editor = editor;
-        this.scrollRowCount = new DerivedVar(()=>{
-            return Math.min(10000, getDataProviderRowCount(this.editor.update.desiredState.value.dataProvider));
-        },this.editor.update.desiredState);
-        this.scrollBarType = new DerivedVar(()=>{
-            if (getDataProviderRowCount(this.editor.update.desiredState.value.dataProvider) > 10000){
-                return "virtual";
-            }
-            return "native";
-        },this.editor.update.desiredState);
-
+        this.positionInFile = 0;
+        
         this.editor.dom.innerContainer.addEventListener("scroll",()=>{
-            if (this.scrollBarType.value != "native"){
+            if (this.scrollbarType != "native"){
                 return;
             }
             const ratio = this.editor.dom.innerContainer.scrollTop / ( this.editor.dom.innerContainer.scrollHeight - (this.editor.dom.innerContainer.clientHeight / 2) );
-            const index = this.getIndexFromRatio(ratio, this.editor.update.desiredState.value.dataProvider.size);
-            this.editor.update.desiredState.value = this.editor.update.desiredState.value.with({
-                positionInFile: this.getDocumentBoundIndex(index,this.editor.update.desiredState.value.dataProvider.size)
-            })
-            this.editor.gesture.mouse.forceUpdateHover();
+            this.updateScrollRatio(ratio);
+            this.editor.rendering.redraw();
         },{passive: true})
     
         this.editor.dom.innerContainer.addEventListener("wheel",(e)=>{
-            if (this.scrollBarType.value == "native"){
+            if (this.scrollbarType == "native"){
                 return;
             }
             const delta = e.deltaY;
             const deltaRow = Math.round(delta / rowHeight);
-            const newIndex = this.editor.update.desiredState.value.positionInFile + deltaRow * this.editor.rendering.layout.bytesPerRow;
-            const boundIndex = this.getDocumentBoundIndex(newIndex,this.editor.update.desiredState.value.dataProvider.size);
-            this.editor.update.desiredState.value = this.editor.update.desiredState.value.with({
-                positionInFile: boundIndex
-            });
-            this.editor.gesture.mouse.forceUpdateHover();
+            const newIndex = this.positionInFile + deltaRow * this.editor.rendering.layout.bytesPerRow;
+            this.updateScrollIndex(newIndex);
+            this.editor.rendering.redraw();
         },{passive: true});
     
         this.createVirtualScrollBar();
+        this.update();
     }
+    update(){
+        this.editor.dom.innerContainer.dataset["scrollType"] = this.scrollbarType;
+        this.editor.dom.scrollView.style.setProperty('--row-count',this.scrollRowCount.toString());
 
+        if (this.scrollbarType == "native"){
+            this.changeNativeScrollerPosition(this.positionInFile);
+        } else {
+            this.changeNativeScrollerPosition(0);
+        }
+    }
+    updateScrollIndex(index: number){
+        const documentSize = this.editor.data.provider.size;
+        const boundIndex = this.getDocumentBoundIndex(index, documentSize);
+        if (this.positionInFile === boundIndex){
+            return;
+        }
+        this.positionInFile = boundIndex;
+        this.editor.gesture.mouse.forceUpdateHover();
+        const ratio = boundIndex / (this.editor.data.provider.size-1);
+        this.virtualScrollbar.style.setProperty("--scroll-percent",String(ratio));
+        this.triggerScrollHandlers(boundIndex);
+    }
+    updateScrollRatio(ratio: number){
+        const documentSize = this.editor.data.provider.size;
+        const boundRatio = Math.max(0,Math.min(ratio,1));
+        const index = this.getIndexFromRatio(boundRatio, documentSize);
+        this.updateScrollIndex(index);
+    }
     createVirtualScrollBar(): void {
-        const scrollBar = this.scrollHandler.scrollBar;
-        scrollBar.classList.add("scrollbar");
-        (scrollBar as any).part = "scrollbar";
-        this.editor.dom.innerContainer.appendChild(scrollBar);
+        const scrollbar = this.virtualScrollbar;
+        scrollbar.classList.add("scrollbar");
+        (scrollbar as any).part = "scrollbar";
+        this.editor.dom.innerContainer.appendChild(scrollbar);
     
         const upButton = document.createElement("button");
         upButton.classList.add("scrollbar-button");
@@ -76,10 +106,10 @@ export class ScrollManager {
         const scrollBarTrackPadding = document.createElement("div");
         scrollBarTrackPadding.classList.add("scrollbar-track-padding");
     
-        scrollBar.appendChild(upButton);
-        scrollBar.appendChild(scrollBarHandleContainer);
-        scrollBar.appendChild(scrollBarTrackPadding);
-        scrollBar.appendChild(downButton);
+        scrollbar.appendChild(upButton);
+        scrollbar.appendChild(scrollBarHandleContainer);
+        scrollbar.appendChild(scrollBarTrackPadding);
+        scrollbar.appendChild(downButton);
     
         const scrollBarHandle = document.createElement("button");
         scrollBarHandle.classList.add("scrollbar-handle");
@@ -107,23 +137,17 @@ export class ScrollManager {
             const diff = e.clientY - scrollStart.y;
             const height = scrollBarHandleContainer.clientHeight;
             const ratio = diff/height + scrollStart.scrollRatio;
-            const boundRatio = Math.max(0,Math.min(ratio,1));
-            const documentSize = this.editor.update.desiredState.value.dataProvider.size;
-            const index = this.getDocumentBoundIndex(this.getIndexFromRatio(boundRatio, documentSize), documentSize);
-            this.editor.update.desiredState.value = this.editor.update.desiredState.value.with({
-                positionInFile: index
-            });
+            this.updateScrollRatio(ratio);
+            this.editor.rendering.redraw();
         })
         window.addEventListener("mouseup",()=>{
             scrollStart = null;
         })
     
         const step = (dir: 1 | -1)=>{
-            const newPosition = this.editor.update.desiredState.value.positionInFile + dir * this.editor.rendering.layout.bytesPerRow;
-            const boundPos = this.getDocumentBoundIndex(newPosition,this.editor.update.desiredState.value.dataProvider.size);
-            this.editor.update.desiredState.value = this.editor.update.desiredState.value.with({
-                positionInFile: boundPos
-            });
+            const newPosition = this.positionInFile + dir * this.editor.rendering.layout.bytesPerRow;
+            this.updateScrollIndex(newPosition);
+            this.editor.rendering.redraw();
         }
     
         upButton.onclick = ()=>{
@@ -132,15 +156,6 @@ export class ScrollManager {
         downButton.onclick = ()=>{
             step(1);
         }
-
-        this.editor.update.desiredState.subscribe(()=>{
-            const { positionInFile, dataProvider } = this.editor.update.desiredState.value;
-            const ratio = positionInFile / dataProvider.size;
-            scrollPercent = Math.max(0,Math.min(ratio,1));
-            const index = this.getIndexFromRatio(scrollPercent, this.editor.update.desiredState.value.dataProvider.size);
-            const alignedIndex = this.getRowAlignedIndex(index);
-            scrollBar.style.setProperty("--scroll-percent",scrollPercent.toString());
-        })
     }
     getScrollTopFromIndex(index: number, documentSize: number){
         const aligned = this.getDocumentBoundIndex(index, documentSize);
@@ -162,12 +177,13 @@ export class ScrollManager {
         const aligned = this.getRowAlignedIndex(index);
         const min = 0;
         const minBound = Math.max(min,aligned);
-        const max = this.getRowAlignedIndex(documentSize) - this.getRowAlignedIndex( ( (this.editor.size.viewportRowCount+2) * this.editor.rendering.layout.bytesPerRow ) / 2 );
+        const max = this.getRowAlignedIndex(documentSize-1) - this.getRowAlignedIndex( ( (this.editor.size.viewportRowCount+2) * this.editor.rendering.layout.bytesPerRow ) / 2 );
         const maxBound = Math.min(minBound,max);
         
         return maxBound;
     }
-    changeNativeScrollerPosition(index: number, documentSize: number){
+    changeNativeScrollerPosition(index: number){
+        const documentSize = this.editor.data.provider.size;
         const top = this.getScrollTopFromIndex(index, documentSize);
         
         this.editor.dom.innerContainer.scrollTo({
