@@ -20,63 +20,64 @@ export class RenderingManager {
     constructor(editor: Editor) {
         this.editor = editor;
 
-        const { sizes, styles, layout, renderer } = this.createRendererSync({
-            state: this.createStateSync({
-                dataToRender: new Uint8Array()
-            })
-        });
-        this.sizes = sizes;
-        this.styles = styles;
-        this.layout = layout;
-        this.renderer = renderer;
+        this.sizes = this.createSizes();
+        this.styles = this.createStyles(this.sizes);
+        this.layout = this.createLayout(this.sizes,this.styles);
+        this.renderer = this.createRenderer(this.styles,this.layout,State.empty());
     }
-    createStateSync({dataToRender}: {dataToRender: Uint8Array}){
+    async createState(){
+        const dataToRender = await this.editor.data.getRenderPage(
+            this.editor.data.provider,
+            this.editor.scroll.positionInFile
+        )
         return new State({
-            positionInFile: this.editor.update.intermediateState.value.positionInFile,
+            positionInFile: this.editor.scroll.positionInFile,
             currentHover: this.editor.gesture.mouse.currentHover,
             pendingSelectionRanges: this.editor.selection.pendingRanges,
             selectionRanges: this.editor.selection.ranges,
             cursorPosition: this.editor.selection.cursorPosition,
             dataToRender: dataToRender,
-            dataProvider: this.editor.update.intermediateState.value.dataProvider
+            dataProvider: this.editor.data.provider
         })
     }
-    async createStateAsync(){
-        const dataToRender = await this.editor.data.getRenderPage(
-            this.editor.update.intermediateState.value.dataProvider,
-            this.editor.update.intermediateState.value.positionInFile
-        )
-        return this.createStateSync({dataToRender});
-    }
-    async createRendererAsync(){
-        const state = await this.createStateAsync();
-        return this.createRendererSync({state});
-    }
-    createRendererSync({ state }: { state: State }){
-        const sizes = new Sizes({
+    createSizes(){
+        return new Sizes({
             devicePixelRatio: this.devicePixelRatio,
             scale: this.scale
         })
-        const styles = new Styles({
+    }
+    createStyles(sizes: Sizes){
+        return new Styles({
             sizes: sizes,
             editor: this.editor
         })
-        const layout = new Layout({
-            width: this.editor.update.intermediateState.value.width,
-            height: this.editor.update.intermediateState.value.height,
+    }
+    createLayout(sizes: Sizes, styles: Styles){
+        return new Layout({
+            width: this.editor.size.width,
+            height: this.editor.size.height,
             styles: styles,
             sizes: sizes,
             ctx: this.editor.dom.ctx,
             canvas: this.editor.dom.canvas,
-            dataProvider: this.editor.update.intermediateState.value.dataProvider,
+            dataProvider: this.editor.data.provider,
         })
-        const renderer = new Renderer({
+    }
+    createRenderer(styles: Styles, layout: Layout, state: State){
+        return new Renderer({
             layout,
             styles,
             ctx: this.editor.dom.ctx,
             canvas: this.editor.dom.canvas,
             state
         });
+    }
+    async createRendererAsync(){
+        const state = await this.createState();
+        const sizes = this.createSizes();
+        const styles = this.createStyles(sizes);
+        const layout = this.createLayout(sizes,styles);
+        const renderer = this.createRenderer(styles,layout,state);
         return {
             sizes,
             styles,
@@ -87,16 +88,6 @@ export class RenderingManager {
     
     async reflow() {
         this.devicePixelRatio = window.devicePixelRatio;
-        this.editor.dom.innerContainer.dataset["scrollType"] = `${this.editor.scroll.scrollBarType.value}`;
-        
-        this.editor.dom.scrollView.style.setProperty('--row-count',this.editor.scroll.scrollRowCount.value.toString());
-        
-        const didChangeFile = this.editor.update.renderedState.value.dataProvider != this.editor.update.intermediateState.value.dataProvider;
-        if (didChangeFile && this.editor.scroll.scrollBarType.value == "native"){
-            this.editor.scroll.changeNativeScrollerPosition(this.editor.update.intermediateState.value.positionInFile, this.editor.update.intermediateState.value.dataProvider.size);
-        } else if (this.editor.scroll.scrollBarType.value == "virtual") {
-            this.editor.dom.innerContainer.scrollTop = 0;
-        }
         
         const result = await this.createRendererAsync();
         Object.assign(this,result);
@@ -105,11 +96,9 @@ export class RenderingManager {
         this.renderer.canvas.style.setProperty("--device-pixel-ratio",String(this.devicePixelRatio));
 
         this.renderer.draw();
-    
-        this.editor.update.renderedState.value = this.editor.update.intermediateState.value;
     }
     async redraw(){
-        const state = await this.createStateAsync();
+        const state = await this.createState();
         const renderer = new Renderer({
             ctx: this.editor.dom.ctx,
             canvas: this.editor.dom.canvas,

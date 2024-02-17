@@ -1,4 +1,4 @@
-import type { DataProvider } from "@/binaryData/dataProvider";
+import { BlobProvider, type DataProvider } from "@/binaryData/dataProvider";
 import type { Hover } from "../GestureManager/MouseGestureManager";
 import type { Range } from "../SelectionManager";
 
@@ -29,5 +29,17 @@ export class State {
         this.pendingSelectionRanges = deps.pendingSelectionRanges;
         this.dataToRender = deps.dataToRender;
         this.dataProvider = deps.dataProvider;
+    }
+
+    static empty(){
+        return new State({
+            positionInFile: 0,
+            currentHover: { type: "none" },
+            dataProvider: new BlobProvider(new Blob()),
+            dataToRender: new Uint8Array(),
+            pendingSelectionRanges: [],
+            selectionRanges: [],
+            cursorPosition: 0
+        })
     }
 }
