@@ -111,14 +111,14 @@ function onWheel(event: WheelEvent){
 }
 
 function onMouseDown(event: MouseEvent,tab: TabData){
-    if (event.button === 1){
-        event.preventDefault();
+    event.preventDefault();
+    if (event.button === 0) {
+        switchTab(tab);
     }
-    switchTab(tab);
 }
 function onMouseUp(event: MouseEvent, file: TabData){
+    event.preventDefault();
     if (event.button === 1){
-        event.preventDefault();
         closeTab(file);
     }
 }
