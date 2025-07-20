@@ -1,6 +1,6 @@
 export interface DataProvider {
     size: number
-    readAsync(from: number, length: number): Promise<Uint8Array>
+    slice(from: number, to: number): Promise<Uint8Array>
     getBlob(): Promise<Blob>
     isWritable: boolean
     makeWritable(): Promise<void>
@@ -14,8 +14,8 @@ export class BlobProvider implements DataProvider {
         this.blob = blob;
         this.size = blob.size;
     }
-    async readAsync(from: number, length: number): Promise<Uint8Array> {
-        const blob = await this.blob.slice(from, from+length);
+    async slice(from: number, to: number): Promise<Uint8Array> {
+        const blob = await this.blob.slice(from, to);
         const buffer = await blob.arrayBuffer();
         const bytes = new Uint8Array(buffer);
         return bytes;
@@ -43,8 +43,8 @@ export class FileHandleProvider implements DataProvider {
     static async new(handle: FileSystemFileHandle){
         return new FileHandleProvider(handle, await handle.getFile());
     }
-    async readAsync(from: number, length: number): Promise<Uint8Array> {
-        const blob = await this.blob.slice(from, from+length);
+    async slice(from: number, to: number): Promise<Uint8Array> {
+        const blob = await this.blob.slice(from, to);
         const buffer = await blob.arrayBuffer();
         const bytes = new Uint8Array(buffer);
         return bytes;

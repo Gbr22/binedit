@@ -26,10 +26,7 @@ export class RenderingManager {
         this.renderer = this.createRenderer(this.styles,this.layout,State.empty());
     }
     async createState(){
-        const dataToRender = await this.editor.data.getRenderPage(
-            this.editor.data.provider,
-            this.editor.scroll.positionInFile
-        )
+        const dataToRender = await this.editor.data.getRenderPage(this.editor.scroll.positionInFile);
         return new State({
             positionInFile: this.editor.scroll.positionInFile,
             currentHover: this.editor.gesture.mouse.currentHover,

@@ -1,4 +1,4 @@
-import { BlobProvider, createDataProvider, type DataProvider } from "./binaryData/dataProvider";
+import { createDataProvider, type DataProvider } from "./binaryData/dataProvider";
 import type { Selections } from "./binaryData/subsystems/SelectionManager";
 
 export class TabData {
