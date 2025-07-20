@@ -19,6 +19,10 @@ export class DomManager {
 
     editor: Editor;
 
+    get isFocused() {
+        return document.activeElement == this.element && this.shadowRoot.activeElement == this.innerContainer;
+    }
+
     constructor(editor: Editor){
         this.editor = editor;
         this.shadowRoot.appendChild(this.innerContainer);
