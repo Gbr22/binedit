@@ -80,7 +80,7 @@ export class Renderer {
     drawRow(renderIndex: number): void {
         this.drawByteCount(renderIndex);
     
-        for(let byteIndex = 0; byteIndex < this.bytesPerRow; byteIndex++){
+        for (let byteIndex = 0; byteIndex < this.bytesPerRow; byteIndex++){
             const value = this.getRenderByteFromIndex(renderIndex * this.bytesPerRow + byteIndex);
             this.drawByte({
                 renderIndex,
