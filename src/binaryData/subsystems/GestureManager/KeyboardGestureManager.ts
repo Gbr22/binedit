@@ -10,6 +10,9 @@ export class KeyboardGestureManager {
         this.manager = manager;
 
         this.editor.dom.innerContainer.onkeydown = (e)=>{
+            if (!this.editor.dom.isFocused) {
+                return;
+            }
             let cursorByteDiff = 0;
             let scrollByteDiff = 0;
             {
