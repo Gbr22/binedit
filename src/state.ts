@@ -7,7 +7,7 @@ export const editor = new Editor();
 export const state = reactive({
     tabs: [] as TabData[],
     activeTab: undefined as TabData | undefined,
-})
+});
 
 editor.scroll.onScroll(positionInFile=>{
     const tab = state.activeTab;
@@ -24,6 +24,7 @@ editor.selection.onUpdateCursor(pos=>{
     }
     tab.cursorPosition = pos;
 })
+
 editor.selection.onUpdateRanges(selections=>{
     const tab = state.activeTab;
     if (!tab){

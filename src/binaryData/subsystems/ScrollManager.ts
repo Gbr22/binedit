@@ -123,11 +123,14 @@ export class ScrollManager {
         }
     
         let scrollStart: ScrollStart | null = null;
-        let scrollPercent = 0;
         scrollBarHandle.addEventListener("mousedown",(e)=>{
+            if (scrollStart) {
+                return;
+            }
+            const scrollRatio = this.editor.scroll.positionInFile / (this.editor.data.provider.size);
             scrollStart = {
                 y: e.clientY,
-                scrollRatio: scrollPercent
+                scrollRatio
             };
         })
         window.addEventListener("mousemove",(e)=>{
@@ -136,7 +139,7 @@ export class ScrollManager {
             }
             const diff = e.clientY - scrollStart.y;
             const height = scrollBarHandleContainer.clientHeight;
-            const ratio = diff/height + scrollStart.scrollRatio;
+            const ratio = diff / height + scrollStart.scrollRatio;
             this.updateScrollRatio(ratio);
             this.editor.rendering.redraw();
         })

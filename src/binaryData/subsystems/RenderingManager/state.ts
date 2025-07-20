@@ -13,7 +13,13 @@ interface StateDependencies {
 }
 
 export class State {
-    positionInFile: number;
+    #positionInFile: number = 0;
+    get positionInFile() {
+        return this.#positionInFile;
+    }
+    set positionInFile(value) {
+        this.#positionInFile = Math.max(value, 0);
+    }
     currentHover: Hover;
     cursorPosition: number;
     selectionRanges: Range[];
