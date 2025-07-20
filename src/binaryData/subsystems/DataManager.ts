@@ -14,14 +14,21 @@ export class DataManager {
     }
 
     provider: DataProvider;
+    get size() {
+        return this.editor.edit.size;
+    }
 
-    async getRenderPage(dataProvider: DataProvider, startByte: number): Promise<Uint8Array> {
+    async slice(from: number, to: number) {
+        return await this.editor.edit.slice(from, to);
+    }
+
+    async getRenderPage(startByte: number): Promise<Uint8Array> {
         const length = this.editor.size.viewportRowCount * bytesPerRow;
        
-        return await dataProvider.readAsync(startByte,length);
+        return await this.slice(startByte,startByte+length);
     }
     async getByte(index: number): Promise<number | undefined> {
-        const arr = await this.provider.readAsync(index,1);
+        const arr = await this.slice(index,index+1);
         if (arr.length == 0){
             return undefined;
         }

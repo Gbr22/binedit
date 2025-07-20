@@ -6,7 +6,7 @@ import { RenderingManager } from "./subsystems/RenderingManager";
 import { GestureManager } from "./subsystems/GestureManager";
 import { DataManager } from "./subsystems/DataManager";
 import { SelectionManager } from "./subsystems/SelectionManager";
-
+import { EditManager } from "./subsystems/EditManager";
 import { dispose, type Disposable, disposeChildren } from "./dispose";
 
 export class Editor implements Disposable {
@@ -18,10 +18,9 @@ export class Editor implements Disposable {
     rendering = new RenderingManager(this);
     scroll = new ScrollManager(this);
     gesture = new GestureManager(this);
+    edit = new EditManager(this);
 
-    constructor(){
-
-    }
+    constructor(){}
 
     [dispose] = disposeChildren.bind(null,this)
 }
