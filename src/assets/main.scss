@@ -1,6 +1,6 @@
-@import './base.scss';
-@import './colors/dark.css';
-@import './themes/default.css';
+@use './base.scss';
+@use './colors/dark.css';
+@use './themes/default.css';
 
 html, body, #app {
   overflow: hidden;
