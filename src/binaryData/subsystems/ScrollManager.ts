@@ -1,6 +1,5 @@
 import { Editor } from "../editor";
 import { rowHeight } from "../constants";
-import { DerivedVar } from "../reactivity";
 import { getDataProviderRowCount } from "./DataManager";
 
 export class ScrollManager {
@@ -8,14 +7,20 @@ export class ScrollManager {
 
     virtualScrollbar = document.createElement("div");
     nativeScrollerRowLimit = 10000;
-    positionInFile: number;
+    #positionInFile: number = 0;
+    get positionInFile(): number {
+        return this.#positionInFile;
+    }
+    set positionInFile(value: number) {
+        this.#positionInFile = Math.max(value, 0);
+    }
 
     onScrollHandlers: ((positionInFile: number)=>void)[] = [];
     onScroll(fn: (positionInFile: number)=>void): void {
         this.onScrollHandlers.push(fn);
     }
     triggerScrollHandlers(positionInFile: number){
-        for (const fn of this.onScrollHandlers){
+        for (const fn of this.onScrollHandlers) {
             fn(positionInFile);
         }
     }
@@ -77,7 +82,7 @@ export class ScrollManager {
         this.editor.gesture.mouse.forceUpdateHover();
         const ratio = boundIndex / (this.editor.data.provider.size-1);
         this.virtualScrollbar.style.setProperty("--scroll-percent",String(ratio));
-        this.triggerScrollHandlers(boundIndex);
+        this.triggerScrollHandlers(this.positionInFile);
     }
     updateScrollRatio(ratio: number){
         const documentSize = this.editor.data.provider.size;
