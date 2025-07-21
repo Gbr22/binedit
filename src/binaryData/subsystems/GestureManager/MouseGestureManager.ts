@@ -1,6 +1,6 @@
 import type { GestureManager } from "../GestureManager";
 import { bytesPerRow } from "../../constants";
-import { dispose, type Disposable } from "@/binaryData/dispose";
+import { dispose, type Disposable } from "../../dispose";
 import type { Box } from "../RenderingManager/box";
 
 export interface Point {
