@@ -1,22 +1,164 @@
+interface RangeDataSource {
+    slice(from: number, to: number): Promise<Uint8Array>;
+    size: number;
+};
+
+export interface RangeDataProvider {
+    slice(from: number, to: number): Promise<Uint8Array>;
+    subProvider(from: number, to?: number): RangeDataProvider;
+    size: number;
+};
+
+export class WrappedDataProvider implements RangeDataProvider {
+    #from: number;
+    #to: number;
+    source: RangeDataSource;
+
+    get size() {
+        return this.#to - this.#from;
+    }
+
+    constructor(source: RangeDataSource, options?: { from?: number, to?: number }) {
+        this.source = source;
+        this.#from = options?.from ?? 0;
+        this.#to = options?.to ?? source.size;
+    }
+
+    #validateSliceIndices(from: number, to: number): [number, number] {
+        if (from < 0 || to < 0) {
+            throw new Error(`Slice indices cannot be negative: from=${from}, to=${to}`);
+        }
+        if ((to - from) < 0) {
+            throw new Error(`Slice cannot have negative length: from=${from}, to=${to}`);
+        }
+        if (to > this.size) {
+            to = this.size;
+        }
+        if (from > this.size) {
+            from = this.size;
+        }
+        return [from, to];
+    }
+
+    async slice(from: number, to: number): Promise<Uint8Array> {
+        [from, to] = this.#validateSliceIndices(from, to);
+        const adjustedFrom = this.#from + from;
+        const adjustedTo = this.#from + to;
+        return await this.source.slice(adjustedFrom, adjustedTo);
+    }
+
+    subProvider(from: number, to?: number): RangeDataProvider {
+        to = to ?? Infinity;
+        [from, to] = this.#validateSliceIndices(from, to);
+        const adjustedFrom = this.#from + from;
+        const adjustedTo = this.#from + to;
+        return new WrappedDataProvider(this.source, {
+            from: adjustedFrom,
+            to: adjustedTo,
+        });
+    }
+}
+
 export interface RangeSource {
     from: number;
     to: number;
-    slice(from: number, to: number): Promise<Uint8Array>;
+    dataProvider: RangeDataProvider;
 };
 
-function isInRange(range: [number, number], index: number): boolean {
+function isInRange(range: [number, number], point: number): boolean {
     const [from, to] = range;
-    return index >= from && index < to;
+    return point >= from && point < to;
+}
+
+export function createRange(source: Uint8Array): RangeSource {
+    return {
+        from: 0,
+        to: source.length,
+        dataProvider: new WrappedDataProvider({
+            slice: (from, to) => Promise.resolve(source.slice(from, to)),
+            size: source.length
+        })
+    };
 }
 
 export function createRanges(source: Uint8Array): RangeSource[] {
-    return [{
-        from: 0,
-        to: source.length,
-        slice: (from, to) => {
-            return Promise.resolve(source.slice(from, to));
-        }
-    }];
+    return [createRange(source)];
+}
+
+export function moveTo(range: RangeSource, documentFrom: number) {
+    if (documentFrom < 0) {
+        throw new Error(`Document from cannot be negative: ${documentFrom}`);
+    }
+    const length = range.to - range.from;
+    return {
+        from: documentFrom,
+        to: documentFrom + length,
+        dataProvider: range.dataProvider
+    };
+}
+
+export function split(source: RangeSource, indexInRange: number): [RangeSource, RangeSource] {
+    const length = source.to - source.from;
+    if (indexInRange < 0 || indexInRange >= length) {
+        throw new Error(`Index ${indexInRange} is out of bounds for range [${source.from}, ${source.to}]`);
+    }
+    const left: RangeSource = {
+        from: source.from,
+        to: source.from + indexInRange,
+        dataProvider: source.dataProvider.subProvider(0, indexInRange)
+    };
+    const right: RangeSource = {
+        from: source.from + indexInRange,
+        to: source.to,
+        dataProvider: source.dataProvider.subProvider(indexInRange)
+    };
+    return [left, right];
+}
+
+export function dropStart(range: RangeSource, count: number): RangeSource {
+    if (count < 0) {
+        throw new Error(`Count cannot be negative: ${count}`);
+    }
+    const length = range.to - range.from;
+    if (count > length) {
+        throw new Error(`Drop count ${count} is greater than range length ${length}`);
+    }
+    return {
+        from: range.from,
+        to: range.to - count,
+        dataProvider: range.dataProvider.subProvider(count)
+    };
+}
+
+export function dropEnd(range: RangeSource, count: number): RangeSource {
+    if (count < 0) {
+        throw new Error(`Count cannot be negative: ${count}`);
+    }
+    const length = range.to - range.from;
+    if (count > length) {
+        throw new Error(`Drop count ${count} is greater than range length ${length}`);
+    }
+    return {
+        from: range.from,
+        to: range.to - count,
+        dataProvider: range.dataProvider.subProvider(0, length - count)
+    };
+}
+
+export function subtract(ranges: RangeSource, ammount: number): RangeSource {
+    return {
+        from: ranges.from - ammount,
+        to: ranges.to - ammount,
+        dataProvider: ranges.dataProvider
+    };
+}
+
+export function add(ranges: RangeSource, ammount: number): RangeSource {
+    return {
+        from: ranges.from + ammount,
+        to: ranges.to + ammount,
+        dataProvider: ranges.dataProvider
+    };
 }
 
 export function getSize(ranges: RangeSource[]): number {
@@ -34,7 +176,7 @@ export function assertConsistency(ranges: RangeSource[], options?: {
     let prev;
     for (const range of ranges) {
         if (prev && prev.to != range.from) {
-            throw new Error(`Ranges are not contiguous: ${prev.to} != ${range.from}`);
+            throw new Error(`Ranges are not contiguous: ${prev.to} != ${range.from}, ranges: ${JSON.stringify(ranges.map(e=>[e.from, e.to]))}`);
         }
         if (!prev && range.from !== 0) {
             throw new Error(`First range does not start at 0: ${range.from}`);
@@ -80,7 +222,7 @@ export async function sliceRanges(ranges: RangeSource[], from: number, to: numbe
         if (range.to > to) {
             endInRange = to - range.from;
         }
-        const dataToPut = await range.slice(startInRange, endInRange);
+        const dataToPut = await range.dataProvider.slice(startInRange, endInRange);
         result.set(dataToPut, offset);
         offset += dataToPut.length;
     }
@@ -88,83 +230,47 @@ export async function sliceRanges(ranges: RangeSource[], from: number, to: numbe
     return result;
 }
 
+export function isFromWithinRange(from: number, other: [number, number]): boolean {
+    return isInRange(other, from);
+}
+
+export function isToWithinRange(to: number, other: [number, number]): boolean {
+    return isInRange(other, to - 1);
+}
+
+export function isRangeWithinRange(small: [number, number], big: [number, number]): boolean {
+    const [smallFrom, smallTo] = small;
+    const [bigFrom, bigTo] = big;
+    return smallFrom >= bigFrom && smallTo <= bigTo;
+}
+
+function range(from: number, to: number): [number, number] {
+    if (to < from) {
+        throw new Error(`Range cannot have negative length: from=${from}, to=${to}`);
+    }
+    return [from, to];
+}
+
 export function deleteRanges(ranges: RangeSource[], deleteFrom: number, deleteTo: number): RangeSource[] {
-    if (deleteFrom < 0 || deleteTo < 0) {
-        throw new Error(`Delete range cannot have negative indices: from=${deleteFrom}, to=${deleteTo}`);
-    }
-    const length = deleteTo - deleteFrom;
-    if (length <= 0) {
-        throw new Error(`Delete range must have positive length: ${length}`);
-    }
-    const debug = false;
-    const deleteLength = deleteTo - deleteFrom;
-    if (debug) {
-        console.debug("Deleting range", { deleteFrom, deleteTo, deleteLength });
-    }
-    if (deleteLength <= 0) {
-        throw new Error(`Delete range must have positive length: ${deleteLength}`);
-    }
+    const deleteRange = range(deleteFrom, deleteTo);
+    const deleteCount = deleteTo - deleteFrom;
     const newRanges: RangeSource[] = [];
-    const isInDelete = isInRange.bind(null, [deleteFrom, deleteTo]);
     for (const range of ranges) {
         const r: [number, number] = [range.from, range.to];
-        const isToWithinDelete = range.to > deleteFrom && range.to <= deleteTo;
-        const isFromWithinDelete = range.from >= deleteFrom && range.from < deleteTo;
+        const isFromWithinDelete = isFromWithinRange(range.from, deleteRange);
+        const isToWithinDelete = isToWithinRange(range.to, deleteRange);
         if (isFromWithinDelete && isToWithinDelete) {
             continue;
         }
-        
-        if (range.to <= deleteFrom) {
-            if (debug) {
-                console.debug("Range not affected by delete", range);
-            }
-            newRanges.push(range);
-        }
-        else if (range.from >= deleteTo) {
-            const newRange: RangeSource = {
-                from: range.from - deleteLength,
-                to: range.to - deleteLength,
-                slice: range.slice
-            }
-            if (debug) {
-                console.debug("Range over deleteTo", "old", range, "new", newRange);
-            }
-            newRanges.push(newRange);
-        }
-        else if (isInRange(r, deleteFrom) && isInRange(r, deleteTo)) {
-            if (debug) {
-                console.debug("Delete is within range", range);
-            }
-            const leftFrom = range.from;
-            const leftTo = deleteFrom;
-            const leftLength = leftTo - leftFrom;
+        else if (isRangeWithinRange(deleteRange, r)) {
+            let [left, right] = split(range, deleteFrom - range.from);
+            right = dropStart(right, deleteCount);
+            const leftLength = left.to - left.from;
+            const rightLength = right.to - right.from;
             if (leftLength > 0) {
-                const left: RangeSource = {
-                    from: leftFrom,
-                    to: leftTo,
-                    slice: range.slice
-                };
                 newRanges.push(left);
             }
-            const oldLength = range.to - range.from;
-            const rightFrom = deleteFrom;
-            const dataShiftedBy = deleteLength + leftLength;
-            if (dataShiftedBy < 0) {
-                throw new Error(`Data shift cannot be negative: ${dataShiftedBy}`);
-            }
-            const rightTo = rightFrom + oldLength - dataShiftedBy;
-            const rightLength = rightTo - rightFrom;
             if (rightLength > 0) {
-                const right: RangeSource = {
-                    from: rightFrom,
-                    to: rightTo,
-                    slice: (from, to) => {
-                        if (from < 0 || to < 0) {
-                            throw new Error(`Slice indices cannot be negative: from=${from}, to=${to}`);
-                        }
-                        return range.slice(from+dataShiftedBy, to+dataShiftedBy)
-                    }
-                };
                 newRanges.push(right);
             }
             if (rightLength <= 0 && leftLength <= 0) {
@@ -172,40 +278,30 @@ export function deleteRanges(ranges: RangeSource[], deleteFrom: number, deleteTo
             }
         }
         else if (isFromWithinDelete) {
-            const oldLength = range.to - range.from;
-            const oldFrom = range.from;
-            const newFrom = deleteFrom;
-            const deleteCount = deleteTo - oldFrom;
-            const newTo = newFrom + oldLength - deleteCount;
-            const newRange: RangeSource = {
-                from: newFrom,
-                to: newTo,
-                slice: (from, to) => range.slice(from + deleteCount, to + deleteCount)
-            }
-            if (debug) {
-                console.debug("Range starts within delete", "old", range, "new", newRange, "delete", deleteCount);
-            }
+            const localDeleteCount = deleteTo - range.from;
+            const shiftCount = deleteCount - localDeleteCount;
+            const newRange = subtract(dropStart(range, localDeleteCount), shiftCount);
             newRanges.push(newRange);
         }
         else if (isToWithinDelete) {
-            const newTo = deleteFrom;
-            const newRange: RangeSource = {
-                from: range.from,
-                to: newTo,
-                slice: (from, to) => range.slice(from, to)
-            }
-            if (debug) {
-                console.debug("Range ends within delete", "old", range, "new", newRange);
-            }
+            const localDeleteCount = range.to - deleteFrom;
+            const newRange = dropEnd(range, localDeleteCount);
+            newRanges.push(newRange);
+        }
+        else if (range.to <= deleteFrom) {
+            newRanges.push(range);
+        }
+        else if (range.from >= deleteTo) {
+            const newRange = subtract(range, deleteCount);
             newRanges.push(newRange);
         }
         else {
             throw new Error(
                 `Unexpected range state: ${JSON.stringify(range)} with context: ${JSON.stringify({
-                    "isInDelete(range.from)": isInDelete(range.from),
-                    "isInDelete(range.to)": isInDelete(range.to),
-                    deleteFrom: deleteFrom,
-                    deleteTo: deleteTo,
+                    isFromWithinDelete,
+                    isToWithinDelete,
+                    deleteFrom,
+                    deleteTo,
                 })}`
             );
         }

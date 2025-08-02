@@ -1,4 +1,4 @@
-import { assertConsistency, deleteRanges, sliceRanges, type RangeSource } from "../editing/editing";
+import { assertConsistency, deleteRanges, sliceRanges, WrappedDataProvider, type RangeSource } from "../editing/editing";
 import type { Editor } from "../editor";
 
 export const ChangeTypes = Object.freeze({
@@ -72,7 +72,18 @@ export class EditManager {
                     get to() {
                         return editor.data.provider.size
                     },
-                    slice: (from, to) => editor.data.provider.slice(from, to)
+                    get dataProvider() {
+                        if (!editor.data.provider) {
+                            return new WrappedDataProvider({
+                                slice: () => Promise.resolve(new Uint8Array()),
+                                size: 0
+                            });
+                        }
+                        return new WrappedDataProvider({
+                            slice: editor.data.provider.slice.bind(editor.data.provider),
+                            size: editor.data.provider.size
+                        })
+                    }
                 }
             ],
             get size() {
