@@ -1,17 +1,11 @@
-export const dispose = Symbol("dispose function");
-type dispose = typeof dispose;
-export interface Disposable {
-    [dispose]: ()=>void
-}
-
 function isDisposable(v: unknown): v is Disposable {
     if (!(v instanceof Object)){
         return false;
     }
-    if (!(dispose in v)){
+    if (!(Symbol.dispose in v)){
         return false;
     }
-    const fn = v[dispose];
+    const fn = v[Symbol.dispose];
     if (!(fn instanceof Function)){
         return false;
     }
@@ -23,7 +17,7 @@ export function disposeChildren(object: object){
         const value = (object as any)[p] as unknown;
         if (isDisposable(value)) {
             try {
-                value[dispose]();
+                value[Symbol.dispose]();
             } catch(_){};
         }
     }

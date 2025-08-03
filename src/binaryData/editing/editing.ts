@@ -99,7 +99,7 @@ export function moveTo(range: RangeSource, documentFrom: number) {
 
 export function split(source: RangeSource, indexInRange: number): [RangeSource, RangeSource] {
     const length = source.to - source.from;
-    if (indexInRange < 0 || indexInRange >= length) {
+    if (indexInRange < 0 || indexInRange > length) {
         throw new Error(`Index ${indexInRange} is out of bounds for range [${source.from}, ${source.to}]`);
     }
     const left: RangeSource = {
@@ -254,6 +254,9 @@ function range(from: number, to: number): [number, number] {
 export function deleteRanges(ranges: RangeSource[], deleteFrom: number, deleteTo: number): RangeSource[] {
     const deleteRange = range(deleteFrom, deleteTo);
     const deleteCount = deleteTo - deleteFrom;
+    if (deleteCount === 0) {
+        throw new Error("Delete count cannot be zero");
+    }
     const newRanges: RangeSource[] = [];
     for (const range of ranges) {
         const r: [number, number] = [range.from, range.to];

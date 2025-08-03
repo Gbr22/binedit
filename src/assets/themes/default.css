@@ -11,6 +11,7 @@
 }
 .editor div::part(container):focus {
     border-color: color-mix(in srgb, var(--editor-background-color), 25% var(--mixer-foreground));
+    outline: none;
 }
 .editor div::part(scrollbar) {
     --width: 15px;

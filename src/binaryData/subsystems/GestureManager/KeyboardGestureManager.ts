@@ -79,22 +79,29 @@ export class KeyboardGestureManager {
             if (e.code == "Delete") {
                 try {
                     this.editor.selection.endRange();
+                    
                     if (this.editor.selection.ranges.length > 0) {
-                        while (this.editor.selection.ranges.length > 0) {
-                            const range = this.editor.selection.ranges[0];
-                            const start = range[0];
-                            const end = range[1]+1;
-                            const length = end - start;
-                            this.editor.edit.deleteRange(start, end);
-                            this.editor.selection.ranges.shift();
-                            for (const range of this.editor.selection.ranges) {
-                                range[0] -= length;
-                                range[1] -= length;
+                        this.editor.transaction(()=>{
+                            while (this.editor.selection.ranges.length > 0) {
+                                const range = this.editor.selection.ranges[0];
+                                const start = range[0];
+                                const end = range[1]+1;
+                                const length = end - start;
+                                if (length === 0) {
+                                    this.editor.selection.ranges.shift();
+                                    continue;
+                                }
+                                this.editor.deleteRange(start, end);
+                                this.editor.selection.ranges.shift();
+                                for (const range of this.editor.selection.ranges) {
+                                    range[0] -= length;
+                                    range[1] -= length;
+                                }
                             }
-                        }
+                        });
                     }
                     else {
-                        this.editor.edit.deleteAt(this.editor.selection.cursorPosition);
+                        this.editor.deleteAt(this.editor.selection.cursorPosition);
                     }
                 }
                 catch (e) {

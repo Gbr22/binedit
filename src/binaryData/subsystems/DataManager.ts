@@ -10,10 +10,17 @@ export class DataManager {
 
     constructor(editor: Editor){
         this.editor = editor;
-        this.provider = new BlobProvider(new Blob());
+        this.#provider = new BlobProvider(new Blob());
     }
 
-    provider: DataProvider;
+    #provider: DataProvider;
+    get provider() {
+        return this.#provider;
+    }
+    set provider(value: DataProvider) {
+        this.#provider = value;
+    }
+
     get size() {
         return this.editor.edit.size;
     }

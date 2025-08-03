@@ -10,12 +10,13 @@ export function switchTab(tab: TabData | undefined){
         editor.event.setState({
             dataProvider: tab.dataSource,
             positionInFile: tab.positionInFile,
+            history: tab.history
         });
         
     } else {
         editor.event.setState({
             dataProvider: new BlobProvider(new Blob([])),
-            positionInFile: 0
+            positionInFile: 0,
         });
         editor.selection.cursorPosition = 0;
     }

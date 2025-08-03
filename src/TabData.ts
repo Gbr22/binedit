@@ -1,4 +1,5 @@
 import { createDataProvider, type DataProvider } from "./binaryData/dataProvider";
+import type { HistoryState } from "./binaryData/editor";
 import type { Selections } from "./binaryData/subsystems/SelectionManager";
 
 export class TabData {
@@ -7,7 +8,8 @@ export class TabData {
     positionInFile: number = 0
     cursorPosition: number = 0
     selections: Selections = []
-    
+    history: HistoryState | undefined;
+
     constructor(name: string, data: DataProvider){
         this.name = name;
         this.dataSource = data;

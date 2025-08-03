@@ -4,14 +4,14 @@
 
 <script setup lang="ts">
 import { editor } from '@/state';
-import { onMounted, ref } from 'vue';
+import { onMounted, useTemplateRef } from 'vue';
 
-const container = ref<HTMLElement>();
+const container = useTemplateRef("container");
 onMounted(()=>{
     if (container.value){
         container.value.appendChild(editor.dom.element);
     }
-})
+});
 </script>
 
 <style scoped lang="scss">
@@ -21,5 +21,4 @@ onMounted(()=>{
     grid-template-rows: 1fr;
     overflow: hidden;
 }
-
 </style>
